@@ -1,19 +1,10 @@
-# macOS
 .DS_Store
-
-# Frontend
-frontend/node_modules/
+node_modules/
+**/node_modules/
 frontend/.svelte-kit/
 frontend/build/
 frontend/.vite/
-frontend/.env
-frontend/.env.*
-
-# Backend
-backend/node_modules/
-backend/.env
-backend/.env.*
-
-# Editors
+*.env
+**/*.env
 .vscode/
 .idea/
