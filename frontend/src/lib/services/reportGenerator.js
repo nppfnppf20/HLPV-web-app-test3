@@ -12,6 +12,7 @@ import { processHeritageRules, RISK_LEVELS } from '../rules/heritageRules.js';
  * 
  * PURPOSE: Create plain English summary of what heritage assets were identified
  * OUTPUT: Array of summary strings describing buildings and conservation areas
+ * @param {any} analysisData
  */
 export function generateDesignationSummary(analysisData) {
   const buildings = analysisData?.listed_buildings || [];
@@ -21,14 +22,14 @@ export function generateDesignationSummary(analysisData) {
   
   // Listed Buildings Summary
   if (buildings.length > 0) {
-    const onSite = buildings.filter(b => b.on_site);
-    const nearby = buildings.filter(b => !b.on_site);
+    const onSite = buildings.filter(/** @param {any} b */ b => b.on_site);
+    const nearby = buildings.filter(/** @param {any} b */ b => !b.on_site);
     
     // Grade breakdown
     const grades = {
-      'I': buildings.filter(b => b.grade === 'I').length,
-      'II*': buildings.filter(b => b.grade === 'II*').length,
-      'II': buildings.filter(b => b.grade === 'II').length
+      'I': buildings.filter(/** @param {any} b */ b => b.grade === 'I').length,
+      'II*': buildings.filter(/** @param {any} b */ b => b.grade === 'II*').length,
+      'II': buildings.filter(/** @param {any} b */ b => b.grade === 'II').length
     };
     
     let buildingText = `${buildings.length} listed building${buildings.length > 1 ? 's' : ''} identified`;
@@ -54,8 +55,8 @@ export function generateDesignationSummary(analysisData) {
   
   // Conservation Areas Summary
   if (conservationAreas.length > 0) {
-    const intersecting = conservationAreas.filter(a => a.on_site);
-    const nearby = conservationAreas.filter(a => !a.on_site);
+    const intersecting = conservationAreas.filter(/** @param {any} a */ a => a.on_site);
+    const nearby = conservationAreas.filter(/** @param {any} a */ a => !a.on_site);
     
     let areaText = `${conservationAreas.length} conservation area${conservationAreas.length > 1 ? 's' : ''} identified`;
     
@@ -76,6 +77,7 @@ export function generateDesignationSummary(analysisData) {
  * 
  * PURPOSE: Provide visual and textual representation of overall development risk
  * OUTPUT: Object with styling and descriptive information for each risk level
+ * @param {string} overallRisk
  */
 export function getRiskSummary(overallRisk) {
   const riskConfig = {
@@ -123,11 +125,12 @@ export function getRiskSummary(overallRisk) {
  *   2. Run heritage rules to assess risk
  *   3. Format results for display
  * OUTPUT: Complete report object ready for UI rendering
+ * @param {any} analysisData
  */
 export function generateHeritageReport(analysisData) {
   const designationSummary = generateDesignationSummary(analysisData);
   const ruleResults = processHeritageRules(analysisData);
-  const riskSummary = getRiskSummary(ruleResults.overallRisk);
+  const riskSummary = getRiskSummary(ruleResults.overallRisk || RISK_LEVELS.LOW_RISK);
   
   return {
     designationSummary,
