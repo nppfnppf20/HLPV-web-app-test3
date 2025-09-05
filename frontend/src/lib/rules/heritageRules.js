@@ -6,6 +6,7 @@
  * 
  * Risk Levels (in order of severity):
  * - SHOWSTOPPER: Development likely not viable without major redesign
+ * - EXTREMELY_HIGH_RISK: Major constraints, extensive specialist input required
  * - HIGH_RISK: Significant constraints, specialist assessment required
  * - MEDIUM_HIGH_RISK: Moderate constraints, careful design required
  * - LOW_RISK: Minimal constraints, standard mitigation measures
@@ -13,6 +14,7 @@
 
 export const RISK_LEVELS = {
   SHOWSTOPPER: 'showstopper',
+  EXTREMELY_HIGH_RISK: 'extremely_high_risk',
   HIGH_RISK: 'high_risk', 
   MEDIUM_HIGH_RISK: 'medium_high_risk',
   LOW_RISK: 'low_risk'
@@ -52,7 +54,42 @@ export function checkGradeIOnSite(buildings) {
 }
 
 /**
- * RULE 2: Grade I Listed Building Within 100m (HIGH RISK)
+ * RULE 2: Conservation Area On-Site (EXTREMELY HIGH RISK)
+ * 
+ * PURPOSE: Identify if development site intersects with a conservation area
+ * TRIGGER: Any conservation area with on_site = true (intersecting)
+ * RATIONALE: Development within conservation areas requires conservation area consent
+ *           and must preserve or enhance the character and appearance of the area
+ * OUTCOME: Extremely high risk - extensive constraints and specialist requirements
+ */
+/** @param {any[]} conservationAreas */
+export function checkConservationAreaOnSite(conservationAreas) {
+  const onSiteAreas = conservationAreas.filter(a => a.on_site);
+  
+  if (onSiteAreas.length > 0) {
+    return {
+      triggered: true,
+      level: RISK_LEVELS.EXTREMELY_HIGH_RISK,
+      rule: 'Conservation Area On-Site',
+      findings: `Development site intersects with ${onSiteAreas.length} conservation area${onSiteAreas.length > 1 ? 's' : ''}`,
+      impact: 'Development within conservation area requires preservation or enhancement of character and appearance',
+      requirements: [
+        'Conservation Area Consent required for most development',
+        'Heritage and Design Statement essential',
+        'Conservation officer pre-application consultation mandatory',
+        'Design must preserve or enhance conservation area character',
+        'Materials and detailing must be sympathetic to historic context',
+        'Detailed historical and architectural analysis required'
+      ],
+      areas: onSiteAreas
+    };
+  }
+  
+  return { triggered: false };
+}
+
+/**
+ * RULE 3: Grade I Listed Building Within 100m (HIGH RISK)
  * 
  * PURPOSE: Assess impact on setting of Grade I buildings in immediate vicinity
  * TRIGGER: Any Grade I listed building within 100m of site boundary
@@ -226,9 +263,23 @@ export function processHeritageRules(analysisData) {
     checkGradeIIOnSite,
     checkAnyGradeWithin100m
   ];
+
+  // Process conservation area rules
+  const conservationRules = [
+    checkConservationAreaOnSite
+  ];
   
+  // Process building rules
   for (const rule of rules) {
     const result = rule(buildings);
+    if (result.triggered) {
+      triggeredRules.push(result);
+    }
+  }
+
+  // Process conservation area rules
+  for (const rule of conservationRules) {
+    const result = rule(conservationAreas);
     if (result.triggered) {
       triggeredRules.push(result);
     }

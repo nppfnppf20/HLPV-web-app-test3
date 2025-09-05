@@ -85,6 +85,12 @@ export function getRiskSummary(overallRisk) {
       color: '#dc2626', // red-600
       bgColor: '#fef2f2' // red-50
     },
+    [RISK_LEVELS.EXTREMELY_HIGH_RISK]: {
+      label: 'EXTREMELY HIGH RISK',
+      description: 'Major constraints, extensive specialist input required',
+      color: '#b91c1c', // red-700
+      bgColor: '#fee2e2' // red-100
+    },
     [RISK_LEVELS.HIGH_RISK]: {
       label: 'HIGH RISK',
       description: 'Significant constraints, specialist assessment required',
@@ -137,7 +143,7 @@ export function generateHeritageReport(analysisData) {
     metadata: {
       generatedAt: new Date().toISOString(),
       rulesVersion: '1.0.0',
-      totalRulesProcessed: 5,
+      totalRulesProcessed: 6,
       rulesTriggered: ruleResults.rules.length
     }
   };
