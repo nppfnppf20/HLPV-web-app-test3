@@ -1,0 +1,37 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { pool } from './db.js';
+import { buildAnalysisQuery } from './queries.js';
+
+const app = express();
+const port = process.env.PORT || 8080;
+
+app.use(cors());
+app.use(express.json({ limit: '2mb' }));
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.post('/analyze', async (req, res) => {
+  try {
+    const { polygon } = req.body;
+    if (!polygon) {
+      return res.status(400).json({ error: 'polygon is required (GeoJSON Polygon or MultiPolygon)' });
+    }
+
+    const { text, values } = buildAnalysisQuery(polygon);
+    const result = await pool.query(text, values);
+    res.json(result.rows[0] ?? {});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Backend listening on port ${port}`);
+});
+
+
