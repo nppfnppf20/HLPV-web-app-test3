@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "inspect": "node scripts/inspect.js"
+    "inspect": "node scripts/inspect.js",
+    "deploy-functions": "node scripts/deploy-functions.js"
   },
   "keywords": [],
   "author": "",
