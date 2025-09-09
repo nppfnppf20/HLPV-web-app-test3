@@ -34,4 +34,24 @@ export function buildAnalysisQuery(geojsonPolygon) {
   return buildHeritageAnalysisQuery(geojsonPolygon);
 }
 
+// AONB analysis (JSON result)
+export function buildAONBQuery(geojsonPolygon) {
+  const text = `SELECT analysis.analyze_aonb($1::jsonb) AS result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
+// Generic multi-layer analyze: map layer keys to query builders that return JSON
+export function buildMultiLayerQueries(geojsonPolygon, layers) {
+  const layerMap = {
+    // existing heritage layers could be added here when migrated to JSON-returning functions
+    aonb: (p) => buildAONBQuery(p)
+    // green_belt, listed_building, conservation_areas can be added when standardized
+  };
+
+  return layers
+    .filter((key) => Boolean(layerMap[key]))
+    .map((key) => ({ key, builder: layerMap[key](geojsonPolygon) }));
+}
+
 

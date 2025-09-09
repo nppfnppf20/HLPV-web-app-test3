@@ -70,4 +70,18 @@ export async function analyzeGreenBelt(polygonGeoJSON) {
   return res.json();
 }
 
+// Multi-layer analysis
+export async function analyzeMulti(polygonGeoJSON, layers) {
+  const res = await fetch(`${BASE_URL}/analyze/multi`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON, layers })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Multi-layer analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 

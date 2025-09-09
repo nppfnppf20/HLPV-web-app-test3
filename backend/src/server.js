@@ -7,7 +7,9 @@ import {
   buildHeritageAnalysisQuery, 
   buildListedBuildingsQuery, 
   buildConservationAreasQuery,
-  buildGreenBeltQuery
+  buildGreenBeltQuery,
+  buildAONBQuery,
+  buildMultiLayerQueries
 } from './queries.js';
 
 const app = express();
@@ -128,6 +130,51 @@ app.get('/tables', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`);
+});
+
+// Multi-layer analysis endpoint
+app.post('/analyze/multi', async (req, res) => {
+  try {
+    const { polygon, layers } = req.body || {};
+    if (!polygon || !Array.isArray(layers) || layers.length === 0) {
+      return res.status(400).json({ error: 'polygon and non-empty layers[] are required' });
+    }
+
+    // Build queries for requested layers
+    const queries = buildMultiLayerQueries(polygon, layers);
+    if (queries.length === 0) {
+      return res.status(400).json({ error: 'No valid layers requested' });
+    }
+
+    // Execute in parallel
+    const results = await Promise.allSettled(
+      queries.map(({ key, builder }) =>
+        pool.query(builder.text, builder.values).then((r) => ({ key, rows: r.rows }))
+      )
+    );
+
+    // Assemble response
+    const payload = { };
+    const errors = { };
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        const { key, rows } = r.value;
+        // JSON-returning functions should expose a single row with column `result` or `analysis_result`
+        const item = rows?.[0]?.result ?? rows?.[0]?.analysis_result ?? rows ?? null;
+        payload[key] = item;
+      } else {
+        // When rejected, Promise.reason is on r.reason
+        const key = queries[results.indexOf(r)]?.key || 'unknown';
+        errors[key] = r.reason?.message || String(r.reason);
+      }
+    }
+
+    if (Object.keys(errors).length > 0) payload.errors = errors;
+    res.json(payload);
+  } catch (error) {
+    console.error('Multi-layer analysis error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 

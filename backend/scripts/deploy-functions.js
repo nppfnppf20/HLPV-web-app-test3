@@ -32,6 +32,28 @@ async function deployFunctions() {
       console.warn('ℹ️ Green Belt SQL not found or failed to deploy. Skipping. Reason:', e?.message || e);
     }
     
+    // Deploy central proximity buffers function
+    try {
+      const proxSqlPath = join(__dirname, '..', 'sql', 'Baseline_analyses', 'Proximity_buffers.sql');
+      const proxSql = readFileSync(proxSqlPath, 'utf8');
+      if (proxSql && proxSql.trim().length > 0) {
+        await pool.query(proxSql);
+        console.log('✅ Proximity buffers function deployed');
+      }
+    } catch (e) {
+      console.warn('ℹ️ Proximity buffers SQL not found or failed to deploy. Skipping. Reason:', e?.message || e);
+    }
+
+    // Deploy AONB analysis SQL
+    try {
+      const aonbSqlPath = join(__dirname, '..', 'sql', 'landscape_analysis', 'analyze_AONB.sql');
+      const aonbSql = readFileSync(aonbSqlPath, 'utf8');
+      await pool.query(aonbSql);
+      console.log('✅ AONB analysis function deployed');
+    } catch (e) {
+      console.warn('ℹ️ AONB SQL not found or failed to deploy. Skipping. Reason:', e?.message || e);
+    }
+
     console.log('✅ PostgreSQL functions deployed successfully!');
     
     // Test the functions
