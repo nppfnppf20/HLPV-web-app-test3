@@ -1,14 +1,16 @@
 <script>
   import Map from '$lib/components/Map.svelte';
-  import AnalysisResults from '$lib/components/AnalysisResults.svelte';
+  import HeritageResults from '$lib/components/Results ribbons/HeritageResults.svelte';
   import ReportGenerator from '$lib/components/ReportGenerator.svelte';
-  import EcologyResults from '$lib/components/EcologyResults.svelte';
-  import { analyzeHeritage, analyzeGreenBelt } from '$lib/services/api.js';
+  import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
+  import { analyzeHeritage, analyzeGreenBelt, analyzeMulti } from '$lib/services/api.js';
   
   /** @type {Record<string, any> | null} */
   let result = null;
   /** @type {any[] | null} */
   let greenBelt = null;
+  /** @type {{ buffers?: any[], nearest_within_1km?: { name?: string, distance_m?: number, direction?: string } } | null} */
+  let aonb = null;
   /** @type {string} */
   let errorMsg = '';
   /** @type {boolean} */
@@ -24,9 +26,15 @@
     loading = true;
     
     try {
-      // Run heritage and green belt in sequence (could be parallel later)
-      result = await analyzeHeritage(geometry);
-      greenBelt = await analyzeGreenBelt(geometry);
+      // Run heritage and multi-layer landscape (AONB via multi) + Green Belt
+      const [heritageRes, multiRes, greenBeltRes] = await Promise.all([
+        analyzeHeritage(geometry),
+        analyzeMulti(geometry, ['aonb']),
+        analyzeGreenBelt(geometry)
+      ]);
+      result = heritageRes;
+      greenBelt = greenBeltRes;
+      aonb = multiRes?.aonb || null;
     } catch (/** @type {any} */ err) {
       errorMsg = err?.message || String(err);
     } finally {
@@ -46,7 +54,7 @@
 <h1>Draw an area to analyze</h1>
 <Map onPolygonDrawn={handlePolygonDrawn} />
 
-<AnalysisResults 
+<HeritageResults 
   data={result} 
   title="Heritage Analysis Results"
   {loading}
@@ -54,9 +62,10 @@
 />
 
 {#if greenBelt}
-  <EcologyResults
+  <LandscapeResults
     {greenBelt}
-    title="Ecology Results"
+    {aonb}
+    title="Landscape Results"
     {loading}
     error={errorMsg}
   />

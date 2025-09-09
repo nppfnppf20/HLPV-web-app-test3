@@ -84,4 +84,12 @@ export async function analyzeMulti(polygonGeoJSON, layers) {
   return res.json();
 }
 
+// Convenience helper: run heritage + landscape (green belt + AONB) together
+export async function analyzeHeritageAndLandscape(polygonGeoJSON) {
+  const res = await analyzeMulti(polygonGeoJSON, ['aonb']);
+  // Green Belt still uses its own endpoint for now
+  const gb = await analyzeGreenBelt(polygonGeoJSON);
+  return { multi: res, greenBelt: gb };
+}
+
 

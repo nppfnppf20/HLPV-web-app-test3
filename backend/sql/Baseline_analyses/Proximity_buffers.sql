@@ -60,12 +60,12 @@ BEGIN
 
         IF group_by IS NULL THEN
             sql := format(
-                'SELECT %s AS distance_m, %s AS group_key, count(*)::bigint AS feature_count\n                 FROM %s t\n                 WHERE %s',
+                'SELECT %s AS distance_m, %s AS group_key, count(*)::bigint AS feature_count FROM %s t WHERE %s',
                 dist, json_expr, layer_view, predicate
             );
         ELSE
             sql := format(
-                'SELECT %s AS distance_m, %s AS group_key, count(*)::bigint AS feature_count\n                 FROM %s t\n                 WHERE %s\n                 GROUP BY %s',
+                'SELECT %s AS distance_m, %s AS group_key, count(*)::bigint AS feature_count FROM %s t WHERE %s GROUP BY %s',
                 dist, json_expr, layer_view, predicate, group_by
             );
         END IF;
