@@ -21,6 +21,13 @@ export function buildConservationAreasQuery(geojsonPolygon) {
   return { text, values };
 }
 
+// Landscape analysis: Green Belt
+export function buildGreenBeltQuery(geojsonPolygon) {
+  const text = `SELECT * FROM analyze_green_belt($1);`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
 // Legacy function for backward compatibility (if needed)
 export function buildAnalysisQuery(geojsonPolygon) {
   // For now, redirect to the new heritage analysis

@@ -1,7 +1,7 @@
 <script>
   import { generateHeritageReport } from '../services/reportGenerator.js';
   
-  /** @type {{ listed_buildings?: any[], conservation_areas?: any[] } | null} */
+  /** @type {{ listed_buildings?: any[], conservation_areas?: any[], green_belt?: any[] } | null} */
   export let data = null;
   
   /** @type {() => void} */
@@ -12,6 +12,7 @@
   $: designationSummary = report?.designationSummary || [];
   $: riskAssessment = report?.riskAssessment;
   $: triggeredRules = riskAssessment?.triggeredRules || [];
+  $: greenBelt = data?.green_belt || [];
 
   function handleClose() {
     onClose();
@@ -59,6 +60,17 @@
             {/each}
           </div>
         </div>
+
+        <!-- Ecology Summary Section (Green Belt) -->
+        {#if greenBelt && greenBelt.length > 0}
+          <div class="report-section">
+            <h3>🌿 Ecology: Green Belt</h3>
+            <div class="designation-summary">
+              <p class="summary-item">{greenBelt.length} Green Belt area{greenBelt.length > 1 ? 's' : ''} identified.</p>
+              <p class="summary-item">{greenBelt.filter(g => g.on_site).length} on site; {greenBelt.filter(g => !g.on_site && g.within_100m).length} within 100m.</p>
+            </div>
+          </div>
+        {/if}
 
         <!-- Triggered Rules Section -->
         {#if triggeredRules.length > 0}
