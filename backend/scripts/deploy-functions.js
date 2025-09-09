@@ -8,20 +8,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function deployFunctions() {
+  const useSsl = process.env.DATABASE_URL && !/localhost|127\.0\.0\.1/i.test(process.env.DATABASE_URL);
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: useSsl ? { rejectUnauthorized: false } : false
   });
 
   try {
     console.log('Deploying PostgreSQL functions...');
     
-    // Read the SQL file
-    const sqlPath = join(__dirname, '..', 'sql', 'create_analysis_functions.sql');
-    const sql = readFileSync(sqlPath, 'utf8');
-    
-    // Execute the SQL
-    await pool.query(sql);
+    // Read and deploy heritage SQL
+    const heritageSqlPath = join(__dirname, '..', 'sql', 'heritage analysis', 'create_analysis_functions.sql');
+    const heritageSql = readFileSync(heritageSqlPath, 'utf8');
+    await pool.query(heritageSql);
+
+    // Read and deploy landscape (Green Belt) SQL, if present
+    try {
+      const greenBeltSqlPath = join(__dirname, '..', 'sql', 'landscape_analysis', 'analyze_green_belt.sql');
+      const greenBeltSql = readFileSync(greenBeltSqlPath, 'utf8');
+      await pool.query(greenBeltSql);
+      console.log('✅ Green Belt analysis function deployed');
+    } catch (e) {
+      console.warn('ℹ️ Green Belt SQL not found or failed to deploy. Skipping. Reason:', e?.message || e);
+    }
     
     console.log('✅ PostgreSQL functions deployed successfully!');
     
@@ -61,3 +70,4 @@ deployFunctions().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
