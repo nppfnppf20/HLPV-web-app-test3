@@ -4,21 +4,16 @@
  * These rules determine risk levels and report content based on the presence 
  * and proximity of heritage assets to the development site.
  * 
- * Risk Levels (in order of severity):
- * - SHOWSTOPPER: Development likely not viable without major redesign
- * - EXTREMELY_HIGH_RISK: Major constraints, extensive specialist input required
- * - HIGH_RISK: Significant constraints, specialist assessment required
- * - MEDIUM_HIGH_RISK: Moderate constraints, careful design required
- * - LOW_RISK: Minimal constraints, standard mitigation measures
+ * Uses centralized 0-7 risk scoring system:
+ * 7 = SHOWSTOPPER: Development likely not viable without major redesign
+ * 6 = EXTREMELY_HIGH: Major constraints, extensive specialist input required
+ * 5 = HIGH: Significant constraints, specialist assessment required
+ * 4 = MEDIUM_HIGH: Moderate constraints, careful design required
+ * 1 = LOW: Minimal constraints, standard mitigation measures
+ * 0 = NO_RISK: No heritage constraints
  */
 
-export const RISK_LEVELS = {
-  SHOWSTOPPER: 'showstopper',
-  EXTREMELY_HIGH_RISK: 'extremely_high_risk',
-  HIGH_RISK: 'high_risk', 
-  MEDIUM_HIGH_RISK: 'medium_high_risk',
-  LOW_RISK: 'low_risk'
-};
+import { RISK_SCORES } from './riskLevels.js';
 
 /**
  * RULE 1: Grade I Listed Building On-Site (SHOWSTOPPER)
@@ -36,7 +31,7 @@ export function checkGradeIOnSite(buildings) {
   if (gradeIOnSite.length > 0) {
     return {
       triggered: true,
-      level: RISK_LEVELS.SHOWSTOPPER,
+      level: RISK_SCORES.SHOWSTOPPER,
       rule: 'Grade I On-Site',
       findings: `${gradeIOnSite.length} Grade I listed building(s) found on development site`,
       impact: 'Development directly affects buildings of exceptional national importance',
@@ -69,7 +64,7 @@ export function checkConservationAreaOnSite(conservationAreas) {
   if (onSiteAreas.length > 0) {
     return {
       triggered: true,
-      level: RISK_LEVELS.EXTREMELY_HIGH_RISK,
+      level: RISK_SCORES.EXTREMELY_HIGH,
       rule: 'Conservation Area On-Site',
       findings: `Development site intersects with ${onSiteAreas.length} conservation area${onSiteAreas.length > 1 ? 's' : ''}`,
       impact: 'Development within conservation area requires preservation or enhancement of character and appearance',
@@ -106,7 +101,7 @@ export function checkGradeIWithin100m(buildings) {
   if (gradeIClose.length > 0) {
     return {
       triggered: true,
-      level: RISK_LEVELS.HIGH_RISK,
+      level: RISK_SCORES.HIGH,
       rule: 'Grade I Within 100m',
       findings: `${gradeIClose.length} Grade I listed building(s) within 100m of site`,
       impact: 'Development may significantly affect the setting of exceptional heritage assets',
@@ -141,7 +136,7 @@ export function checkGradeIWithin500m(buildings) {
   if (gradeIWider.length > 0) {
     return {
       triggered: true,
-      level: RISK_LEVELS.HIGH_RISK,
+      level: RISK_SCORES.HIGH,
       rule: 'Grade I Within 500m',
       findings: `${gradeIWider.length} Grade I listed building(s) within 500m of site`,
       impact: 'Development may affect wider setting of exceptional heritage assets',
@@ -181,7 +176,7 @@ export function checkGradeIIOnSite(buildings) {
     
     return {
       triggered: true,
-      level: RISK_LEVELS.HIGH_RISK,
+      level: RISK_SCORES.HIGH,
       rule: 'Grade II/II* On-Site',
       findings: `${gradeIIOnSite.length} Grade II or II* listed building(s) found on development site`,
       gradeBreakdown,
@@ -224,7 +219,7 @@ export function checkAnyGradeWithin100m(buildings) {
     
     return {
       triggered: true,
-      level: RISK_LEVELS.MEDIUM_HIGH_RISK,
+      level: RISK_SCORES.MEDIUM_HIGH,
       rule: 'Listed Buildings Within 100m',
       findings: `${buildingsClose.length} listed building(s) within 100m of site`,
       gradeBreakdown,
@@ -287,7 +282,7 @@ export function processHeritageRules(analysisData) {
   
   return {
     rules: triggeredRules,
-    overallRisk: triggeredRules.length > 0 ? triggeredRules[0].level : RISK_LEVELS.LOW_RISK,
+    overallRisk: triggeredRules.length > 0 ? triggeredRules[0].level : RISK_SCORES.NO_RISK,
     buildings,
     conservationAreas
   };

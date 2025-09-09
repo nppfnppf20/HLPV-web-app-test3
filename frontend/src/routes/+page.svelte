@@ -1,7 +1,6 @@
 <script>
   import Map from '$lib/components/Map.svelte';
   import HeritageResults from '$lib/components/Results ribbons/HeritageResults.svelte';
-  import ReportGenerator from '$lib/components/ReportGenerator.svelte';
   import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
   import { analyzeHeritage, analyzeGreenBelt, analyzeMulti } from '$lib/services/api.js';
   
@@ -15,8 +14,6 @@
   let errorMsg = '';
   /** @type {boolean} */
   let loading = false;
-  /** @type {boolean} */
-  let showReport = false;
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
@@ -42,13 +39,6 @@
     }
   }
 
-  function openReport() {
-    showReport = true;
-  }
-
-  function closeReport() {
-    showReport = false;
-  }
 </script>
 
 <h1>Draw an area to analyze</h1>
@@ -71,46 +61,4 @@
   />
 {/if}
 
-{#if result && !loading && !errorMsg}
-  <div class="report-button-container">
-    <button class="generate-report-btn" on:click={openReport}>
-      📄 Generate Report
-    </button>
-  </div>
-{/if}
 
-{#if showReport}
-  <ReportGenerator 
-    data={{ ...result, green_belt: greenBelt || [] }} 
-    onClose={closeReport}
-  />
-{/if}
-
-<style>
-  .report-button-container {
-    display: flex;
-    justify-content: center;
-    margin: 2rem 0;
-  }
-
-  .generate-report-btn {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .generate-report-btn:hover {
-    background: #2563eb;
-  }
-
-  .generate-report-btn:active {
-    transform: translateY(1px);
-  }
-</style>
