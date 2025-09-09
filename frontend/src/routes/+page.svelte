@@ -2,6 +2,7 @@
   import Map from '$lib/components/Map.svelte';
   import HeritageResults from '$lib/components/Results ribbons/HeritageResults.svelte';
   import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
+  import ReportGeneratorModal from '$lib/components/Modals/reportgeneratormodal.svelte';
   import { analyzeHeritage, analyzeGreenBelt, analyzeMulti } from '$lib/services/api.js';
   
   /** @type {Record<string, any> | null} */
@@ -14,6 +15,10 @@
   let errorMsg = '';
   /** @type {boolean} */
   let loading = false;
+
+  let showReportModal = false;
+  function openReport() { showReportModal = true; }
+  function closeReport() { showReportModal = false; }
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
@@ -44,6 +49,10 @@
 <h1>Draw an area to analyze</h1>
 <Map onPolygonDrawn={handlePolygonDrawn} />
 
+<div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+  <button class="btn btn--primary btn--lg" on:click={openReport} disabled={!result || loading}>Generate Report</button>
+</div>
+
 <HeritageResults 
   data={result} 
   title="Heritage Analysis Results"
@@ -59,6 +68,10 @@
     {loading}
     error={errorMsg}
   />
+{/if}
+
+{#if showReportModal}
+  <ReportGeneratorModal data={result} onClose={closeReport} />
 {/if}
 
 
