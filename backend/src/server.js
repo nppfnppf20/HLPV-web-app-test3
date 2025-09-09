@@ -6,8 +6,7 @@ import {
   buildAnalysisQuery, 
   buildHeritageAnalysisQuery, 
   buildListedBuildingsQuery, 
-  buildConservationAreasQuery,
-  buildGreenBeltQuery
+  buildConservationAreasQuery 
 } from './queries.js';
 
 const app = express();
@@ -88,41 +87,6 @@ app.post('/analyze/conservation-areas', async (req, res) => {
   } catch (error) {
     console.error('Conservation areas analysis error:', error);
     res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Green Belt analysis endpoint
-app.post('/analyze/green-belt', async (req, res) => {
-  try {
-    const { polygon } = req.body;
-    if (!polygon) {
-      return res.status(400).json({ error: 'polygon is required (GeoJSON Polygon or MultiPolygon)' });
-    }
-
-    const { text, values } = buildGreenBeltQuery(polygon);
-    const result = await pool.query(text, values);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Green Belt analysis error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Temporary endpoint to list database tables
-app.get('/tables', async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT 
-        table_name,
-        table_type
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      ORDER BY table_name;
-    `);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error listing tables:', error);
-    res.status(500).json({ error: 'Failed to list tables' });
   }
 });
 

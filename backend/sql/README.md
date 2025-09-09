@@ -51,7 +51,7 @@ The functions expect these tables with underscore naming:
 
 Or manually execute the SQL:
 ```bash
-psql $DATABASE_URL -f "sql/heritage analysis/create_analysis_functions.sql"
+psql $DATABASE_URL -f sql/create_analysis_functions.sql
 ```
 
 ## API Endpoints
@@ -71,4 +71,3 @@ All endpoints expect:
   }
 }
 ```
-
