@@ -61,7 +61,7 @@
   error={errorMsg}
 />
 
-{#if greenBelt}
+{#if greenBelt || aonb}
   <LandscapeResults
     {greenBelt}
     {aonb}

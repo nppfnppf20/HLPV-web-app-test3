@@ -61,6 +61,8 @@
   $: items = greenBelt || [];
   $: total = items.length;
   $: onSiteCount = items.filter(i => i.on_site).length;
+  $: within1kmCount = items.filter(i => i.dist_m <= 1000).length;
+  $: greenBeltStatus = onSiteCount > 0 ? 'Yes' : (within1kmCount > 0 ? 'Nearby' : 'No');
 
   // AONB computed
   $: aonbNearest = aonb?.nearest_within_1km || null;
@@ -77,8 +79,10 @@
       .map(([k,v]) => ({ distance_m: Number(k), count: Number(v) }))
       .sort((a,b) => a.distance_m - b.distance_m);
   })();
-  $: aonbTotalFeatures = aonbBufferTotals.reduce((sum, row) => sum + row.count, 0);
   $: aonbOnSite = aonbBufferTotals.find(row => row.distance_m === 0)?.count || 0;
+  $: aonbWithin1km = aonbBufferTotals.find(row => row.distance_m === 1000)?.count || 0;
+  $: aonbStatus = aonbOnSite > 0 ? 'Yes' : (aonbWithin1km > 0 ? 'Nearby' : 'No');
+  $: aonbOnSiteName = aonbOnSite > 0 && aonb?.buffers ? aonb.buffers.find(row => row.distance_m === 0)?.name : null;
 </script>
 
 {#if loading}
@@ -99,24 +103,31 @@
     <div class="results-summary">
       <div class="summary-card">
         <h3>Green Belt</h3>
-        <p class="summary-value">{total}</p>
-        {#if onSiteCount > 0}
+        <p class="summary-value">{greenBeltStatus}</p>
+        {#if greenBeltStatus === 'Yes'}
           <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
-            {onSiteCount} on site
+            On site
+          </p>
+        {:else if greenBeltStatus === 'Nearby'}
+          <p style="font-size: 0.875rem; color: #d97706; margin: 0.25rem 0 0 0;">
+            Within 1km
           </p>
         {/if}
       </div>
       
       <div class="summary-card">
         <h3>AONB</h3>
-        <p class="summary-value">{aonbTotalFeatures}</p>
-        {#if aonbOnSite > 0}
+        <p class="summary-value">{aonbStatus}</p>
+        {#if aonbStatus === 'Yes'}
           <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
-            {aonbOnSite} intersecting
+            On site
           </p>
-        {/if}
-        {#if aonbNearest && aonbTotalFeatures === 0}
+        {:else if aonbStatus === 'Nearby'}
           <p style="font-size: 0.875rem; color: #d97706; margin: 0.25rem 0 0 0;">
+            Within 1km
+          </p>
+        {:else if aonbNearest}
+          <p style="font-size: 0.875rem; color: #6b7280; margin: 0.25rem 0 0 0;">
             Nearest: {aonbNearest.distance_m}m away
           </p>
         {/if}
@@ -124,7 +135,7 @@
     </div>
 
     <!-- Green Belt Section -->
-    {#if items.length > 0}
+    {#if greenBeltStatus !== 'No'}
       <div class="results-section">
         <div 
           class="section-header clickable" 
@@ -191,50 +202,67 @@
     {/if}
 
     <!-- AONB Section -->
-    <div class="results-section" style="margin-top: 1rem;">
-      <div 
-        class="section-header clickable" 
-        on:click={() => aonbExpanded = !aonbExpanded}
-        on:keydown={(e) => e.key === 'Enter' && (aonbExpanded = !aonbExpanded)}
-        role="button"
-        tabindex="0"
-        aria-expanded={aonbExpanded}
-      >
-        <div class="section-header-content">
-          <span class="section-icon">🏞️</span>
-          <h3 class="section-title">Areas of Outstanding Natural Beauty (AONB)</h3>
-          {#if aonbNearest}
-            <span class="section-subtitle">Nearest within 1 km: {aonbNearest.name} ({aonbNearest.distance_m} m {aonbNearest.direction})</span>
-          {/if}
-        </div>
-        <span class="expand-icon">{aonbExpanded ? '▼' : '▶'}</span>
-      </div>
-
-      {#if aonbExpanded}
-        <div class="results-grid">
-          <div class="result-item">
-            <div class="item-header">
-              <h4 class="item-title">Buffer summary</h4>
-            </div>
-            <div class="item-details">
-              {#if aonbBufferTotals.length > 0}
-                {#each aonbBufferTotals as row}
-                  <div class="detail-row">
-                    <span class="detail-label">Within {row.distance_m === 0 ? 'intersect' : `${row.distance_m} m`}</span>
-                    <span class="detail-value">{row.count}</span>
-                  </div>
-                {/each}
-              {:else}
-                <div class="detail-row">
-                  <span class="detail-label">No AONB features found</span>
-                  <span class="detail-value">0</span>
-                </div>
-              {/if}
-            </div>
+    {#if aonbStatus !== 'No' || aonbNearest}
+      <div class="results-section" style="margin-top: 1rem;">
+        <div 
+          class="section-header clickable" 
+          on:click={() => aonbExpanded = !aonbExpanded}
+          on:keydown={(e) => e.key === 'Enter' && (aonbExpanded = !aonbExpanded)}
+          role="button"
+          tabindex="0"
+          aria-expanded={aonbExpanded}
+        >
+          <div class="section-header-content">
+            <span class="section-icon">🏞️</span>
+            <h3 class="section-title">Areas of Outstanding Natural Beauty</h3>
+            {#if aonbStatus === 'Yes'}
+              <span class="section-subtitle">On site</span>
+            {:else if aonbStatus === 'Nearby'}
+              <span class="section-subtitle">Within 1km</span>
+            {:else if aonbNearest}
+              <span class="section-subtitle">{aonbNearest.name} - {aonbNearest.distance_m}m {aonbNearest.direction || ''}</span>
+            {/if}
           </div>
+          <span class="expand-icon">{aonbExpanded ? '▼' : '▶'}</span>
         </div>
-      {/if}
-    </div>
+
+        {#if aonbExpanded}
+          <div class="results-grid">
+            {#if aonbStatus === 'Yes' && aonbOnSiteName}
+              <div class="result-item">
+                <div class="item-header">
+                  <h4 class="item-title">{aonbOnSiteName}</h4>
+                </div>
+                <div class="item-details">
+                  <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value">On site</span>
+                  </div>
+                </div>
+              </div>
+            {:else if aonbNearest && aonbStatus === 'No'}
+              <div class="result-item">
+                <div class="item-header">
+                  <h4 class="item-title">{aonbNearest.name}</h4>
+                </div>
+                <div class="item-details">
+                  <div class="detail-row">
+                    <span class="detail-label">Distance</span>
+                    <span class="detail-value">{aonbNearest.distance_m}m</span>
+                  </div>
+                  {#if aonbNearest.direction}
+                    <div class="detail-row">
+                      <span class="detail-label">Direction</span>
+                      <span class="detail-value">{aonbNearest.direction}</span>
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 {/if}
 
