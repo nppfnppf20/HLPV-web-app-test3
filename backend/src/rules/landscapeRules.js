@@ -6,13 +6,10 @@ import { RISK_SCORES } from './riskLevels.js';
  * Assesses landscape constraints including:
  * - Areas of Outstanding Natural Beauty (AONB)
  * - Green Belt
+ */
 
 /**
  * RULE: AONB Proximity Assessment
- * 
- * PURPOSE: Assess impact on Areas of Outstanding Natural Beauty
- * TRIGGER: AONB intersecting site or within proximity
- * RATIONALE: AONBs have statutory protection; development must conserve and enhance natural beauty
  * 
  * Risk Levels:
  * - On-site (intersects): EXTREMELY_HIGH (6)
@@ -24,10 +21,8 @@ import { RISK_SCORES } from './riskLevels.js';
  * - Within 3km: LOW (1)
  * - Within 5km: LOW (1)
  */
-/** @param {{ buffers?: any[], nearest_within_1km?: { name?: string, distance_m?: number, direction?: string } }} aonbData */
 export function checkAONBConstraints(aonbData) {
   const buffers = aonbData?.buffers || [];
-  const nearest = aonbData?.nearest_within_1km;
   
   // Define distance thresholds and their risk levels
   const distanceRisks = [
@@ -61,15 +56,10 @@ export function checkAONBConstraints(aonbData) {
 /**
  * RULE: Green Belt On-Site
  * 
- * PURPOSE: Assess Green Belt constraints
- * TRIGGER: Green Belt intersecting site
- * RATIONALE: Green Belt policy aims to prevent urban sprawl and maintain openness
- * 
  * Risk Level:
  * - On-site (intersects): MEDIUM_HIGH (4)
  * - All other distances: NO_RISK (0)
  */
-/** @param {any[]} greenBeltData */
 export function checkGreenBeltConstraints(greenBeltData) {
   const onSite = (greenBeltData || []).filter(g => g.on_site);
   

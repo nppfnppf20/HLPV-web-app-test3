@@ -3,8 +3,7 @@
  * 
  * Unified 0-7 risk scale used across all constraint layers:
  * - Heritage (listed buildings, conservation areas, scheduled monuments)
- * - Ecology (Green Belt, SSSI, ancient woodland, etc.)
- * - Landscape (AONB, National Parks)
+ * - Landscape (AONB, Green Belt)
  * - Flood risk, transport, utilities, etc.
  * 
  * Higher numbers = higher risk/more constraints
@@ -89,23 +88,4 @@ export function getRiskColor(score) {
  */
 export function getRiskDescription(score) {
   return RISK_DESCRIPTIONS[score] || 'Unknown risk level';
-}
-
-/**
- * Convert legacy string-based risk levels to numeric scores
- * @param {string} legacyLevel - Old string-based risk level
- * @returns {number} Numeric risk score
- */
-export function convertLegacyRiskLevel(legacyLevel) {
-  /** @type {Record<string, number>} */
-  const mapping = {
-    'showstopper': RISK_SCORES.SHOWSTOPPER,
-    'extremely_high_risk': RISK_SCORES.EXTREMELY_HIGH,
-    'high_risk': RISK_SCORES.HIGH,
-    'medium_high_risk': RISK_SCORES.MEDIUM_HIGH,
-    'medium_risk': RISK_SCORES.MEDIUM,
-    'medium_low_risk': RISK_SCORES.MEDIUM_LOW,
-    'low_risk': RISK_SCORES.LOW
-  };
-  return mapping[legacyLevel] || RISK_SCORES.NO_RISK;
 }

@@ -9,7 +9,8 @@ import {
   buildConservationAreasQuery,
   buildGreenBeltQuery,
   buildAONBQuery,
-  buildMultiLayerQueries
+  buildMultiLayerQueries,
+  enhanceWithRiskAssessment
 } from './queries.js';
 
 const app = express();
@@ -173,6 +174,45 @@ app.post('/analyze/multi', async (req, res) => {
     res.json(payload);
   } catch (error) {
     console.error('Multi-layer analysis error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST endpoint for enhanced analysis with risk assessment
+app.post('/analyze/enhanced', async (req, res) => {
+  try {
+    const { polygon } = req.body;
+    
+    if (!polygon) {
+      return res.status(400).json({ error: 'Missing polygon data' });
+    }
+    
+    // For now, we'll do heritage analysis + AONB as a demo
+    // This will be expanded to include all layers
+    const heritageQuery = buildHeritageAnalysisQuery(polygon);
+    const aonbQuery = buildAONBQuery(polygon);
+    const greenBeltQuery = buildGreenBeltQuery(polygon);
+    
+    // Execute all queries in parallel
+    const [heritageResult, aonbResult, greenBeltResult] = await Promise.all([
+      pool.query(heritageQuery.text, heritageQuery.values),
+      pool.query(aonbQuery.text, aonbQuery.values),
+      pool.query(greenBeltQuery.text, greenBeltQuery.values)
+    ]);
+    
+    // Combine spatial data
+    const spatialData = {
+      heritage: heritageResult.rows[0]?.analysis_result || {},
+      aonb: aonbResult.rows[0]?.result || null,
+      green_belt: greenBeltResult.rows || []
+    };
+    
+    // Enhance with risk assessment
+    const enhancedResult = await enhanceWithRiskAssessment(spatialData);
+    
+    res.json(enhancedResult);
+  } catch (error) {
+    console.error('Enhanced analysis error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

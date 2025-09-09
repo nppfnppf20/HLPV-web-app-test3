@@ -1,6 +1,8 @@
 // Heritage analysis using PostgreSQL functions
 // These functions analyze listed buildings and conservation areas relative to a drawn polygon
 
+import { processAllRules } from './rules/index.js';
+
 // Main analysis function that returns detailed heritage analysis
 export function buildHeritageAnalysisQuery(geojsonPolygon) {
   const text = `SELECT analyze_site_heritage($1) as analysis_result;`;
@@ -28,12 +30,6 @@ export function buildGreenBeltQuery(geojsonPolygon) {
   return { text, values };
 }
 
-// Legacy function for backward compatibility (if needed)
-export function buildAnalysisQuery(geojsonPolygon) {
-  // For now, redirect to the new heritage analysis
-  return buildHeritageAnalysisQuery(geojsonPolygon);
-}
-
 // AONB analysis (JSON result)
 export function buildAONBQuery(geojsonPolygon) {
   const text = `SELECT analysis.analyze_aonb($1::jsonb) AS result;`;
@@ -41,12 +37,16 @@ export function buildAONBQuery(geojsonPolygon) {
   return { text, values };
 }
 
+// Enhanced multi-layer analysis with risk assessment
+export function buildEnhancedAnalysisQuery(geojsonPolygon) {
+  // This will be expanded to include all spatial analysis + risk assessment
+  return buildHeritageAnalysisQuery(geojsonPolygon);
+}
+
 // Generic multi-layer analyze: map layer keys to query builders that return JSON
 export function buildMultiLayerQueries(geojsonPolygon, layers) {
   const layerMap = {
-    // existing heritage layers could be added here when migrated to JSON-returning functions
     aonb: (p) => buildAONBQuery(p)
-    // green_belt, listed_building, conservation_areas can be added when standardized
   };
 
   return layers
@@ -54,4 +54,23 @@ export function buildMultiLayerQueries(geojsonPolygon, layers) {
     .map((key) => ({ key, builder: layerMap[key](geojsonPolygon) }));
 }
 
+// Legacy function for backward compatibility (if needed)
+export function buildAnalysisQuery(geojsonPolygon) {
+  return buildHeritageAnalysisQuery(geojsonPolygon);
+}
 
+// Process analysis results through rules engine
+export async function enhanceWithRiskAssessment(analysisData) {
+  // Apply rules to spatial analysis results
+  const ruleResults = processAllRules(analysisData);
+  
+  return {
+    spatial_data: analysisData,
+    rule_results: ruleResults,
+    report_data: {
+      // Placeholder for future report generation
+      summary: "Rules processed, no aggregation yet",
+      recommendations: []
+    }
+  };
+}

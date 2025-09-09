@@ -92,4 +92,18 @@ export async function analyzeHeritageAndLandscape(polygonGeoJSON) {
   return { multi: res, greenBelt: gb };
 }
 
+// Enhanced analysis with risk assessment
+export async function analyzeEnhanced(polygonGeoJSON) {
+  const res = await fetch(`${BASE_URL}/analyze/enhanced`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Enhanced analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 
