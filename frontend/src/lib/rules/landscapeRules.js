@@ -49,24 +49,7 @@ export function checkAONBConstraints(aonbData) {
         triggered: true,
         level: risk.level,
         rule: risk.rule,
-        findings: risk.distance === 0 
-          ? `Development site intersects with AONB: ${buffer.name}`
-          : `AONB within ${risk.distance}m: ${buffer.name}`,
-        impact: risk.distance === 0
-          ? 'Development within AONB must conserve and enhance natural beauty'
-          : 'Development may affect the setting and views to/from AONB',
-        requirements: risk.distance === 0 ? [
-          'Landscape and Visual Impact Assessment (LVIA) required',
-          'Demonstrate development conserves and enhances natural beauty',
-          'Early consultation with Natural England and Local Planning Authority',
-          'Consider alternative locations outside AONB',
-          'Exceptional circumstances may be required for major development'
-        ] : [
-          'Landscape and Visual Impact Assessment recommended',
-          'Assess visual impact from AONB viewpoints',
-          'Design should minimize impact on AONB setting',
-          'Consider landscaping and screening measures'
-        ],
+        distance: risk.distance,
         aonbName: buffer.name
       };
     }
@@ -95,14 +78,7 @@ export function checkGreenBeltConstraints(greenBeltData) {
       triggered: true,
       level: RISK_SCORES.MEDIUM_HIGH,
       rule: 'Green Belt On-Site',
-      findings: `${onSite.length} Green Belt area(s) intersect the development site`,
-      impact: 'Development within Green Belt is constrained; policy tests will apply',
-      requirements: [
-        'Demonstrate very special circumstances or comply with NPPF Green Belt policy',
-        'Assess harm to openness and purposes of the Green Belt',
-        'Early engagement with local planning authority recommended'
-      ],
-      areas: onSite
+      count: onSite.length
     };
   }
   
