@@ -16,17 +16,41 @@ async function deployFunctions() {
   try {
     console.log('Deploying PostgreSQL functions...');
     
-    // Execute landscape analysis SQLs first (so referenced functions exist)
-    const aonbPath = join(__dirname, '..', 'sql', 'landscape_analysis', 'analyze_AONB.sql');
-    try {
-      const aonbSql = readFileSync(aonbPath, 'utf8');
-      await pool.query(aonbSql);
-      console.log('✅ analyze_aonb created/updated');
-    } catch (e) {
-      console.warn('⚠️ Could not execute analyze_AONB.sql:', e?.message || e);
+    // Deploy heritage analysis functions first
+    const heritageFiles = [
+      'analyze_listed_buildings.sql',
+      'analyze_conservation_areas.sql'
+    ];
+    
+    for (const file of heritageFiles) {
+      const path = join(__dirname, '..', 'sql', 'heritage_analysis', file);
+      try {
+        const sql = readFileSync(path, 'utf8');
+        await pool.query(sql);
+        console.log(`✅ ${file} deployed`);
+      } catch (e) {
+        console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
+      }
+    }
+    
+    // Deploy landscape analysis functions
+    const landscapeFiles = [
+      'analyze_green_belt.sql',
+      'analyze_AONB.sql'
+    ];
+    
+    for (const file of landscapeFiles) {
+      const path = join(__dirname, '..', 'sql', 'landscape_analysis', file);
+      try {
+        const sql = readFileSync(path, 'utf8');
+        await pool.query(sql);
+        console.log(`✅ ${file} deployed`);
+      } catch (e) {
+        console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
+      }
     }
 
-    // Read and execute the combined analysis functions (heritage + landscape aggregator)
+    // Finally, deploy the aggregator functions (depends on all individual functions)
     const combinedPath = join(__dirname, '..', 'sql', 'create_analysis_functions.sql');
     const combinedSql = readFileSync(combinedPath, 'utf8');
     await pool.query(combinedSql);
