@@ -17,6 +17,8 @@
   let listedBuildingsLayer = null;
   /** @type {any} */
   let layerControl = null;
+  /** @type {any} */
+  let legend = null;
 
   /** @param {string} href */
   onMount(async () => {
@@ -67,6 +69,41 @@
       },
       { collapsed: false }
     ).addTo(map);
+
+    // Custom legend
+    legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.innerHTML = `
+        <div class="legend-content">
+          <h4>Heritage Assets</h4>
+          <div class="legend-section">
+            <div class="legend-title">Listed Buildings</div>
+            <div class="legend-item">
+              <span class="legend-symbol" style="background: #dc2626;"></span>
+              Grade I
+            </div>
+            <div class="legend-item">
+              <span class="legend-symbol" style="background: #ea580c;"></span>
+              Grade II*
+            </div>
+            <div class="legend-item">
+              <span class="legend-symbol" style="background: #8b5cf6;"></span>
+              Grade II
+            </div>
+          </div>
+          <div class="legend-section">
+            <div class="legend-title">Conservation Areas</div>
+            <div class="legend-item">
+              <span class="legend-symbol" style="background: rgba(14, 165, 233, 0.15); border: 2px solid #0ea5e9;"></span>
+              Conservation Area
+            </div>
+          </div>
+        </div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
 
     // leaflet-draw types aren't available, cast to any to access Draw
     const Lany = /** @type {any} */ (L);
@@ -129,5 +166,74 @@
 </script>
 
 <div bind:this={mapContainer} class="map-container"></div>
+
+<style>
+  .map-container {
+    height: 500px;
+    width: 100%;
+  }
+
+  :global(.map-legend) {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    min-width: 180px;
+  }
+
+  :global(.map-legend .legend-content h4) {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 4px;
+  }
+
+  :global(.map-legend .legend-section) {
+    margin-bottom: 12px;
+  }
+
+  :global(.map-legend .legend-section:last-child) {
+    margin-bottom: 0;
+  }
+
+  :global(.map-legend .legend-title) {
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  :global(.map-legend .legend-item) {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    color: #6b7280;
+  }
+
+  :global(.map-legend .legend-item:last-child) {
+    margin-bottom: 0;
+  }
+
+  :global(.map-legend .legend-symbol) {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  :global(.map-legend .legend-symbol[style*="border"]) {
+    border-radius: 3px;
+    width: 16px;
+    height: 12px;
+  }
+</style>
 
 
