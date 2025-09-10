@@ -10,7 +10,7 @@ import {
   buildLandscapeAnalysisQuery
 } from './queries.js';
 // Use rich, UI-aligned rules on the server
-import { processHeritageRules } from './rules/heritageRulesRich.js';
+import { processHeritageRules } from './rules/heritage/index.js';
 import { processLandscapeRules } from './rules/landscape/index.js';
 
 const app = express();

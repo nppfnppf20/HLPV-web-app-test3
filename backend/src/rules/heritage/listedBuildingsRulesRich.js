@@ -1,17 +1,4 @@
-/**
- * HERITAGE IMPACT ASSESSMENT RULES (Rich, UI-aligned)
- *
- * These rules mirror the client-side rules to produce human-readable
- * findings, impact, and requirements along with a string-based risk level.
- */
-
-export const RISK_LEVELS = {
-  SHOWSTOPPER: 'showstopper',
-  EXTREMELY_HIGH_RISK: 'extremely_high_risk',
-  HIGH_RISK: 'high_risk',
-  MEDIUM_HIGH_RISK: 'medium_high_risk',
-  LOW_RISK: 'low_risk'
-};
+import { RISK_LEVELS } from './riskLevels.js';
 
 /** @param {any[]} buildings */
 export function checkGradeIOnSite(buildings) {
@@ -31,29 +18,6 @@ export function checkGradeIOnSite(buildings) {
       'Consider alternative site locations'
     ],
     buildings: gradeIOnSite
-  };
-}
-
-/** @param {any[]} conservationAreas */
-export function checkConservationAreaOnSite(conservationAreas) {
-  const onSiteAreas = (conservationAreas || []).filter(a => a.on_site);
-  if (onSiteAreas.length === 0) return { triggered: false };
-  return {
-    id: 'conservation_area_on_site',
-    triggered: true,
-    level: RISK_LEVELS.EXTREMELY_HIGH_RISK,
-    rule: 'Conservation Area On-Site',
-    findings: `Development site intersects with ${onSiteAreas.length} conservation area${onSiteAreas.length > 1 ? 's' : ''}`,
-    impact: 'Development within conservation area requires preservation or enhancement of character and appearance',
-    requirements: [
-      'Conservation Area Consent required for most development',
-      'Heritage and Design Statement essential',
-      'Conservation officer pre-application consultation mandatory',
-      'Design must preserve or enhance conservation area character',
-      'Materials and detailing must be sympathetic to historic context',
-      'Detailed historical and architectural analysis required'
-    ],
-    areas: onSiteAreas
   };
 }
 
@@ -154,13 +118,11 @@ export function checkAnyGradeWithin100m(buildings) {
 }
 
 /**
- * Runs all heritage rules in priority order and returns triggered rules
- * @param {any} analysisData
+ * Process all listed buildings rules and return triggered ones
+ * @param {{ listed_buildings?: any[] }} analysisData
  */
-export function processHeritageRules(analysisData) {
+export function processListedBuildingsRules(analysisData) {
   const buildings = analysisData?.listed_buildings || [];
-  const conservationAreas = analysisData?.conservation_areas || [];
-
   const triggeredRules = [];
 
   // Order: most serious first
@@ -172,25 +134,13 @@ export function processHeritageRules(analysisData) {
     checkAnyGradeWithin100m
   ];
 
-  const conservationRules = [
-    checkConservationAreaOnSite
-  ];
-
   for (const rule of buildingRules) {
     const result = rule(buildings);
-    if (result.triggered) triggeredRules.push(result);
-  }
-  for (const rule of conservationRules) {
-    const result = rule(conservationAreas);
     if (result.triggered) triggeredRules.push(result);
   }
 
   return {
     rules: triggeredRules,
-    overallRisk: triggeredRules.length > 0 ? triggeredRules[0].level : RISK_LEVELS.LOW_RISK,
-    buildings,
-    conservationAreas
+    buildings
   };
 }
-
-

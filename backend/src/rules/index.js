@@ -1,5 +1,5 @@
-import { processHeritageRules } from './heritageRules.js';
-import { processLandscapeRules } from './landscapeRules.js';
+import { processHeritageRules } from './heritage/index.js';
+import { processLandscapeRules } from './landscape/index.js';
 
 /**
  * Process all rules for a given analysis dataset
