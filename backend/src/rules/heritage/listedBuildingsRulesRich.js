@@ -12,10 +12,8 @@ export function checkGradeIOnSite(buildings) {
     findings: `${gradeIOnSite.length} Grade I listed building(s) found on development site`,
     impact: 'Development directly affects buildings of exceptional national importance',
     requirements: [
-      'Immediate specialist heritage consultation required',
-      'Historic England pre-application advice essential',
-      'Development proposal likely requires fundamental redesign',
-      'Consider alternative site locations'
+      'N/a - this consitutes a showstopping designation', 
+      'Development on this site is not viable'
     ],
     buildings: gradeIOnSite
   };
@@ -33,10 +31,8 @@ export function checkGradeIWithin100m(buildings) {
     findings: `${gradeIClose.length} Grade I listed building(s) within 100m of site`,
     impact: 'Development may significantly affect the setting of exceptional heritage assets',
     requirements: [
-      'Heritage Impact Assessment focusing on setting required',
-      'Visual impact assessment from multiple viewpoints',
-      'Historic England consultation recommended',
-      'Design must demonstrate no harm to setting'
+      'N/a - this consitutes a showstopping designation', 
+      'Development on this site is not viable'
     ],
     buildings: gradeIClose
   };
@@ -54,10 +50,11 @@ export function checkGradeIWithin500m(buildings) {
     findings: `${gradeIWider.length} Grade I listed building(s) within 500m of site`,
     impact: 'Development may affect wider setting of exceptional heritage assets',
     requirements: [
-      'Setting assessment required with focus on inter-visibility',
-      'Landscape and visual impact assessment',
-      'Consider cumulative effects with other development',
-      'Historic England consultation may be required'
+      'Development highly unlikely to be viable',
+      'Heritage assessment essential',
+      'Consider alternative site locations'
+      
+      
     ],
     buildings: gradeIWider
   };
