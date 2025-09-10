@@ -21,6 +21,13 @@ export function buildConservationAreasQuery(geojsonPolygon) {
   return { text, values };
 }
 
+// Landscape analysis using PostgreSQL functions
+export function buildLandscapeAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_landscape($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
 // Legacy function for backward compatibility (if needed)
 export function buildAnalysisQuery(geojsonPolygon) {
   // For now, redirect to the new heritage analysis

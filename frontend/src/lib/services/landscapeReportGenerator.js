@@ -1,5 +1,5 @@
-// Frontend report builder: consume server-provided rules and overallRisk
-// Removed references to non-existent report content/policy modules
+// Frontend landscape report builder: consume server-provided rules and overallRisk
+// Handles landscape-specific risk assessment and report formatting
 
 const RISK_CONFIG = {
   7: { label: 'SHOWSTOPPER', description: 'Development likely not viable without major redesign', color: '#dc2626', bgColor: '#fef2f2' },
@@ -31,15 +31,10 @@ function resolveRiskSummary(overallRisk) {
 }
 
 /**
- * Build UI-ready heritage report from backend payload
  * @param {any} backend
  */
-/**
- * @param {any} backend
- */
-export function buildHeritageReport(backend) {
-  const buildings = backend?.listed_buildings ?? [];
-  const areas = backend?.conservation_areas ?? [];
+export function buildLandscapeReport(backend) {
+  const greenBelt = backend?.green_belt ?? [];
   const rules = Array.isArray(backend?.rules) ? backend.rules : [];
   const overallRisk = backend?.overallRisk ?? 0;
 
@@ -54,20 +49,13 @@ export function buildHeritageReport(backend) {
 
   // Simple designation summaries for UI
   const designationSummary = (() => {
-    const bCount = buildings.length;
-    const aCount = areas.length;
-    const onSiteB = buildings.filter((/** @type {any} */ b) => b.on_site).length;
-    const onSiteA = areas.filter((/** @type {any} */ a) => a.on_site).length;
+    const gbCount = greenBelt.length;
+    const onSiteGb = greenBelt.filter((/** @type {any} */ gb) => gb.on_site).length;
     const parts = [];
     parts.push(
-      bCount > 0
-        ? `${bCount} listed building${bCount > 1 ? 's' : ''}${onSiteB > 0 ? ` (${onSiteB} on site)` : ''}`
-        : 'No listed buildings identified within the search area'
-    );
-    parts.push(
-      aCount > 0
-        ? `${aCount} conservation area${aCount > 1 ? 's' : ''}${onSiteA > 0 ? ` (${onSiteA} intersecting)` : ''}`
-        : 'No conservation areas identified within 1km'
+      gbCount > 0
+        ? `${gbCount} Green Belt area${gbCount > 1 ? 's' : ''}${onSiteGb > 0 ? ` (${onSiteGb} intersecting)` : ''}`
+        : 'No Green Belt areas identified within 5km'
     );
     return parts;
   })();
@@ -80,11 +68,11 @@ export function buildHeritageReport(backend) {
       triggeredRules
     },
     lists: {
-      buildings: { detailed: buildings, within1kmCount: buildings.filter((/** @type {any} */ b) => !b.on_site && b.dist_m <= 1000).length },
-      conservationAreas: { detailed: areas, within1kmCount: areas.filter((/** @type {any} */ a) => !a.on_site && a.dist_m <= 1000).length }
+      greenBelt: { 
+        detailed: greenBelt, 
+        within1kmCount: greenBelt.filter((/** @type {any} */ gb) => !gb.on_site && gb.within_1km).length 
+      }
     },
     metadata: backend?.metadata || {}
   };
 }
-
-

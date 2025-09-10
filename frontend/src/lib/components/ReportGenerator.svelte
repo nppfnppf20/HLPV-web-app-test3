@@ -1,5 +1,5 @@
 <script>
-  import { generateHeritageReport } from '../services/reportGenerator.js';
+  import { buildHeritageReport } from '../services/reportGenerator.js';
   
   /** @type {{ listed_buildings?: any[], conservation_areas?: any[] } | null} */
   export let data = null;
@@ -8,7 +8,7 @@
   export let onClose;
 
   // Generate report when data changes
-  $: report = data ? generateHeritageReport(data) : null;
+  $: report = data ? buildHeritageReport(data) : null;
   $: designationSummary = report?.designationSummary || [];
   $: riskAssessment = report?.riskAssessment;
   $: triggeredRules = riskAssessment?.triggeredRules || [];

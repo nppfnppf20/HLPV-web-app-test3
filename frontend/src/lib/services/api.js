@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 
 // Legacy analysis function (simple counts)
-export async function analyzePolygon(polygonGeoJSON) {
+export async function analyzePolygon(/** @type {any} */ polygonGeoJSON) {
   const res = await fetch(`${BASE_URL}/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -15,7 +15,7 @@ export async function analyzePolygon(polygonGeoJSON) {
 }
 
 // New detailed heritage analysis
-export async function analyzeHeritage(polygonGeoJSON) {
+export async function analyzeHeritage(/** @type {any} */ polygonGeoJSON) {
   const res = await fetch(`${BASE_URL}/analyze/heritage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -29,7 +29,7 @@ export async function analyzeHeritage(polygonGeoJSON) {
 }
 
 // Listed buildings analysis
-export async function analyzeListedBuildings(polygonGeoJSON) {
+export async function analyzeListedBuildings(/** @type {any} */ polygonGeoJSON) {
   const res = await fetch(`${BASE_URL}/analyze/listed-buildings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -43,7 +43,7 @@ export async function analyzeListedBuildings(polygonGeoJSON) {
 }
 
 // Conservation areas analysis
-export async function analyzeConservationAreas(polygonGeoJSON) {
+export async function analyzeConservationAreas(/** @type {any} */ polygonGeoJSON) {
   const res = await fetch(`${BASE_URL}/analyze/conservation-areas`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -52,6 +52,20 @@ export async function analyzeConservationAreas(polygonGeoJSON) {
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Conservation areas analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
+// Landscape analysis (Green Belt, AONB, etc.)
+export async function analyzeLandscape(/** @type {any} */ polygonGeoJSON) {
+  const res = await fetch(`${BASE_URL}/analyze/landscape`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Landscape analysis failed: ${res.status} ${text}`);
   }
   return res.json();
 }

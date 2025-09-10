@@ -1,11 +1,14 @@
 <script>
   import Map from '$lib/components/Map.svelte';
   import AnalysisResults from '$lib/components/AnalysisResults.svelte';
+  import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
   import ReportGenerator from '$lib/components/ReportGenerator.svelte';
-  import { analyzeHeritage } from '$lib/services/api.js';
+  import { analyzeHeritage, analyzeLandscape } from '$lib/services/api.js';
   
   /** @type {Record<string, any> | null} */
   let result = null;
+  /** @type {Record<string, any> | null} */
+  let landscapeResult = null;
   /** @type {string} */
   let errorMsg = '';
   /** @type {boolean} */
@@ -17,10 +20,17 @@
   async function handlePolygonDrawn(geometry) {
     errorMsg = '';
     result = null;
+    landscapeResult = null;
     loading = true;
     
     try {
-      result = await analyzeHeritage(geometry);
+      // Run both heritage and landscape analysis in parallel
+      const [heritageData, landscapeData] = await Promise.all([
+        analyzeHeritage(geometry),
+        analyzeLandscape(geometry)
+      ]);
+      result = heritageData;
+      landscapeResult = landscapeData;
     } catch (/** @type {any} */ err) {
       errorMsg = err?.message || String(err);
     } finally {
@@ -46,6 +56,16 @@
   {loading}
   error={errorMsg}
 />
+
+{#if landscapeResult}
+  <LandscapeResults 
+    greenBelt={landscapeResult?.green_belt}
+    aonb={null}
+    title="Landscape Analysis Results"
+    {loading}
+    error={errorMsg}
+  />
+{/if}
 
 {#if result && !loading && !errorMsg}
   <div class="report-button-container">

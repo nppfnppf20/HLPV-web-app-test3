@@ -195,3 +195,33 @@ BEGIN
   RETURN combined_result;
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+-- Combined landscape analysis function that calls landscape individual functions
+CREATE OR REPLACE FUNCTION analyze_site_landscape(polygon_geojson TEXT)
+RETURNS JSON AS $$
+DECLARE
+  green_belt_result JSON;
+  aonb_result JSON;
+  combined_result JSON;
+BEGIN
+  -- Get Green Belt analysis
+  SELECT json_agg(row_to_json(t)) INTO green_belt_result
+  FROM (
+    SELECT * FROM analyze_green_belt(polygon_geojson)
+  ) t;
+
+  -- Get AONB analysis (placeholder for future implementation)
+  -- SELECT json_agg(row_to_json(t)) INTO aonb_result
+  -- FROM (
+  --   SELECT * FROM analyze_aonb(polygon_geojson)
+  -- ) t;
+
+  -- Combine results
+  SELECT json_build_object(
+    'green_belt', COALESCE(green_belt_result, '[]'::json)
+    -- 'aonb', COALESCE(aonb_result, '[]'::json)
+  ) INTO combined_result;
+
+  RETURN combined_result;
+END;
+$$ LANGUAGE plpgsql STABLE;
