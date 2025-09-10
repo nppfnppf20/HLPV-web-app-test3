@@ -11,7 +11,7 @@ import {
 } from './queries.js';
 // Use rich, UI-aligned rules on the server
 import { processHeritageRules } from './rules/heritageRulesRich.js';
-import { processLandscapeRules } from './rules/landscapeRulesRich.js';
+import { processLandscapeRules } from './rules/landscape/index.js';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -126,25 +126,41 @@ app.post('/analyze/landscape', async (req, res) => {
     // Extract the JSON result from the PostgreSQL function
     const analysisResult = result.rows[0]?.analysis_result || {};
 
+    // Debug: log landscape layer counts to verify data flow
+    try {
+      const gbArr = Array.isArray(analysisResult.green_belt) ? analysisResult.green_belt : [];
+      const aonbArr = Array.isArray(analysisResult.aonb) ? analysisResult.aonb : [];
+      console.log('[Landscape] green_belt count:', gbArr.length, 'on_site:', gbArr.filter((x) => x?.on_site).length, 'within_1km:', gbArr.filter((x) => x?.within_1km).length);
+      console.log('[Landscape] aonb count:', aonbArr.length, 'on_site:', aonbArr.filter((x) => x?.on_site).length, 'within_1km:', aonbArr.filter((x) => x?.within_1km).length);
+    } catch {}
+
     // Compute landscape rules and overall risk on the server
     const rulesAssessment = processLandscapeRules(analysisResult);
 
     // Build enriched response for the frontend
     const response = {
       green_belt: analysisResult.green_belt || [],
+      aonb: analysisResult.aonb || [],
       rules: rulesAssessment.rules || [],
       overallRisk: rulesAssessment.overallRisk || 0,
       metadata: {
         generatedAt: new Date().toISOString(),
-        totalRulesProcessed: 2, // Green Belt rules count
+        totalRulesProcessed: 10, // 2 Green Belt + 8 AONB rule checks
         rulesTriggered: (rulesAssessment.rules || []).length,
-        rulesVersion: 'landscape-rules-v1'
+        rulesVersion: 'landscape-rules-v2'
       }
     };
 
     res.json(response);
   } catch (error) {
-    console.error('Landscape analysis error:', error);
+    // Log detailed Postgres error information when available
+    console.error('Landscape analysis error:', {
+      message: error?.message,
+      detail: error?.detail,
+      hint: error?.hint,
+      position: error?.position,
+      stack: error?.stack
+    });
     res.status(500).json({ error: 'Internal server error' });
   }
 });

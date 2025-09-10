@@ -45,6 +45,35 @@
   function closeReport() {
     showReport = false;
   }
+
+  // Derive AONB data into the shape expected by LandscapeResults (buffers + nearest)
+  /** @type {{ buffers?: any[], nearest_within_1km?: { name?: string, distance_m?: number, direction?: string } } | null} */
+  $: aonbUi = (() => {
+    const arr = landscapeResult?.aonb || [];
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+
+    /** @type {any[]} */
+    const onSite = arr.filter((/** @type {any} */ a) => a.on_site);
+    /** @type {any[]} */
+    const within1km = arr.filter((/** @type {any} */ a) => !a.on_site && a.within_1km);
+
+    const nearest = within1km.length > 0
+      ? within1km.reduce((/** @type {any} */ min, /** @type {any} */ a) => (a.dist_m < min.dist_m ? a : min), within1km[0])
+      : null;
+
+    /** @type {{ distance_m: number, feature_count: number, name?: string }[]} */
+    const buffers = [
+      { distance_m: 0, feature_count: onSite.length, name: onSite[0]?.name },
+      { distance_m: 1000, feature_count: within1km.length }
+    ];
+
+    /** @type {{ buffers?: any[], nearest_within_1km?: { name?: string, distance_m?: number, direction?: string } }} */
+    const shaped = { buffers };
+    if (nearest) {
+      shaped.nearest_within_1km = { name: nearest.name, distance_m: nearest.dist_m, direction: nearest.direction };
+    }
+    return shaped;
+  })();
 </script>
 
 <h1>Draw an area to analyze</h1>
@@ -60,7 +89,7 @@
 {#if landscapeResult}
   <LandscapeResults 
     greenBelt={landscapeResult?.green_belt}
-    aonb={null}
+    aonb={landscapeResult?.aonb}
     title="Landscape Analysis Results"
     {loading}
     error={errorMsg}

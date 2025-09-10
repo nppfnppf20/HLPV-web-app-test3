@@ -1,88 +1,97 @@
--- Schema and thin view
-CREATE SCHEMA IF NOT EXISTS analysis;
+-- PostgreSQL function for AONB spatial analysis
+-- Analyzes Areas of Outstanding Natural Beauty relative to a drawn polygon
+-- Returns features that are on-site or within up to 5km, with distance buckets
 
-CREATE OR REPLACE VIEW analysis.aonb_features_v AS
+CREATE OR REPLACE FUNCTION analyze_aonb(polygon_geojson TEXT)
+RETURNS TABLE (
+  id INTEGER,
+  name TEXT,
+  dist_m INTEGER,
+  on_site BOOLEAN,
+  within_50m BOOLEAN,
+  within_100m BOOLEAN,
+  within_250m BOOLEAN,
+  within_500m BOOLEAN,
+  within_1km BOOLEAN,
+  within_3km BOOLEAN,
+  within_5km BOOLEAN,
+  direction TEXT
+) AS $$
+WITH
+-- Convert input GeoJSON polygon to geometry
+site AS (
+  SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(polygon_geojson), 4326)) AS geom
+),
+
+-- Transform to British National Grid (27700) for accurate distance calculations
+site_metric AS (
+  SELECT ST_Transform(geom, 27700) AS geom FROM site
+),
+
+-- Reference point for azimuth calculation
+site_ref AS (
+  SELECT sm.geom, ST_PointOnSurface(sm.geom) AS ref_pt FROM site_metric sm
+),
+
+-- AONB polygons (adjust table/columns as appropriate)
+-- Source from public.aonb table (27700-aware)
+aonb_polys AS (
+  SELECT
+    ST_MakeValid(
+      CASE WHEN ST_SRID(a.geom) = 27700 THEN a.geom ELSE ST_Transform(a.geom, 27700) END
+    ) AS geom,
+    a."OBJECTID" AS id,
+    a."NAME" AS name
+  FROM public."AONB" a
+  WHERE a.geom IS NOT NULL
+),
+
+with_measures AS (
+  SELECT
+    p.id,
+    p.name,
+    ROUND(ST_Distance(sr.geom, p.geom))::INTEGER               AS dist_m,
+    ST_Intersects(sr.geom, p.geom)                             AS on_site,
+    ST_DWithin(sr.geom, p.geom, 50.0)                          AS within_50m,
+    ST_DWithin(sr.geom, p.geom, 100.0)                         AS within_100m,
+    ST_DWithin(sr.geom, p.geom, 250.0)                         AS within_250m,
+    ST_DWithin(sr.geom, p.geom, 500.0)                         AS within_500m,
+    ST_DWithin(sr.geom, p.geom, 1000.0)                        AS within_1km,
+    ST_DWithin(sr.geom, p.geom, 3000.0)                        AS within_3km,
+    ST_DWithin(sr.geom, p.geom, 5000.0)                        AS within_5km,
+    degrees(ST_Azimuth(sr.ref_pt, ST_ClosestPoint(p.geom, sr.geom))) AS az_deg
+  FROM aonb_polys p
+  CROSS JOIN site_ref sr
+)
+
 SELECT
-  "OBJECTID"::bigint AS id,
-  geom                AS geom,
-  "NAME"::text        AS name
-FROM public."AONB";
+  m.id,
+  m.name,
+  m.dist_m,
+  m.on_site,
+  m.within_50m,
+  m.within_100m,
+  m.within_250m,
+  m.within_500m,
+  m.within_1km,
+  m.within_3km,
+  m.within_5km,
+  CASE
+    WHEN m.on_site THEN 'N/A'
+    WHEN m.az_deg >= 337.5 OR m.az_deg < 22.5  THEN 'N'
+    WHEN m.az_deg >= 22.5  AND m.az_deg < 67.5  THEN 'NE'
+    WHEN m.az_deg >= 67.5  AND m.az_deg < 112.5 THEN 'E'
+    WHEN m.az_deg >= 112.5 AND m.az_deg < 157.5 THEN 'SE'
+    WHEN m.az_deg >= 157.5 AND m.az_deg < 202.5 THEN 'S'
+    WHEN m.az_deg >= 202.5 AND m.az_deg < 247.5 THEN 'SW'
+    WHEN m.az_deg >= 247.5 AND m.az_deg < 292.5 THEN 'W'
+    WHEN m.az_deg >= 292.5 AND m.az_deg < 337.5 THEN 'NW'
+    ELSE NULL
+  END AS direction
+FROM with_measures m
+WHERE
+  m.on_site OR m.within_5km
+ORDER BY m.on_site DESC, m.dist_m ASC;
 
--- Helper: azimuth (radians) -> 16-wind compass direction
-CREATE OR REPLACE FUNCTION analysis.to_compass_dir(azimuth_rad double precision)
-RETURNS text
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
-DECLARE
-  deg double precision := degrees(azimuth_rad);
-  dirs text[] := ARRAY['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-  idx int;
-BEGIN
-  IF deg IS NULL THEN RETURN NULL; END IF;
-  deg := mod(deg + 360, 360);
-  idx := floor((deg + 11.25) / 22.5)::int % 16 + 1;
-  RETURN dirs[idx];
-END;
-$$;
+$$ LANGUAGE sql STABLE;
 
--- Example ad-hoc queries were removed; use the analysis.analyze_aonb(jsonb) function below.
-
--- Function: analysis.analyze_aonb(jsonb) -> jsonb
--- Returns proximity buffer summaries and nearest AONB within 1km
-CREATE OR REPLACE FUNCTION analysis.analyze_aonb(polygon_geojson jsonb)
-RETURNS jsonb
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  aoi_4326 geometry;
-  aoi_27700 geometry;
-  buffers jsonb := '[]'::jsonb;
-  nearest jsonb := NULL;
-BEGIN
-  -- Parse GeoJSON and transform to 27700
-  aoi_4326 := ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(polygon_geojson::text), 4326));
-  aoi_27700 := ST_Transform(aoi_4326, 27700);
-
-  -- Build buffers summary (flatten group_key->name)
-  SELECT COALESCE(
-    jsonb_agg(
-      jsonb_build_object(
-        'distance_m', s.distance_m,
-        'name', s.group_key->>'name',
-        'feature_count', s.feature_count
-      )
-      ORDER BY s.distance_m, s.group_key->>'name'
-    ), '[]'::jsonb)
-  INTO buffers
-  FROM analysis.proximity_summary(
-    aoi         => aoi_27700,
-    layer_view  => 'analysis.aonb_features_v'::regclass,
-    group_cols  => ARRAY['name'],
-    distances_m => ARRAY[0,20,100,250,500,1000,3000,5000]
-  ) AS s;
-
-  -- Nearest within 1km
-  WITH i AS (
-    SELECT aoi_27700 AS aoi_geom, ST_PointOnSurface(aoi_27700) AS aoi_pt
-  ), n AS (
-    SELECT
-      v.name,
-      ROUND(ST_Distance(v.geom, i.aoi_pt))::int AS distance_m,
-      analysis.to_compass_dir(ST_Azimuth(i.aoi_pt, ST_ClosestPoint(v.geom, i.aoi_pt))) AS direction
-    FROM analysis.aonb_features_v v
-    CROSS JOIN i
-    WHERE ST_DWithin(v.geom, i.aoi_geom, 1000)
-    ORDER BY ST_Distance(v.geom, i.aoi_pt)
-    LIMIT 1
-  )
-  SELECT to_jsonb(n.*)
-  INTO nearest
-  FROM n;
-
-  RETURN jsonb_build_object(
-    'buffers', buffers,
-    'nearest_within_1km', COALESCE(nearest, 'null'::jsonb)
-  );
-END;
-$$;

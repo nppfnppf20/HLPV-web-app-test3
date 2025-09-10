@@ -65,15 +65,31 @@
   $: greenBeltStatus = onSiteCount > 0 ? 'Yes' : (within1kmCount > 0 ? 'Nearby' : 'No');
 
   // AONB computed
-  $: aonbNearest = aonb?.nearest_within_1km || null;
+  $: aonbNearest = (() => {
+    // Support both legacy buffered shape and direct feature array
+    if (Array.isArray(aonb)) {
+      const candidates = aonb.filter((/** @type {any} */ a) => !a.on_site);
+      if (candidates.length === 0) return null;
+      const nearest = candidates.reduce((/** @type {any} */ min, /** @type {any} */ a) => (a.dist_m < min.dist_m ? a : min), candidates[0]);
+      return { name: nearest.name, distance_m: nearest.dist_m, direction: nearest.direction };
+    }
+    return aonb?.nearest_within_1km || null;
+  })();
   $: aonbBufferTotals = (() => {
     /** @type {Record<number, number>} */
     const map = {};
-    const arr = aonb?.buffers || [];
-    for (const row of arr) {
-      const d = Number(row?.distance_m) || 0;
-      const c = Number(row?.feature_count) || 0;
-      map[d] = (map[d] || 0) + c;
+    if (Array.isArray(aonb)) {
+      const onSiteCount = aonb.filter((/** @type {any} */ a) => a.on_site).length;
+      const within1kmCount = aonb.filter((/** @type {any} */ a) => !a.on_site && a.within_1km).length;
+      map[0] = onSiteCount;
+      map[1000] = within1kmCount;
+    } else {
+      const arr = aonb?.buffers || [];
+      for (const row of arr) {
+        const d = Number(row?.distance_m) || 0;
+        const c = Number(row?.feature_count) || 0;
+        map[d] = (map[d] || 0) + c;
+      }
     }
     return Object.entries(map)
       .map(([k,v]) => ({ distance_m: Number(k), count: Number(v) }))
@@ -83,6 +99,7 @@
   $: aonbWithin1km = aonbBufferTotals.find(row => row.distance_m === 1000)?.count || 0;
   $: aonbStatus = aonbOnSite > 0 ? 'Yes' : (aonbWithin1km > 0 ? 'Nearby' : 'No');
   $: aonbOnSiteName = aonbOnSite > 0 && aonb?.buffers ? aonb.buffers.find(row => row.distance_m === 0)?.name : null;
+  $: aonbItems = Array.isArray(aonb) ? aonb : [];
 </script>
 
 {#if loading}
@@ -228,7 +245,34 @@
 
         {#if aonbExpanded}
           <div class="results-grid">
-            {#if aonbStatus === 'Yes' && aonbOnSiteName}
+            {#if aonbItems.length > 0}
+              {#each aonbItems as area}
+                <div class="result-item">
+                  <div class="item-header">
+                    <h4 class="item-title">{area.name || `Area #${area.id}`}</h4>
+                    <div class="status-badges">
+                      {#each getStatusBadges(area) as badge}
+                        <span class="badge {badge.class}">{badge.text}</span>
+                      {/each}
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <div class="detail-row">
+                      <span class="detail-label">Distance</span>
+                      <span class="detail-value distance {getDistanceClass(area.dist_m, area.on_site)}">
+                        {formatDistance(area.dist_m, area.on_site)}
+                      </span>
+                    </div>
+                    {#if area.direction && area.direction !== 'N/A'}
+                      <div class="detail-row">
+                        <span class="detail-label">Direction</span>
+                        <span class="detail-value">{area.direction}</span>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            {:else if aonbStatus === 'Yes' && aonbOnSiteName}
               <div class="result-item">
                 <div class="item-header">
                   <h4 class="item-title">{aonbOnSiteName}</h4>

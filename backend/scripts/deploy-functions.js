@@ -16,12 +16,20 @@ async function deployFunctions() {
   try {
     console.log('Deploying PostgreSQL functions...');
     
-    // Read the SQL file
-    const sqlPath = join(__dirname, '..', 'sql', 'create_analysis_functions.sql');
-    const sql = readFileSync(sqlPath, 'utf8');
-    
-    // Execute the SQL
-    await pool.query(sql);
+    // Execute landscape analysis SQLs first (so referenced functions exist)
+    const aonbPath = join(__dirname, '..', 'sql', 'landscape_analysis', 'analyze_AONB.sql');
+    try {
+      const aonbSql = readFileSync(aonbPath, 'utf8');
+      await pool.query(aonbSql);
+      console.log('✅ analyze_aonb created/updated');
+    } catch (e) {
+      console.warn('⚠️ Could not execute analyze_AONB.sql:', e?.message || e);
+    }
+
+    // Read and execute the combined analysis functions (heritage + landscape aggregator)
+    const combinedPath = join(__dirname, '..', 'sql', 'create_analysis_functions.sql');
+    const combinedSql = readFileSync(combinedPath, 'utf8');
+    await pool.query(combinedSql);
     
     console.log('✅ PostgreSQL functions deployed successfully!');
     

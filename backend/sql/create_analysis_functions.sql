@@ -210,16 +210,16 @@ BEGIN
     SELECT * FROM analyze_green_belt(polygon_geojson)
   ) t;
 
-  -- Get AONB analysis (placeholder for future implementation)
-  -- SELECT json_agg(row_to_json(t)) INTO aonb_result
-  -- FROM (
-  --   SELECT * FROM analyze_aonb(polygon_geojson)
-  -- ) t;
+  -- Get AONB analysis
+  SELECT json_agg(row_to_json(t)) INTO aonb_result
+  FROM (
+    SELECT * FROM analyze_aonb(polygon_geojson)
+  ) t;
 
   -- Combine results
   SELECT json_build_object(
-    'green_belt', COALESCE(green_belt_result, '[]'::json)
-    -- 'aonb', COALESCE(aonb_result, '[]'::json)
+    'green_belt', COALESCE(green_belt_result, '[]'::json),
+    'aonb', COALESCE(aonb_result, '[]'::json)
   ) INTO combined_result;
 
   RETURN combined_result;
