@@ -19,6 +19,83 @@
   let layerControl = null;
   /** @type {any} */
   let legend = null;
+  /** @type {any} */
+  let riskFilterControl = null;
+
+  // Risk level filter state
+  /** @type {Record<string, boolean>} */
+  let riskFilters = {
+    'showstopper': true,
+    'extremely_high_risk': true,
+    'high_risk': true,
+    'medium_high_risk': true,
+    'medium_risk': true,
+    'medium_low_risk': true,
+    'low_risk': true
+  };
+
+  /**
+   * Determine risk level for a listed building based on its properties
+   * @param {any} building
+   */
+  function getBuildingRiskLevel(building) {
+    if (building.on_site) {
+      if (building.grade === 'I') return 'showstopper';
+      if (building.grade === 'II*' || building.grade === 'II') return 'high_risk';
+    }
+    
+    if (!building.on_site && building.dist_m <= 100) {
+      if (building.grade === 'I') return 'high_risk';
+      return 'medium_high_risk';
+    }
+    
+    if (!building.on_site && building.dist_m <= 500 && building.grade === 'I') {
+      return 'high_risk';
+    }
+    
+    return 'low_risk';
+  }
+
+  /**
+   * Determine risk level for a conservation area based on its properties
+   * @param {any} area
+   */
+  function getConservationAreaRiskLevel(area) {
+    if (area.on_site) return 'high_risk';
+    if (area.within_250m) return 'medium_risk';
+    return 'low_risk';
+  }
+
+  /**
+   * Check if a feature should be visible based on current risk filters
+   * @param {string} riskLevel
+   */
+  function isRiskLevelVisible(riskLevel) {
+    return riskFilters[riskLevel] === true;
+  }
+
+  /**
+   * Update layer visibility based on current risk filter settings
+   */
+  function updateLayerVisibility() {
+    if (!conservationAreasLayer || !listedBuildingsLayer) return;
+
+    // Refresh layers with current filter settings
+    if (heritageData?.conservation_areas) {
+      setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({ 
+        name: r.name,
+        riskLevel: getConservationAreaRiskLevel(r)
+      }), true);
+    }
+
+    if (heritageData?.listed_buildings) {
+      setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({ 
+        name: r.name, 
+        grade: r.grade,
+        riskLevel: getBuildingRiskLevel(r)
+      }), true);
+    }
+  }
 
   /** @param {string} href */
   onMount(async () => {
@@ -99,11 +176,94 @@
               Conservation Area
             </div>
           </div>
+          <div class="legend-section">
+            <div class="legend-title">Risk Levels</div>
+            <div class="legend-note">Features are filtered by risk level. Use the Risk Filter control above to toggle visibility.</div>
+            <div class="legend-item">
+              <span class="legend-dot" style="color: #dc2626;">●</span>
+              Showstopper
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="color: #ea580c;">●</span>
+              High Risk
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="color: #d97706;">●</span>
+              Medium-High
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="color: #f59e0b;">●</span>
+              Medium Risk
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="color: #059669;">●</span>
+              Low Risk
+            </div>
+          </div>
         </div>
       `;
       return div;
     };
     legend.addTo(map);
+
+    // Create risk filter control
+    riskFilterControl = L.control({ position: 'topleft' });
+    riskFilterControl.onAdd = function() {
+      const div = L.DomUtil.create('div', 'risk-filter-control');
+      div.innerHTML = `
+        <div class="risk-filter-content">
+          <h4>Risk Level Filter</h4>
+          <div class="risk-filter-options">
+            <label class="risk-filter-item">
+              <input type="checkbox" id="risk-showstopper" checked>
+              <span class="risk-label showstopper">Showstopper</span>
+            </label>
+            <label class="risk-filter-item">
+              <input type="checkbox" id="risk-extremely_high_risk" checked>
+              <span class="risk-label extremely-high">Extremely High</span>
+            </label>
+            <label class="risk-filter-item">
+              <input type="checkbox" id="risk-high_risk" checked>
+              <span class="risk-label high">High Risk</span>
+            </label>
+            <label class="risk-filter-item">
+              <input type="checkbox" id="risk-medium_high_risk" checked>
+              <span class="risk-label medium-high">Medium-High</span>
+            </label>
+            <label class="risk-filter-item">
+              <input type="checkbox" id="risk-medium_risk" checked>
+              <span class="risk-label medium">Medium Risk</span>
+            </label>
+            <label class="risk-filter-item">
+              <input type="checkbox" id="risk-medium_low_risk" checked>
+              <span class="risk-label medium-low">Medium-Low</span>
+            </label>
+            <label class="risk-filter-item">
+              <input type="checkbox" id="risk-low_risk" checked>
+              <span class="risk-label low">Low Risk</span>
+            </label>
+          </div>
+        </div>
+      `;
+      
+      // Add event listeners for checkboxes
+      Object.keys(riskFilters).forEach(riskLevel => {
+        const checkbox = div.querySelector(`#risk-${riskLevel}`);
+        if (checkbox) {
+          checkbox.addEventListener('change', () => {
+            riskFilters[riskLevel] = checkbox.checked;
+            updateLayerVisibility();
+          });
+        }
+      });
+      
+      // Prevent map interaction when clicking on control
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      
+      return div;
+    };
+    riskFilterControl.addTo(map);
 
     // leaflet-draw types aren't available, cast to any to access Draw
     const Lany = /** @type {any} */ (L);
@@ -141,27 +301,45 @@
    * @param {import('leaflet').GeoJSON | null} layer
    * @param {any[]} rows
    * @param {(r: any) => Record<string, any>} propsMapper
+   * @param {boolean} applyRiskFilter
    */
-  function setLayerData(layer, rows, propsMapper = (r) => r) {
+  function setLayerData(layer, rows, propsMapper = (r) => r, applyRiskFilter = false) {
     if (!layer) return;
     layer.clearLayers();
     if (!Array.isArray(rows) || rows.length === 0) return;
-    const features = rows
-      .filter((r) => r?.geometry)
-      .map((r) => ({
-        type: 'Feature',
-        geometry: r.geometry,
-        properties: propsMapper(r)
-      }));
+    
+    let filteredRows = rows.filter((r) => r?.geometry);
+    
+    // Apply risk level filtering if requested
+    if (applyRiskFilter) {
+      filteredRows = filteredRows.filter((r) => {
+        const props = propsMapper(r);
+        return props.riskLevel ? isRiskLevelVisible(props.riskLevel) : true;
+      });
+    }
+    
+    const features = filteredRows.map((r) => ({
+      type: 'Feature',
+      geometry: r.geometry,
+      properties: propsMapper(r)
+    }));
+    
     if (features.length > 0) layer.addData({ type: 'FeatureCollection', features });
   }
 
   $: if (heritageData?.conservation_areas) {
-    setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({ name: r.name }));
+    setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({ 
+      name: r.name,
+      riskLevel: getConservationAreaRiskLevel(r)
+    }), true);
   }
 
   $: if (heritageData?.listed_buildings) {
-    setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({ name: r.name, grade: r.grade }));
+    setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({ 
+      name: r.name, 
+      grade: r.grade,
+      riskLevel: getBuildingRiskLevel(r)
+    }), true);
   }
 </script>
 
@@ -233,6 +411,94 @@
     border-radius: 3px;
     width: 16px;
     height: 12px;
+  }
+
+  :global(.map-legend .legend-note) {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-bottom: 6px;
+    font-style: italic;
+    line-height: 1.3;
+  }
+
+  :global(.map-legend .legend-dot) {
+    margin-right: 8px;
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  /* Risk Filter Control Styles */
+  :global(.risk-filter-control) {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    min-width: 160px;
+    margin-bottom: 10px;
+  }
+
+  :global(.risk-filter-control .risk-filter-content h4) {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 4px;
+  }
+
+  :global(.risk-filter-control .risk-filter-options) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  :global(.risk-filter-control .risk-filter-item) {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 11px;
+    color: #6b7280;
+  }
+
+  :global(.risk-filter-control .risk-filter-item input[type="checkbox"]) {
+    margin-right: 6px;
+    margin-top: 0;
+    cursor: pointer;
+  }
+
+  :global(.risk-filter-control .risk-label) {
+    font-weight: 500;
+  }
+
+  :global(.risk-filter-control .risk-label.showstopper) {
+    color: #dc2626;
+  }
+
+  :global(.risk-filter-control .risk-label.extremely-high) {
+    color: #b91c1c;
+  }
+
+  :global(.risk-filter-control .risk-label.high) {
+    color: #ea580c;
+  }
+
+  :global(.risk-filter-control .risk-label.medium-high) {
+    color: #d97706;
+  }
+
+  :global(.risk-filter-control .risk-label.medium) {
+    color: #f59e0b;
+  }
+
+  :global(.risk-filter-control .risk-label.medium-low) {
+    color: #84cc16;
+  }
+
+  :global(.risk-filter-control .risk-label.low) {
+    color: #059669;
   }
 </style>
 
