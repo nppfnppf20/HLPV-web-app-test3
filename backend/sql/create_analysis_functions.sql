@@ -61,3 +61,25 @@ BEGIN
   RETURN combined_result;
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+-- Agricultural land analysis function (separate category)
+CREATE OR REPLACE FUNCTION analyze_site_ag_land(polygon_geojson TEXT)
+RETURNS JSON AS $$
+DECLARE
+  ag_land_result JSON;
+  combined_result JSON;
+BEGIN
+  -- Get agricultural land analysis
+  SELECT json_agg(row_to_json(t)) INTO ag_land_result
+  FROM (
+    SELECT * FROM analyze_ag_land(polygon_geojson)
+  ) t;
+
+  -- Build result object
+  SELECT json_build_object(
+    'ag_land', COALESCE(ag_land_result, '[]'::json)
+  ) INTO combined_result;
+
+  RETURN combined_result;
+END;
+$$ LANGUAGE plpgsql STABLE;

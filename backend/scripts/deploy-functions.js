@@ -39,8 +39,24 @@ async function deployFunctions() {
       'analyze_AONB.sql'
     ];
     
-    for (const file of landscapeFiles) {
-      const path = join(__dirname, '..', 'sql', 'landscape_analysis', file);
+    // Deploy agricultural land analysis functions
+    const agLandFiles = [
+      'analyze_ag_land.sql'
+    ];
+    
+    // for (const file of landscapeFiles) {
+    //   const path = join(__dirname, '..', 'sql', 'landscape_analysis', file);
+    //   try {
+    //     const sql = readFileSync(path, 'utf8');
+    //     await pool.query(sql);
+    //     console.log(`✅ ${file} deployed`);
+    //   } catch (e) {
+    //     console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
+    //   }
+    // }
+    
+    for (const file of agLandFiles) {
+      const path = join(__dirname, '..', 'sql', 'Ag_land_analysis', file);
       try {
         const sql = readFileSync(path, 'utf8');
         await pool.query(sql);

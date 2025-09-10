@@ -28,6 +28,13 @@ export function buildLandscapeAnalysisQuery(geojsonPolygon) {
   return { text, values };
 }
 
+// Agricultural land analysis using PostgreSQL functions
+export function buildAgLandAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_ag_land($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
 // Legacy function for backward compatibility (if needed)
 export function buildAnalysisQuery(geojsonPolygon) {
   // For now, redirect to the new heritage analysis

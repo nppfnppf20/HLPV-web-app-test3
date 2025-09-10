@@ -70,4 +70,18 @@ export async function analyzeLandscape(/** @type {any} */ polygonGeoJSON) {
   return res.json();
 }
 
+// Agricultural land analysis (ALC grades and coverage)
+export async function analyzeAgLand(/** @type {any} */ polygonGeoJSON) {
+  const res = await fetch(`${BASE_URL}/analyze/ag-land`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Agricultural land analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 

@@ -2,13 +2,16 @@
   import Map from '$lib/components/Map.svelte';
   import AnalysisResults from '$lib/components/AnalysisResults.svelte';
   import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
+  import AgLandResults from '$lib/components/Results ribbons/Ag_landResults.svelte';
   import ReportGenerator from '$lib/components/ReportGenerator.svelte';
-  import { analyzeHeritage, analyzeLandscape } from '$lib/services/api.js';
+  import { analyzeHeritage, analyzeLandscape, analyzeAgLand } from '$lib/services/api.js';
   
   /** @type {Record<string, any> | null} */
   let result = null;
   /** @type {Record<string, any> | null} */
   let landscapeResult = null;
+  /** @type {Record<string, any> | null} */
+  let agLandResult = null;
   /** @type {string} */
   let errorMsg = '';
   /** @type {boolean} */
@@ -21,16 +24,19 @@
     errorMsg = '';
     result = null;
     landscapeResult = null;
+    agLandResult = null;
     loading = true;
     
     try {
-      // Run both heritage and landscape analysis in parallel
-      const [heritageData, landscapeData] = await Promise.all([
+      // Run heritage, landscape, and agricultural land analysis in parallel
+      const [heritageData, landscapeData, agLandData] = await Promise.all([
         analyzeHeritage(geometry),
-        analyzeLandscape(geometry)
+        analyzeLandscape(geometry),
+        analyzeAgLand(geometry)
       ]);
       result = heritageData;
       landscapeResult = landscapeData;
+      agLandResult = agLandData;
     } catch (/** @type {any} */ err) {
       errorMsg = err?.message || String(err);
     } finally {
@@ -91,6 +97,15 @@
     greenBelt={landscapeResult?.green_belt}
     aonb={landscapeResult?.aonb}
     title="Landscape Analysis Results"
+    {loading}
+    error={errorMsg}
+  />
+{/if}
+
+{#if agLandResult}
+  <AgLandResults 
+    agLand={agLandResult?.ag_land}
+    title="Agricultural Land Analysis Results"
     {loading}
     error={errorMsg}
   />

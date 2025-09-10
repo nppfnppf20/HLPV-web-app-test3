@@ -7,7 +7,8 @@ import {
   buildHeritageAnalysisQuery, 
   buildListedBuildingsQuery, 
   buildConservationAreasQuery,
-  buildLandscapeAnalysisQuery
+  buildLandscapeAnalysisQuery,
+  buildAgLandAnalysisQuery
 } from './queries.js';
 // Use rich, UI-aligned rules on the server
 import { processHeritageRules } from './rules/heritage/index.js';
@@ -155,6 +156,50 @@ app.post('/analyze/landscape', async (req, res) => {
   } catch (error) {
     // Log detailed Postgres error information when available
     console.error('Landscape analysis error:', {
+      message: error?.message,
+      detail: error?.detail,
+      hint: error?.hint,
+      position: error?.position,
+      stack: error?.stack
+    });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Agricultural land analysis endpoint
+app.post('/analyze/ag-land', async (req, res) => {
+  try {
+    const { polygon } = req.body;
+    if (!polygon) {
+      return res.status(400).json({ error: 'polygon is required (GeoJSON Polygon or MultiPolygon)' });
+    }
+
+    const { text, values } = buildAgLandAnalysisQuery(polygon);
+    const result = await pool.query(text, values);
+    
+    // Extract the JSON result from the PostgreSQL function
+    const analysisResult = result.rows[0]?.analysis_result || {};
+
+    // Debug: log ag land data to verify data flow
+    try {
+      const agLandArr = Array.isArray(analysisResult.ag_land) ? analysisResult.ag_land : [];
+      console.log('[AgLand] ag_land count:', agLandArr.length, 'grades found:', agLandArr.map(a => a.grade).join(', '));
+    } catch {}
+
+    // Return raw data (no rules processing for now - just display in ribbon)
+    const response = {
+      ag_land: analysisResult.ag_land || [],
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        dataSource: 'provisional_alc',
+        analysisType: 'agricultural-land-classification'
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    // Log detailed Postgres error information when available
+    console.error('Agricultural land analysis error:', {
       message: error?.message,
       detail: error?.detail,
       hint: error?.hint,
