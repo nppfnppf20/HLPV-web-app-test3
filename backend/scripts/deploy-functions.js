@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 async function deployFunctions() {
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
   });
 
   try {

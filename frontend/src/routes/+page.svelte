@@ -83,7 +83,7 @@
 </script>
 
 <h1>Draw an area to analyze</h1>
-<Map onPolygonDrawn={handlePolygonDrawn} />
+<Map onPolygonDrawn={handlePolygonDrawn} heritageData={result} />
 
 <AnalysisResults 
   data={result} 

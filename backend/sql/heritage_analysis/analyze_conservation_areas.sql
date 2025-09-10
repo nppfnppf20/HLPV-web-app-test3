@@ -2,6 +2,7 @@
 -- Analyzes conservation areas relative to a drawn polygon
 
 -- Function to analyze conservation areas relative to a drawn polygon
+DROP FUNCTION IF EXISTS analyze_conservation_areas(TEXT);
 CREATE OR REPLACE FUNCTION analyze_conservation_areas(polygon_geojson TEXT)
 RETURNS TABLE (
   id INTEGER,
@@ -9,7 +10,8 @@ RETURNS TABLE (
   dist_m INTEGER,
   on_site BOOLEAN,
   within_250m BOOLEAN,
-  direction TEXT
+  direction TEXT,
+  geometry JSON
 ) AS $$
 WITH
 -- Convert input GeoJSON polygon to geometry
@@ -50,6 +52,7 @@ with_bearing AS (
   SELECT
     p.id,
     p.name,
+    p.geom,
     ROUND(ST_Distance(sr.geom, p.geom))::INTEGER               AS dist_m,   -- rounded to nearest meter
     ST_Intersects(sr.geom, p.geom)                             AS on_site,  -- polygon intersection
     ST_DWithin(sr.geom, p.geom, 250.0)                         AS within_250m, -- flag for within 250m
@@ -75,7 +78,8 @@ SELECT
     WHEN wb.az_deg >= 247.5 AND wb.az_deg < 292.5 THEN 'W'
     WHEN wb.az_deg >= 292.5 AND wb.az_deg < 337.5 THEN 'NW'
     ELSE NULL
-  END AS direction
+  END AS direction,
+  ST_AsGeoJSON(ST_Transform(wb.geom, 4326))::json AS geometry
 FROM with_bearing wb
 WHERE
   wb.on_site

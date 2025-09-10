@@ -2,6 +2,7 @@
 -- Analyzes listed buildings relative to a drawn polygon
 
 -- Function to analyze listed buildings relative to a drawn polygon
+DROP FUNCTION IF EXISTS analyze_listed_buildings(TEXT);
 CREATE OR REPLACE FUNCTION analyze_listed_buildings(polygon_geojson TEXT)
 RETURNS TABLE (
   id INTEGER,
@@ -9,7 +10,8 @@ RETURNS TABLE (
   grade TEXT,
   dist_m INTEGER,
   on_site BOOLEAN,
-  direction TEXT
+  direction TEXT,
+  geometry JSON
 ) AS $$
 WITH
 -- Convert input GeoJSON polygon to geometry
@@ -73,7 +75,8 @@ SELECT
     WHEN wb.az_deg >= 247.5 AND wb.az_deg < 292.5 THEN 'W'
     WHEN wb.az_deg >= 292.5 AND wb.az_deg < 337.5 THEN 'NW'
     ELSE NULL
-  END AS direction
+  END AS direction,
+  ST_AsGeoJSON(ST_Transform(wb.geom, 4326))::json AS geometry
 FROM with_bearing wb
 WHERE
   wb.on_site

@@ -55,6 +55,22 @@ app.post('/analyze/heritage', async (req, res) => {
     // Extract the JSON result from the PostgreSQL function
     const analysisResult = result.rows[0]?.analysis_result || {};
 
+    // Enrich conservation areas with geometry if not present by joining back to source table
+    try {
+      const caRows = Array.isArray(analysisResult.conservation_areas) ? analysisResult.conservation_areas : [];
+      const ids = caRows.map((r) => r?.id).filter((v) => Number.isFinite(v));
+      if (ids.length > 0) {
+        const geoRes = await pool.query(
+          'SELECT c."OBJECTID" as id, ST_AsGeoJSON(ST_Transform(c.geom, 4326)) as geometry FROM public.conservation_area c WHERE c."OBJECTID" = ANY($1)',
+          [ids]
+        );
+        const idToGeom = new Map(geoRes.rows.map((r) => [r.id, r.geometry ? JSON.parse(r.geometry) : null]));
+        analysisResult.conservation_areas = caRows.map((r) => ({ ...r, geometry: r.geometry ?? idToGeom.get(r.id) }));
+      }
+    } catch (e) {
+      console.warn('Conservation areas geometry enrichment failed:', e?.message || e);
+    }
+
     // Compute heritage rules and overall risk on the server
     const rulesAssessment = processHeritageRules(analysisResult);
 
