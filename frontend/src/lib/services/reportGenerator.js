@@ -1,90 +1,91 @@
-// Frontend report builder: consume server-provided rules and overallRisk
-// Removed references to non-existent report content/policy modules
+// Main report aggregator: combines heritage and landscape reports
+// This is the primary entry point for all report generation
 
-const RISK_CONFIG = {
-  7: { label: 'SHOWSTOPPER', description: 'Development likely not viable without major redesign', color: '#dc2626', bgColor: '#fef2f2' },
-  6: { label: 'EXTREMELY HIGH RISK', description: 'Major constraints, extensive specialist input required', color: '#b91c1c', bgColor: '#fee2e2' },
-  5: { label: 'HIGH RISK', description: 'Significant constraints, specialist assessment required', color: '#ea580c', bgColor: '#fff7ed' },
-  4: { label: 'MEDIUM-HIGH RISK', description: 'Moderate constraints, careful design required', color: '#d97706', bgColor: '#fffbeb' },
-  3: { label: 'MEDIUM-HIGH RISK', description: 'Moderate constraints, careful design required', color: '#d97706', bgColor: '#fffbeb' },
-  2: { label: 'LOW RISK', description: 'Minimal constraints, standard mitigation measures', color: '#059669', bgColor: '#ecfdf5' },
-  1: { label: 'LOW RISK', description: 'Minimal constraints, standard mitigation measures', color: '#059669', bgColor: '#ecfdf5' },
-  0: { label: 'LOW RISK', description: 'Minimal constraints, standard mitigation measures', color: '#059669', bgColor: '#ecfdf5' }
-};
+import { buildHeritageReport } from './heritage/heritageReportGenerator.js';
+import { buildLandscapeReport } from './landscape/landscapeReportGenerator.js';
 
 /**
- * Resolve a risk summary object from either numeric or string overallRisk
- * @param {number | string} overallRisk
+ * Determine overall risk across multiple domains
+ * @param {string|number|null} heritageRisk 
+ * @param {string|number|null} landscapeRisk 
  */
-function resolveRiskSummary(overallRisk) {
-  const stringMap = {
-    showstopper: { label: 'SHOWSTOPPER', description: 'Development likely not viable without major redesign', color: '#dc2626', bgColor: '#fef2f2' },
-    extremely_high_risk: { label: 'EXTREMELY HIGH RISK', description: 'Major constraints, extensive specialist input required', color: '#b91c1c', bgColor: '#fee2e2' },
-    high_risk: { label: 'HIGH RISK', description: 'Significant constraints, specialist assessment required', color: '#ea580c', bgColor: '#fff7ed' },
-    medium_high_risk: { label: 'MEDIUM-HIGH RISK', description: 'Moderate constraints, careful design required', color: '#d97706', bgColor: '#fffbeb' },
-    low_risk: { label: 'LOW RISK', description: 'Minimal constraints, standard mitigation measures', color: '#059669', bgColor: '#ecfdf5' }
-  };
-  if (typeof overallRisk === 'string') {
-    return stringMap[/** @type {keyof typeof stringMap} */ (overallRisk)] || RISK_CONFIG[0];
+function determineOverallRisk(heritageRisk, landscapeRisk) {
+  // Risk hierarchy (highest to lowest)
+  const riskHierarchy = [
+    'showstopper',
+    'extremely_high_risk', 
+    'high_risk',
+    'medium_high_risk',
+    'medium_risk',
+    'medium_low_risk',
+    'low_risk'
+  ];
+  
+  const risks = [heritageRisk, landscapeRisk].filter(Boolean);
+  if (risks.length === 0) return 'low_risk';
+  
+  // Return the highest risk level found
+  for (const riskLevel of riskHierarchy) {
+    if (risks.includes(riskLevel)) return riskLevel;
   }
-  return RISK_CONFIG[/** @type {keyof typeof RISK_CONFIG} */ (overallRisk)] || RISK_CONFIG[0];
+  
+  return 'low_risk';
 }
 
 /**
- * Build UI-ready heritage report from backend payload
- * @param {any} backend
+ * Build combined heritage and landscape report
+ * @param {any} heritageData - Backend heritage analysis results
+ * @param {any} landscapeData - Backend landscape analysis results  
  */
-/**
- * @param {any} backend
- */
-export function buildHeritageReport(backend) {
-  const buildings = backend?.listed_buildings ?? [];
-  const areas = backend?.conservation_areas ?? [];
-  const rules = Array.isArray(backend?.rules) ? backend.rules : [];
-  const overallRisk = backend?.overallRisk ?? 0;
-
-  // Server already provides human-readable rule content
-  const triggeredRules = rules.map((/** @type {any} */ r) => ({
-    rule: r.rule,
-    level: r.level,
-    findings: r.findings,
-    impact: r.impact,
-    requirements: r.requirements || []
-  }));
-
-  // Simple designation summaries for UI
-  const designationSummary = (() => {
-    const bCount = buildings.length;
-    const aCount = areas.length;
-    const onSiteB = buildings.filter((/** @type {any} */ b) => b.on_site).length;
-    const onSiteA = areas.filter((/** @type {any} */ a) => a.on_site).length;
-    const parts = [];
-    parts.push(
-      bCount > 0
-        ? `${bCount} listed building${bCount > 1 ? 's' : ''}${onSiteB > 0 ? ` (${onSiteB} on site)` : ''}`
-        : 'No listed buildings identified within the search area'
-    );
-    parts.push(
-      aCount > 0
-        ? `${aCount} conservation area${aCount > 1 ? 's' : ''}${onSiteA > 0 ? ` (${onSiteA} intersecting)` : ''}`
-        : 'No conservation areas identified within 1km'
-    );
-    return parts;
-  })();
-
+export function buildCombinedReport(heritageData, landscapeData) {
+  const heritageReport = heritageData ? buildHeritageReport(heritageData) : null;
+  const landscapeReport = landscapeData ? buildLandscapeReport(landscapeData) : null;
+  
+  // Determine overall risk across both domains
+  const overallRisk = determineOverallRisk(
+    heritageReport?.riskAssessment?.overallRisk,
+    landscapeReport?.riskAssessment?.overallRisk
+  );
+  
+  // Combine triggered rules from both domains
+  const allTriggeredRules = [
+    ...(heritageReport?.riskAssessment?.triggeredRules || []),
+    ...(landscapeReport?.riskAssessment?.triggeredRules || [])
+  ];
+  
+  // Combine designation summaries
+  const combinedDesignationSummary = [
+    ...(heritageReport?.designationSummary || []),
+    ...(landscapeReport?.designationSummary || [])
+  ];
+  
   return {
-    designationSummary,
-    riskAssessment: {
+    heritage: heritageReport,
+    landscape: landscapeReport,
+    combined: {
       overallRisk,
-      riskSummary: resolveRiskSummary(overallRisk),
-      triggeredRules
+      designationSummary: combinedDesignationSummary,
+      triggeredRules: allTriggeredRules,
+      riskSummary: heritageReport?.riskAssessment?.riskSummary || landscapeReport?.riskAssessment?.riskSummary
     },
-    lists: {
-      buildings: { detailed: buildings, within1kmCount: buildings.filter((/** @type {any} */ b) => !b.on_site && b.dist_m <= 1000).length },
-      conservationAreas: { detailed: areas, within1kmCount: areas.filter((/** @type {any} */ a) => !a.on_site && a.dist_m <= 1000).length }
-    },
-    metadata: backend?.metadata || {}
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      sectionsIncluded: [
+        heritageData ? 'heritage' : null,
+        landscapeData ? 'landscape' : null
+      ].filter(Boolean),
+      totalRules: allTriggeredRules.length,
+      totalRulesProcessed: (heritageReport?.metadata?.totalRulesProcessed || 0) + (landscapeReport?.metadata?.totalRulesProcessed || 0),
+      rulesTriggered: allTriggeredRules.length,
+      rulesVersion: `combined-v1 (heritage: ${heritageReport?.metadata?.rulesVersion || 'n/a'}, landscape: ${landscapeReport?.metadata?.rulesVersion || 'n/a'})`,
+      heritageMetadata: heritageReport?.metadata,
+      landscapeMetadata: landscapeReport?.metadata
+    }
   };
 }
 
-
+/**
+ * Legacy function for backward compatibility - builds heritage report only
+ * @param {any} backend 
+ */
+export { buildHeritageReport } from './heritage/heritageReportGenerator.js';

@@ -1,6 +1,6 @@
 import { processListedBuildingsRules } from './listedBuildingsRulesRich.js';
 import { processConservationAreasRules } from './conservationAreasRulesRich.js';
-import { RISK_LEVELS } from './riskLevels.js';
+import { RISK_LEVELS } from '../riskLevels.js';
 
 /**
  * Aggregate heritage rules across listed buildings and conservation areas

@@ -1,4 +1,4 @@
-import { RISK_LEVELS } from './riskLevels.js';
+import { RISK_LEVELS } from '../riskLevels.js';
 
 /** @param {any[]} aonbAreas */
 export function checkAONBOnSite(aonbAreas) {

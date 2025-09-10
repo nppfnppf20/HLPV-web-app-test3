@@ -1,6 +1,6 @@
 import { processGreenBeltRules } from './greenBeltRulesRich.js';
 import { processAONBRules } from './aonbRulesRich.js';
-import { RISK_LEVELS } from './riskLevels.js';
+import { RISK_LEVELS } from '../riskLevels.js';
 
 /**
  * Aggregate landscape rules across layers

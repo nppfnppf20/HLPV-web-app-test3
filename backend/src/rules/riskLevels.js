@@ -1,3 +1,6 @@
+// Shared risk level definitions for all planning domains
+// This is the single source of truth for risk levels across heritage, landscape, and future domains
+
 export const RISK_LEVELS = {
   SHOWSTOPPER: 'showstopper',
   EXTREMELY_HIGH_RISK: 'extremely_high_risk',
@@ -7,5 +10,3 @@ export const RISK_LEVELS = {
   MEDIUM_LOW_RISK: 'medium_low_risk',
   LOW_RISK: 'low_risk'
 };
-
-

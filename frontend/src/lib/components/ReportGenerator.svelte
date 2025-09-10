@@ -1,17 +1,20 @@
 <script>
-  import { buildHeritageReport } from '../services/reportGenerator.js';
+  import { buildCombinedReport } from '../services/reportGenerator.js';
   
-  /** @type {{ listed_buildings?: any[], conservation_areas?: any[] } | null} */
-  export let data = null;
+  /** @type {any} */
+  export let heritageData = null;
+  
+  /** @type {any} */
+  export let landscapeData = null;
   
   /** @type {() => void} */
   export let onClose;
 
-  // Generate report when data changes
-  $: report = data ? buildHeritageReport(data) : null;
-  $: designationSummary = report?.designationSummary || [];
-  $: riskAssessment = report?.riskAssessment;
-  $: triggeredRules = riskAssessment?.triggeredRules || [];
+  // Generate combined report when data changes
+  $: report = (heritageData || landscapeData) ? buildCombinedReport(heritageData, landscapeData) : null;
+  $: designationSummary = report?.combined?.designationSummary || [];
+  $: riskAssessment = report?.combined || report?.heritage?.riskAssessment || report?.landscape?.riskAssessment;
+  $: triggeredRules = report?.combined?.triggeredRules || [];
 
   function handleClose() {
     onClose();

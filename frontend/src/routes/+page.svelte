@@ -96,7 +96,7 @@
   />
 {/if}
 
-{#if result && !loading && !errorMsg}
+{#if (result || landscapeResult) && !loading && !errorMsg}
   <div class="report-button-container">
     <button class="generate-report-btn" on:click={openReport}>
       📄 Generate Report
@@ -106,7 +106,8 @@
 
 {#if showReport}
   <ReportGenerator 
-    data={result} 
+    heritageData={result}
+    landscapeData={landscapeResult}
     onClose={closeReport}
   />
 {/if}
