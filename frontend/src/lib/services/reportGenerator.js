@@ -5,15 +5,6 @@ import { buildHeritageReport } from './heritage/heritageReportGenerator.js';
 import { buildLandscapeReport } from './landscape/landscapeReportGenerator.js';
 
 
-/**
- * Extract all unique requirements from a set of rules
- * @param {any[]} rules - Array of rules with requirements
- * @returns {string[]} - Array of unique requirements
- */
-function extractRecommendations(rules) {
-  const allRequirements = rules.flatMap(rule => rule.requirements || []);
-  return [...new Set(allRequirements)]; // Remove duplicates
-}
 
 /**
  * Resolve a risk summary object from either numeric or string overallRisk
@@ -103,8 +94,7 @@ export function buildCombinedReport(heritageData, landscapeData) {
       name: "Heritage",
       overallRisk: heritageReport.riskAssessment?.overallRisk,
       riskSummary: heritageReport.riskAssessment?.riskSummary,
-      triggeredRules: heritageTriggeredRules,
-      recommendations: extractRecommendations(heritageTriggeredRules)
+      triggeredRules: heritageTriggeredRules
     });
   }
   
@@ -114,8 +104,7 @@ export function buildCombinedReport(heritageData, landscapeData) {
       name: "Landscape", 
       overallRisk: landscapeReport.riskAssessment?.overallRisk,
       riskSummary: landscapeReport.riskAssessment?.riskSummary,
-      triggeredRules: landscapeTriggeredRules,
-      recommendations: extractRecommendations(landscapeTriggeredRules)
+      triggeredRules: landscapeTriggeredRules
     });
   }
 

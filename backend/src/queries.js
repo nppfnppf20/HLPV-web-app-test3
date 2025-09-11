@@ -35,6 +35,13 @@ export function buildAgLandAnalysisQuery(geojsonPolygon) {
   return { text, values };
 }
 
+// Renewables analysis using PostgreSQL functions
+export function buildRenewablesAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_renewables($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
 // Legacy function for backward compatibility (if needed)
 export function buildAnalysisQuery(geojsonPolygon) {
   // For now, redirect to the new heritage analysis

@@ -3,8 +3,9 @@
   import AnalysisResults from '$lib/components/AnalysisResults.svelte';
   import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
   import AgLandResults from '$lib/components/Results ribbons/Ag_landResults.svelte';
+  import RenewablesResults from '$lib/components/Results ribbons/RenewablesResults.svelte';
   import ReportGenerator from '$lib/components/ReportGenerator.svelte';
-  import { analyzeHeritage, analyzeLandscape, analyzeAgLand } from '$lib/services/api.js';
+  import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables } from '$lib/services/api.js';
   
   /** @type {Record<string, any> | null} */
   let result = null;
@@ -12,6 +13,8 @@
   let landscapeResult = null;
   /** @type {Record<string, any> | null} */
   let agLandResult = null;
+  /** @type {Record<string, any> | null} */
+  let renewablesResult = null;
   /** @type {string} */
   let errorMsg = '';
   /** @type {boolean} */
@@ -25,18 +28,21 @@
     result = null;
     landscapeResult = null;
     agLandResult = null;
+    renewablesResult = null;
     loading = true;
     
     try {
-      // Run heritage, landscape, and agricultural land analysis in parallel
-      const [heritageData, landscapeData, agLandData] = await Promise.all([
+      // Run heritage, landscape, agricultural land, and renewables analysis in parallel
+      const [heritageData, landscapeData, agLandData, renewablesData] = await Promise.all([
         analyzeHeritage(geometry),
         analyzeLandscape(geometry),
-        analyzeAgLand(geometry)
+        analyzeAgLand(geometry),
+        analyzeRenewables(geometry)
       ]);
       result = heritageData;
       landscapeResult = landscapeData;
       agLandResult = agLandData;
+      renewablesResult = renewablesData;
     } catch (/** @type {any} */ err) {
       errorMsg = err?.message || String(err);
     } finally {
@@ -106,6 +112,15 @@
   <AgLandResults 
     agLand={agLandResult?.ag_land}
     title="Agricultural Land Analysis Results"
+    {loading}
+    error={errorMsg}
+  />
+{/if}
+
+{#if renewablesResult}
+  <RenewablesResults 
+    renewables={renewablesResult?.renewables}
+    title="Renewables Analysis Results"
     {loading}
     error={errorMsg}
   />

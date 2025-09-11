@@ -83,3 +83,25 @@ BEGIN
   RETURN combined_result;
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+-- Renewables analysis function (separate category)
+CREATE OR REPLACE FUNCTION analyze_site_renewables(polygon_geojson TEXT)
+RETURNS JSON AS $$
+DECLARE
+  renewables_result JSON;
+  combined_result JSON;
+BEGIN
+  -- Get renewables analysis
+  SELECT json_agg(row_to_json(t)) INTO renewables_result
+  FROM (
+    SELECT * FROM analyze_renewables(polygon_geojson)
+  ) t;
+
+  -- Build result object
+  SELECT json_build_object(
+    'renewables', COALESCE(renewables_result, '[]'::json)
+  ) INTO combined_result;
+
+  RETURN combined_result;
+END;
+$$ LANGUAGE plpgsql STABLE;

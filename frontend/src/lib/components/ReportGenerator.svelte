@@ -81,10 +81,7 @@
           <!-- 1c. Overall Risk -->
           <div class="subsection">
             <h4>Overall Risk Estimation</h4>
-            <div class="risk-badge" style="background-color: {summaryData?.overallRiskSummary?.bgColor}; color: {summaryData?.overallRiskSummary?.color};">
-              <span class="risk-level">{summaryData?.overallRiskSummary?.label}</span>
-              <span class="risk-description">{summaryData?.overallRiskSummary?.description}</span>
-            </div>
+            <p class="placeholder">TBC - Overall risk estimation placeholder</p>
           </div>
         </div>
 
@@ -143,21 +140,10 @@
             {/if}
             
             <!-- 2c. Recommendations -->
-            {#if discipline.recommendations && discipline.recommendations.length > 0}
-              <div class="subsection">
-                <h4>{discipline.name} Recommendations</h4>
-                <ul class="recommendations-list">
-                  {#each discipline.recommendations as recommendation}
-                    <li>{recommendation}</li>
-                  {/each}
-                </ul>
-              </div>
-            {:else}
-              <div class="subsection">
-                <h4>{discipline.name} Recommendations</h4>
-                <p class="placeholder">TBC - {discipline.name} recommendations placeholder</p>
-              </div>
-            {/if}
+            <div class="subsection">
+              <h4>{discipline.name} Recommendations</h4>
+              <p class="placeholder">TBC - {discipline.name} recommendations placeholder</p>
+            </div>
           </div>
         {/each}
 
@@ -347,23 +333,6 @@
     padding-top: 1.5rem;
   }
 
-  .recommendations-list {
-    margin: 0;
-    padding-left: 1.5rem;
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 1rem 1rem 1rem 2.5rem;
-  }
-
-  .recommendations-list li {
-    margin-bottom: 0.5rem;
-    color: #4b5563;
-    line-height: 1.5;
-  }
-
-  .recommendations-list li:last-child {
-    margin-bottom: 0;
-  }
 
   .placeholder {
     font-style: italic;

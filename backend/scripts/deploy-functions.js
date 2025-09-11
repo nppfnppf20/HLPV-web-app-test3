@@ -10,28 +10,31 @@ const __dirname = dirname(__filename);
 async function deployFunctions() {
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    max: 3, // Limit concurrent connections
+    connectionTimeoutMillis: 30000,
+    idleTimeoutMillis: 30000
   });
 
   try {
     console.log('Deploying PostgreSQL functions...');
     
-    // Deploy heritage analysis functions first
-    const heritageFiles = [
-      'analyze_listed_buildings.sql',
-      'analyze_conservation_areas.sql'
-    ];
+    // Skip heritage analysis functions - already deployed and working
+    // const heritageFiles = [
+    //   'analyze_listed_buildings.sql',
+    //   'analyze_conservation_areas.sql'
+    // ];
     
-    for (const file of heritageFiles) {
-      const path = join(__dirname, '..', 'sql', 'heritage_analysis', file);
-      try {
-        const sql = readFileSync(path, 'utf8');
-        await pool.query(sql);
-        console.log(`✅ ${file} deployed`);
-      } catch (e) {
-        console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
-      }
-    }
+    // for (const file of heritageFiles) {
+    //   const path = join(__dirname, '..', 'sql', 'heritage_analysis', file);
+    //   try {
+    //     const sql = readFileSync(path, 'utf8');
+    //     await pool.query(sql);
+    //     console.log(`✅ ${file} deployed`);
+    //   } catch (e) {
+    //     console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
+    //   }
+    // }
     
     // Deploy landscape analysis functions
     const landscapeFiles = [
@@ -42,6 +45,11 @@ async function deployFunctions() {
     // Deploy agricultural land analysis functions
     const agLandFiles = [
       'analyze_ag_land.sql'
+    ];
+    
+    // Deploy renewables analysis functions
+    const renewablesFiles = [
+      'analyze_renewables.sql'
     ];
     
     // for (const file of landscapeFiles) {
@@ -61,6 +69,19 @@ async function deployFunctions() {
         const sql = readFileSync(path, 'utf8');
         await pool.query(sql);
         console.log(`✅ ${file} deployed`);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+      } catch (e) {
+        console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
+      }
+    }
+    
+    for (const file of renewablesFiles) {
+      const path = join(__dirname, '..', 'sql', 'renewables_analysis', file);
+      try {
+        const sql = readFileSync(path, 'utf8');
+        await pool.query(sql);
+        console.log(`✅ ${file} deployed`);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
       } catch (e) {
         console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
       }

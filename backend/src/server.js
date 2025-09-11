@@ -8,7 +8,8 @@ import {
   buildListedBuildingsQuery, 
   buildConservationAreasQuery,
   buildLandscapeAnalysisQuery,
-  buildAgLandAnalysisQuery
+  buildAgLandAnalysisQuery,
+  buildRenewablesAnalysisQuery
 } from './queries.js';
 // Use rich, UI-aligned rules on the server
 import { processHeritageRules } from './rules/heritage/index.js';
@@ -200,6 +201,51 @@ app.post('/analyze/ag-land', async (req, res) => {
   } catch (error) {
     // Log detailed Postgres error information when available
     console.error('Agricultural land analysis error:', {
+      message: error?.message,
+      detail: error?.detail,
+      hint: error?.hint,
+      position: error?.position,
+      stack: error?.stack
+    });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Renewables analysis endpoint
+app.post('/analyze/renewables', async (req, res) => {
+  try {
+    const { polygon } = req.body;
+    if (!polygon) {
+      return res.status(400).json({ error: 'polygon is required (GeoJSON Polygon or MultiPolygon)' });
+    }
+
+    const { text, values } = buildRenewablesAnalysisQuery(polygon);
+    const result = await pool.query(text, values);
+    
+    // Extract the JSON result from the PostgreSQL function
+    const analysisResult = result.rows[0]?.analysis_result || {};
+
+    // Debug: log renewables data to verify data flow
+    try {
+      const renewablesArr = Array.isArray(analysisResult.renewables) ? analysisResult.renewables : [];
+      console.log('[Renewables] count:', renewablesArr.length, 'on_site:', renewablesArr.filter(r => r?.on_site).length, 'tech types:', [...new Set(renewablesArr.map(r => r.technology_type))].join(', '));
+    } catch {}
+
+    // Return raw data (no rules processing for now - just display in ribbon)
+    const response = {
+      renewables: analysisResult.renewables || [],
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        dataSource: 'Renewable Energy developments Q1 2025',
+        analysisType: 'renewable-energy-developments',
+        technologyFilter: ['Solar Photovoltaics', 'Wind Onshore', 'Battery']
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    // Log detailed Postgres error information when available
+    console.error('Renewables analysis error:', {
       message: error?.message,
       detail: error?.detail,
       hint: error?.hint,

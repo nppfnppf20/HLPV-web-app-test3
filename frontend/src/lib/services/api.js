@@ -84,4 +84,18 @@ export async function analyzeAgLand(/** @type {any} */ polygonGeoJSON) {
   return res.json();
 }
 
+// Renewables analysis (Solar, Wind, Battery developments)
+export async function analyzeRenewables(/** @type {any} */ polygonGeoJSON) {
+  const res = await fetch(`${BASE_URL}/analyze/renewables`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Renewables analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 
