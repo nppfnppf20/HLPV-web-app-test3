@@ -12,6 +12,13 @@
 
   // Generate combined report when data changes
   $: report = (heritageData || landscapeData) ? buildCombinedReport(heritageData, landscapeData) : null;
+  
+  // Use the new structured data
+  $: structuredReport = report?.structuredReport;
+  $: summaryData = structuredReport?.summary;
+  $: disciplines = structuredReport?.disciplines || [];
+  
+  // Keep legacy data for fallback compatibility
   $: designationSummary = report?.combined?.designationSummary || [];
   $: riskAssessment = report?.combined || report?.heritage?.riskAssessment || report?.landscape?.riskAssessment;
   $: triggeredRules = report?.combined?.triggeredRules || [];
@@ -36,87 +43,140 @@
 <div class="report-modal-backdrop" on:click={handleBackdropClick} on:keydown={handleBackdropClick} role="dialog" aria-labelledby="report-title" tabindex="-1">
   <div class="report-modal">
     <div class="report-header">
-      <h2 id="report-title">📄 Heritage Impact Assessment Report</h2>
+      <h2 id="report-title">📄 Planning Constraints Assessment Report</h2>
       <button class="close-btn" on:click={handleClose} aria-label="Close report">
         ✕
       </button>
     </div>
     
     <div class="report-content">
-      {#if report}
-        <!-- Risk Assessment Section -->
+      {#if structuredReport}
+        <!-- 1. SUMMARY SECTION -->
         <div class="report-section">
-          <h3>🎯 Risk Assessment</h3>
-          <div class="risk-badge" style="background-color: {riskAssessment?.riskSummary?.bgColor}; color: {riskAssessment?.riskSummary?.color};">
-            <span class="risk-level">{riskAssessment?.riskSummary?.label}</span>
-            <span class="risk-description">{riskAssessment?.riskSummary?.description}</span>
+          <h3>📋 Summary</h3>
+          
+          <!-- 1a. Site Summary -->
+          <div class="subsection">
+            <h4>Site Summary</h4>
+            <p class="placeholder">{summaryData?.site}</p>
           </div>
-        </div>
-
-        <!-- Designation Summary Section -->
-        <div class="report-section">
-          <h3>🏛️ Heritage Designations Identified</h3>
-          <div class="designation-summary">
-            {#each designationSummary as summary}
-              <p class="summary-item">• {summary}</p>
-            {/each}
-          </div>
-        </div>
-
-        <!-- Triggered Rules Section -->
-        {#if triggeredRules.length > 0}
-          <div class="report-section">
-            <h3>⚠️ Assessment Rules Triggered</h3>
-            <div class="rules-container">
-              {#each triggeredRules as rule}
-                <div class="rule-card" style="border-left-color: {riskAssessment?.riskSummary?.color};">
-                  <div class="rule-header">
-                    <h4 class="rule-title">{rule.rule}</h4>
-                    <span class="rule-level" style="background-color: {riskAssessment?.riskSummary?.bgColor}; color: {riskAssessment?.riskSummary?.color};">
-                      {rule.level?.replace('_', '-').toUpperCase()}
+          
+          <!-- 1b. Risk by Discipline -->
+          {#if summaryData?.riskByDiscipline && summaryData.riskByDiscipline.length > 0}
+            <div class="subsection">
+              <h4>Risk by Discipline</h4>
+              <div class="discipline-risk-list">
+                {#each summaryData.riskByDiscipline as discipline}
+                  <div class="discipline-risk-item">
+                    <span class="discipline-name">{discipline.name}:</span>
+                    <span class="risk-badge-small" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+                      {discipline.riskSummary?.label}
                     </span>
                   </div>
-                  
-                  <div class="rule-content">
-                    <p class="rule-findings"><strong>Findings:</strong> {rule.findings}</p>
-                    <p class="rule-impact"><strong>Impact:</strong> {rule.impact}</p>
-                    
-                    {#if rule.requirements && rule.requirements.length > 0}
-                      <div class="rule-requirements">
-                        <strong>Requirements:</strong>
-                        <ul>
-                          {#each formatRequirements(rule.requirements) as requirement}
-                            <li>{requirement}</li>
-                          {/each}
-                        </ul>
-                      </div>
-                    {/if}
-                  </div>
-                </div>
-              {/each}
+                {/each}
+              </div>
+            </div>
+          {/if}
+          
+          <!-- 1c. Overall Risk -->
+          <div class="subsection">
+            <h4>Overall Risk Estimation</h4>
+            <div class="risk-badge" style="background-color: {summaryData?.overallRiskSummary?.bgColor}; color: {summaryData?.overallRiskSummary?.color};">
+              <span class="risk-level">{summaryData?.overallRiskSummary?.label}</span>
+              <span class="risk-description">{summaryData?.overallRiskSummary?.description}</span>
             </div>
           </div>
-        {:else}
-          <div class="report-section">
-            <h3>✅ Assessment Rules</h3>
-            <p class="no-rules">No heritage risk rules were triggered. Standard development considerations apply.</p>
+        </div>
+
+        <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
+        {#each disciplines as discipline}
+          <div class="report-section discipline-section">
+            <h3>{discipline.name === 'Heritage' ? '🏛️' : discipline.name === 'Landscape' ? '🌳' : '📊'} {discipline.name}</h3>
+            
+            <!-- 2a. Overall Risk for this discipline -->
+            <div class="subsection">
+              <h4>Overall {discipline.name} Risk</h4>
+              <div class="risk-badge" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+                <span class="risk-level">{discipline.riskSummary?.label}</span>
+                <span class="risk-description">{discipline.riskSummary?.description}</span>
+              </div>
+            </div>
+            
+            <!-- 2b. Triggered Rules -->
+            {#if discipline.triggeredRules && discipline.triggeredRules.length > 0}
+              <div class="subsection">
+                <h4>{discipline.name} Assessment Rules Triggered</h4>
+                <div class="rules-container">
+                  {#each discipline.triggeredRules as rule}
+                    <div class="rule-card" style="border-left-color: {discipline.riskSummary?.color};">
+                      <div class="rule-header">
+                        <h4 class="rule-title">{rule.rule}</h4>
+                        <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+                          {rule.level?.replace('_', '-').toUpperCase()}
+                        </span>
+                      </div>
+                      
+                      <div class="rule-content">
+                        <p class="rule-findings"><strong>Findings:</strong> {rule.findings}</p>
+                        <p class="rule-impact"><strong>Impact:</strong> {rule.impact}</p>
+                        
+                        {#if rule.requirements && rule.requirements.length > 0}
+                          <div class="rule-requirements">
+                            <strong>Requirements:</strong>
+                            <ul>
+                              {#each formatRequirements(rule.requirements) as requirement}
+                                <li>{requirement}</li>
+                              {/each}
+                            </ul>
+                          </div>
+                        {/if}
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {:else}
+              <div class="subsection">
+                <h4>{discipline.name} Assessment Rules</h4>
+                <p class="no-rules">No {discipline.name.toLowerCase()} risk rules were triggered. Standard development considerations apply.</p>
+              </div>
+            {/if}
+            
+            <!-- 2c. Recommendations -->
+            {#if discipline.recommendations && discipline.recommendations.length > 0}
+              <div class="subsection">
+                <h4>{discipline.name} Recommendations</h4>
+                <ul class="recommendations-list">
+                  {#each discipline.recommendations as recommendation}
+                    <li>{recommendation}</li>
+                  {/each}
+                </ul>
+              </div>
+            {:else}
+              <div class="subsection">
+                <h4>{discipline.name} Recommendations</h4>
+                <p class="placeholder">TBC - {discipline.name} recommendations placeholder</p>
+              </div>
+            {/if}
           </div>
-        {/if}
+        {/each}
 
         <!-- Report Metadata -->
-        <div class="report-section">
-          <h3>📋 Report Information</h3>
-          <div class="metadata">
-            <p><strong>Generated:</strong> {new Date(report.metadata.generatedAt).toLocaleString()}</p>
-            <p><strong>Rules Processed:</strong> {report.metadata.totalRulesProcessed}</p>
-            <p><strong>Rules Triggered:</strong> {report.metadata.rulesTriggered}</p>
-            <p><strong>Rules Version:</strong> {report.metadata.rulesVersion}</p>
+        {#if report?.metadata}
+          <div class="report-section">
+            <h3>📋 Report Information</h3>
+            <div class="metadata">
+              <p><strong>Generated:</strong> {new Date(report.metadata.generatedAt).toLocaleString()}</p>
+              <p><strong>Rules Processed:</strong> {report.metadata.totalRulesProcessed}</p>
+              <p><strong>Rules Triggered:</strong> {report.metadata.rulesTriggered}</p>
+              <p><strong>Rules Version:</strong> {report.metadata.rulesVersion}</p>
+            </div>
           </div>
-        </div>
+        {/if}
       {:else}
         <div class="report-placeholder">
           <h3>⚠️ No Analysis Data</h3>
-          <p>Please run an analysis first to generate a heritage report.</p>
+          <p>Please run an analysis first to generate a report.</p>
         </div>
       {/if}
     </div>
@@ -240,21 +300,80 @@
     font-weight: 400;
   }
 
-  .designation-summary {
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 1.5rem;
+  /* New structured report styles */
+  .subsection {
+    margin-bottom: 1.5rem;
   }
 
-  .summary-item {
+  .subsection h4 {
     margin-bottom: 0.75rem;
+    color: #4b5563;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .discipline-risk-list {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .discipline-risk-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .discipline-risk-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .discipline-name {
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .risk-badge-small {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .discipline-section {
+    border-top: 2px solid #e5e7eb;
+    padding-top: 1.5rem;
+  }
+
+  .recommendations-list {
+    margin: 0;
+    padding-left: 1.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 1rem 1rem 1rem 2.5rem;
+  }
+
+  .recommendations-list li {
+    margin-bottom: 0.5rem;
     color: #4b5563;
     line-height: 1.5;
   }
 
-  .summary-item:last-child {
+  .recommendations-list li:last-child {
     margin-bottom: 0;
   }
+
+  .placeholder {
+    font-style: italic;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #d1d5db;
+  }
+
 
   .rules-container {
     display: flex;
