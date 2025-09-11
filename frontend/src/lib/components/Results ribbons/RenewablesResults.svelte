@@ -27,10 +27,7 @@
   /** @type {string} */
   export let error = '';
 
-  $: developmentsFound = (renewables || []).length;
   $: safeRenewables = renewables || [];
-  $: onSiteDevelopments = safeRenewables.filter(r => r.on_site);
-  $: nearbyDevelopments = safeRenewables.filter(r => !r.on_site);
 
   /** @param {RenewableItem} item */
   function getClosestBuffer(item) {
@@ -68,21 +65,6 @@
   <div class="analysis-results">
     <h2>⚡ {title}</h2>
 
-    <!-- Summary cards -->
-    <div class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-label">Total Found</div>
-        <div class="summary-value">{developmentsFound}</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">On-site</div>
-        <div class="summary-value">{onSiteDevelopments.length}</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">Nearby</div>
-        <div class="summary-value">{nearbyDevelopments.length}</div>
-      </div>
-    </div>
 
     <!-- Individual development cards -->
     <div class="results-grid">

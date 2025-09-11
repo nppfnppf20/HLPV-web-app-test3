@@ -192,7 +192,7 @@ function calculateOverallRisk(rules) {
 
   // Find the highest risk level among triggered rules
   for (const level of riskLevels) {
-    if (rules.some(rule => rule.riskLevel === level)) {
+    if (rules.some(rule => rule.level === level)) {
       return level;
     }
   }
