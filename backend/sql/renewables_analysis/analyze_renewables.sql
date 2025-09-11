@@ -55,12 +55,12 @@ ren_points AS (
     r."Technology Type" AS technology_type,
     r."Installed Capacity (MWelec)" AS installed_capacity_mw
   FROM public."Renewable Energy developments Q1 2025" r
-  WHERE r."Technology Type" IN ('Solar Photovoltaics', 'Wind Onshore', 'Battery')
+  WHERE r."Technology Type" = 'Solar Photovoltaics'
     AND r.geom IS NOT NULL
     AND r."Development Status (short)" IN ('Appeal Refused', 'Application Refused', 'Application Submitted', 'Awaiting Construction', 'Operational', 'Revised', 'Under Construction')
     AND (
       r."Installed Capacity (MWelec)" ~ '^[0-9]+\.?[0-9]*$' 
-      AND CAST(r."Installed Capacity (MWelec)" AS NUMERIC) > 3
+      AND CAST(r."Installed Capacity (MWelec)" AS NUMERIC) > 10
     )
 ),
 
