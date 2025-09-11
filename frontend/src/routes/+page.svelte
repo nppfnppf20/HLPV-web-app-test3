@@ -39,6 +39,14 @@
         analyzeAgLand(geometry),
         analyzeRenewables(geometry)
       ]);
+      
+      console.log('🔍 API Results:', {
+        heritage: heritageData,
+        landscape: landscapeData,
+        agLand: agLandData,
+        renewables: renewablesData
+      });
+      
       result = heritageData;
       landscapeResult = landscapeData;
       agLandResult = agLandData;
@@ -51,6 +59,14 @@
   }
 
   function openReport() {
+    console.log('🔍 Opening report with data:', {
+      heritage: !!result,
+      landscape: !!landscapeResult, 
+      renewables: !!renewablesResult,
+      heritageData: result,
+      landscapeData: landscapeResult,
+      renewablesData: renewablesResult
+    });
     showReport = true;
   }
 
@@ -126,7 +142,7 @@
   />
 {/if}
 
-{#if (result || landscapeResult) && !loading && !errorMsg}
+{#if (result || landscapeResult || renewablesResult) && !loading && !errorMsg}
   <div class="report-button-container">
     <button class="generate-report-btn" on:click={openReport}>
       📄 Generate Report
@@ -138,6 +154,7 @@
   <ReportGenerator 
     heritageData={result}
     landscapeData={landscapeResult}
+    renewablesData={renewablesResult}
     onClose={closeReport}
   />
 {/if}

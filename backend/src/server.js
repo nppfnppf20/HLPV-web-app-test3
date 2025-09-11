@@ -14,6 +14,7 @@ import {
 // Use rich, UI-aligned rules on the server
 import { processHeritageRules } from './rules/heritage/index.js';
 import { processLandscapeRules } from './rules/landscape/index.js';
+import { processRenewablesRules } from './rules/renewables/index.js';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -231,14 +232,23 @@ app.post('/analyze/renewables', async (req, res) => {
       console.log('[Renewables] count:', renewablesArr.length, 'on_site:', renewablesArr.filter(r => r?.on_site).length, 'tech types:', [...new Set(renewablesArr.map(r => r.technology_type))].join(', '));
     } catch {}
 
-    // Return raw data (no rules processing for now - just display in ribbon)
+    // Compute renewables rules and overall risk on the server
+    const rulesAssessment = processRenewablesRules(analysisResult);
+
+    // Build enriched response for the frontend
     const response = {
       renewables: analysisResult.renewables || [],
+      rules: rulesAssessment.rules || [],
+      overallRisk: rulesAssessment.overallRisk || null,
       metadata: {
         generatedAt: new Date().toISOString(),
         dataSource: 'Renewable Energy developments Q1 2025',
         analysisType: 'renewable-energy-developments',
-        technologyFilter: ['Solar Photovoltaics', 'Wind Onshore', 'Battery']
+        technologyFilter: ['Solar Photovoltaics'],
+        capacityFilter: '> 10 MW',
+        totalRulesProcessed: rulesAssessment.metadata?.totalRulesProcessed || 0,
+        rulesTriggered: (rulesAssessment.rules || []).length,
+        rulesVersion: rulesAssessment.metadata?.rulesVersion || 'renewables-rules-v1'
       }
     };
 

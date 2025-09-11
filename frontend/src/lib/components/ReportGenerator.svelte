@@ -7,16 +7,40 @@
   /** @type {any} */
   export let landscapeData = null;
   
+  /** @type {any} */
+  export let renewablesData = null;
+  
   /** @type {() => void} */
   export let onClose;
 
   // Generate combined report when data changes
-  $: report = (heritageData || landscapeData) ? buildCombinedReport(heritageData, landscapeData) : null;
+  $: report = (() => {
+    try {
+      if (heritageData || landscapeData || renewablesData) {
+        console.log('🔄 Building combined report with:', { heritageData: !!heritageData, landscapeData: !!landscapeData, renewablesData: !!renewablesData });
+        const result = buildCombinedReport(heritageData, landscapeData, renewablesData);
+        console.log('✅ Report built successfully:', result);
+        return result;
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Error building report:', error);
+      console.error('Data that caused error:', { heritageData, landscapeData, renewablesData });
+      return null;
+    }
+  })();
   
   // Use the new structured data
   $: structuredReport = report?.structuredReport;
   $: summaryData = structuredReport?.summary;
   $: disciplines = structuredReport?.disciplines || [];
+
+  // Debug when component mounts
+  $: if (report !== null) {
+    console.log('📊 ReportGenerator component has report data:', report);
+    console.log('📋 Disciplines array:', disciplines);
+    console.log('📋 Structured report:', structuredReport);
+  }
   
   // Keep legacy data for fallback compatibility
   $: designationSummary = report?.combined?.designationSummary || [];
@@ -88,7 +112,7 @@
         <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
         {#each disciplines as discipline}
           <div class="report-section discipline-section">
-            <h3>{discipline.name === 'Heritage' ? '🏛️' : discipline.name === 'Landscape' ? '🌳' : '📊'} {discipline.name}</h3>
+            <h3>{discipline.name === 'Heritage' ? '🏛️' : discipline.name === 'Landscape' ? '🌳' : discipline.name === 'Renewable Energy' ? '⚡' : '📊'} {discipline.name}</h3>
             
             <!-- 2a. Overall Risk for this discipline -->
             <div class="subsection">

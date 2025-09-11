@@ -4,6 +4,41 @@
 import { buildHeritageReport } from './heritage/heritageReportGenerator.js';
 import { buildLandscapeReport } from './landscape/landscapeReportGenerator.js';
 
+/**
+ * Build renewables-specific report from backend analysis data
+ * @param {any} renewablesData - Backend renewables analysis results
+ */
+function buildRenewablesReport(renewablesData) {
+  const rules = renewablesData?.rules || [];
+  const overallRisk = renewablesData?.overallRisk || null;
+  const renewablesArray = renewablesData?.renewables || [];
+
+  // Build designation summary for renewables
+  const designationSummary = [];
+  if (renewablesArray.length > 0) {
+    const onSite = renewablesArray.filter(/** @param {any} r */ r => r.on_site).length;
+    const nearby = renewablesArray.filter(/** @param {any} r */ r => !r.on_site).length;
+    
+    const summaryItems = [
+      `${renewablesArray.length} renewable energy development${renewablesArray.length === 1 ? '' : 's'} identified`,
+      onSite > 0 ? `${onSite} on-site` : null,
+      nearby > 0 ? `${nearby} nearby` : null
+    ].filter(/** @param {any} item */ item => Boolean(item));
+    
+    designationSummary.push(...summaryItems);
+  }
+
+  return {
+    riskAssessment: {
+      overallRisk,
+      riskSummary: `${rules.length} renewable energy rule${rules.length === 1 ? '' : 's'} triggered`,
+      triggeredRules: rules
+    },
+    designationSummary,
+    metadata: renewablesData?.metadata || {}
+  };
+}
+
 
 
 /**
@@ -33,8 +68,9 @@ function resolveRiskSummary(overallRisk) {
  * Determine overall risk across multiple domains
  * @param {string|number|null} heritageRisk 
  * @param {string|number|null} landscapeRisk 
+ * @param {string|number|null} renewablesRisk 
  */
-function determineOverallRisk(heritageRisk, landscapeRisk) {
+function determineOverallRisk(heritageRisk, landscapeRisk, renewablesRisk) {
   // Risk hierarchy (highest to lowest)
   const riskHierarchy = [
     'showstopper',
@@ -46,7 +82,7 @@ function determineOverallRisk(heritageRisk, landscapeRisk) {
     'low_risk'
   ];
   
-  const risks = [heritageRisk, landscapeRisk].filter(Boolean);
+  const risks = [heritageRisk, landscapeRisk, renewablesRisk].filter(Boolean);
   if (risks.length === 0) return 'low_risk';
   
   // Return the highest risk level found
@@ -58,30 +94,35 @@ function determineOverallRisk(heritageRisk, landscapeRisk) {
 }
 
 /**
- * Build combined heritage and landscape report
+ * Build combined heritage, landscape, and renewables report
  * @param {any} heritageData - Backend heritage analysis results
  * @param {any} landscapeData - Backend landscape analysis results  
+ * @param {any} renewablesData - Backend renewables analysis results
  */
-export function buildCombinedReport(heritageData, landscapeData) {
+export function buildCombinedReport(heritageData, landscapeData, renewablesData) {
   const heritageReport = heritageData ? buildHeritageReport(heritageData) : null;
   const landscapeReport = landscapeData ? buildLandscapeReport(landscapeData) : null;
+  const renewablesReport = renewablesData ? buildRenewablesReport(renewablesData) : null;
   
-  // Determine overall risk across both domains
+  // Determine overall risk across all domains
   const overallRisk = determineOverallRisk(
     heritageReport?.riskAssessment?.overallRisk,
-    landscapeReport?.riskAssessment?.overallRisk
+    landscapeReport?.riskAssessment?.overallRisk,
+    renewablesReport?.riskAssessment?.overallRisk
   );
   
-  // Combine triggered rules from both domains
+  // Combine triggered rules from all domains
   const allTriggeredRules = [
     ...(heritageReport?.riskAssessment?.triggeredRules || []),
-    ...(landscapeReport?.riskAssessment?.triggeredRules || [])
+    ...(landscapeReport?.riskAssessment?.triggeredRules || []),
+    ...(renewablesReport?.riskAssessment?.triggeredRules || [])
   ];
   
   // Combine designation summaries
   const combinedDesignationSummary = [
     ...(heritageReport?.designationSummary || []),
-    ...(landscapeReport?.designationSummary || [])
+    ...(landscapeReport?.designationSummary || []),
+    ...(renewablesReport?.designationSummary || [])
   ];
 
   // Build discipline-specific data for structured report
@@ -93,7 +134,7 @@ export function buildCombinedReport(heritageData, landscapeData) {
     disciplines.push({
       name: "Heritage",
       overallRisk: heritageReport.riskAssessment?.overallRisk,
-      riskSummary: heritageReport.riskAssessment?.riskSummary,
+      riskSummary: resolveRiskSummary(heritageReport.riskAssessment?.overallRisk),
       triggeredRules: heritageTriggeredRules
     });
   }
@@ -103,8 +144,18 @@ export function buildCombinedReport(heritageData, landscapeData) {
     disciplines.push({
       name: "Landscape", 
       overallRisk: landscapeReport.riskAssessment?.overallRisk,
-      riskSummary: landscapeReport.riskAssessment?.riskSummary,
+      riskSummary: resolveRiskSummary(landscapeReport.riskAssessment?.overallRisk),
       triggeredRules: landscapeTriggeredRules
+    });
+  }
+  
+  if (renewablesReport) {
+    const renewablesTriggeredRules = renewablesReport.riskAssessment?.triggeredRules || [];
+    disciplines.push({
+      name: "Renewable Energy", 
+      overallRisk: renewablesReport.riskAssessment?.overallRisk,
+      riskSummary: resolveRiskSummary(renewablesReport.riskAssessment?.overallRisk),
+      triggeredRules: renewablesTriggeredRules
     });
   }
 
@@ -114,31 +165,34 @@ export function buildCombinedReport(heritageData, landscapeData) {
     .map(d => ({
       name: d.name,
       risk: d.overallRisk,
-      riskSummary: d.riskSummary
+      riskSummary: resolveRiskSummary(d.overallRisk)
     }));
   
   return {
     // EXISTING STRUCTURE - Keep for backward compatibility
     heritage: heritageReport,
     landscape: landscapeReport,
+    renewables: renewablesReport,
     combined: {
       overallRisk,
       designationSummary: combinedDesignationSummary,
       triggeredRules: allTriggeredRules,
-      riskSummary: heritageReport?.riskAssessment?.riskSummary || landscapeReport?.riskAssessment?.riskSummary
+      riskSummary: heritageReport?.riskAssessment?.riskSummary || landscapeReport?.riskAssessment?.riskSummary || renewablesReport?.riskAssessment?.riskSummary
     },
     metadata: {
       generatedAt: new Date().toISOString(),
       sectionsIncluded: [
         heritageData ? 'heritage' : null,
-        landscapeData ? 'landscape' : null
+        landscapeData ? 'landscape' : null,
+        renewablesData ? 'renewables' : null
       ].filter(Boolean),
       totalRules: allTriggeredRules.length,
-      totalRulesProcessed: (heritageReport?.metadata?.totalRulesProcessed || 0) + (landscapeReport?.metadata?.totalRulesProcessed || 0),
+      totalRulesProcessed: (heritageReport?.metadata?.totalRulesProcessed || 0) + (landscapeReport?.metadata?.totalRulesProcessed || 0) + (renewablesReport?.metadata?.totalRulesProcessed || 0),
       rulesTriggered: allTriggeredRules.length,
-      rulesVersion: `combined-v1 (heritage: ${heritageReport?.metadata?.rulesVersion || 'n/a'}, landscape: ${landscapeReport?.metadata?.rulesVersion || 'n/a'})`,
+      rulesVersion: `combined-v2 (heritage: ${heritageReport?.metadata?.rulesVersion || 'n/a'}, landscape: ${landscapeReport?.metadata?.rulesVersion || 'n/a'}, renewables: ${renewablesReport?.metadata?.rulesVersion || 'n/a'})`,
       heritageMetadata: heritageReport?.metadata,
-      landscapeMetadata: landscapeReport?.metadata
+      landscapeMetadata: landscapeReport?.metadata,
+      renewablesMetadata: renewablesReport?.metadata
     },
 
     // NEW STRUCTURED REPORT - New organized structure
