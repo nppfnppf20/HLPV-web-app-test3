@@ -1,5 +1,12 @@
 <script>
-  /** @type {any[] | undefined} */
+  /**
+   * @typedef {Object} AgLandItem
+   * @property {string} grade - The agricultural land grade
+   * @property {number} area_hectares - Area in hectares
+   * @property {number} percentage_coverage - Percentage coverage of the site
+   */
+
+  /** @type {AgLandItem[] | undefined} */
   export let agLand = [];
   /** @type {string} */
   export let title = 'Agricultural Land Results';
@@ -9,6 +16,7 @@
   export let error = '';
 
   $: gradesFound = (agLand || []).length;
+  $: safeAgLand = agLand || [];
 
   /** @param {string} grade */
   function cleanGrade(grade) {
@@ -33,7 +41,7 @@
 
     <!-- Simple cards for each grade -->
     <div class="results-grid">
-      {#each agLand as row}
+      {#each safeAgLand as row}
         <div class="result-item">
           <div class="item-header">
             <h4 class="item-title">Grade {cleanGrade(row.grade)}</h4>
