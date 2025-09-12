@@ -80,7 +80,7 @@
 {#if loading}
   <div class="analysis-results">
     <div class="results-loading">
-      <p>🔍 Analyzing heritage assets...</p>
+      <p>Analysing site...</p>
     </div>
   </div>
 {:else if error}
@@ -89,7 +89,7 @@
   </div>
 {:else if data}
   <div class="analysis-results">
-    <h2>🏛️ {title}</h2>
+    <h2>{title}</h2>
     
     <!-- Summary Cards -->
     <div class="results-summary">
@@ -126,7 +126,7 @@
           aria-expanded={listedBuildingsExpanded}
         >
           <div class="section-header-content">
-            <span class="section-icon">🏗️</span>
+            <span class="section-icon"></span>
             <h3 class="section-title">Listed Buildings ({totalListedBuildings})</h3>
             {#if onSiteBuildings > 0}
               <span class="section-subtitle">{onSiteBuildings} on site</span>
@@ -189,7 +189,7 @@
           aria-expanded={conservationAreasExpanded}
         >
           <div class="section-header-content">
-            <span class="section-icon">🌳</span>
+            <span class="section-icon"></span>
             <h3 class="section-title">Conservation Areas ({totalConservationAreas})</h3>
             {#if onSiteAreas > 0}
               <span class="section-subtitle">{onSiteAreas} intersecting</span>
@@ -243,7 +243,7 @@
     <!-- Empty state -->
     {#if listedBuildings.length === 0 && conservationAreas.length === 0}
       <div class="results-empty">
-        <p>📍 No heritage assets found in the analyzed area.</p>
+        <p>No heritage assets found in the analyzed area.</p>
         <p style="font-size: 0.875rem; margin-top: 0.5rem;">Try drawing a larger polygon or a different location.</p>
       </div>
     {/if}

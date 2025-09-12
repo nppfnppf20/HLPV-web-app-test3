@@ -127,7 +127,7 @@
 {#if agLandResult}
   <AgLandResults 
     agLand={agLandResult?.ag_land}
-    title="Agricultural Land Analysis Results"
+    title="Provisional Agricultural Land Classification"
     {loading}
     error={errorMsg}
   />
@@ -136,7 +136,7 @@
 {#if renewablesResult}
   <RenewablesResults 
     renewables={renewablesResult?.renewables}
-    title="Renewables Analysis Results"
+    title="Cumulative Development"
     {loading}
     error={errorMsg}
   />
@@ -145,7 +145,7 @@
 {#if (result || landscapeResult || renewablesResult) && !loading && !errorMsg}
   <div class="report-button-container">
     <button class="generate-report-btn" on:click={openReport}>
-      📄 Generate Report
+Generate Report
     </button>
   </div>
 {/if}

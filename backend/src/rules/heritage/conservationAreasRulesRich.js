@@ -12,12 +12,9 @@ export function checkConservationAreaOnSite(conservationAreas) {
     findings: `Development site intersects with ${onSiteAreas.length} conservation area${onSiteAreas.length > 1 ? 's' : ''}`,
     impact: 'Development within conservation area requires preservation or enhancement of character and appearance',
     requirements: [
-      'Conservation Area Consent required for most development',
-      'Heritage and Design Statement essential',
-      'Conservation officer pre-application consultation mandatory',
-      'Design must preserve or enhance conservation area character',
-      'Materials and detailing must be sympathetic to historic context',
-      'Detailed historical and architectural analysis required'
+      'Heritage Statement essential',
+      'Specialist heritage consultant input required at an early stage',
+      'Careful consideration of site layout required to minimise adverse impact on the Conservation Area'
     ],
     areas: onSiteAreas
   };

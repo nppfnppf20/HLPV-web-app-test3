@@ -50,8 +50,7 @@ export function checkGradeIWithin500m(buildings) {
     findings: `${gradeIWider.length} Grade I listed building(s) within 500m of site`,
     impact: 'Development may affect wider setting of exceptional heritage assets',
     requirements: [
-      'Development highly unlikely to be viable',
-      'Heritage assessment essential',
+      'Development highly unlikely to be viable given proximity of Grade I asset',
       'Consider alternative site locations'
       
       
@@ -77,11 +76,11 @@ export function checkGradeIIOnSite(buildings) {
     gradeBreakdown,
     impact: 'Development directly affects buildings of special architectural or historic interest',
     requirements: [
-      'Heritage Impact Assessment required',
-      'Specialist heritage consultation recommended',
-      'Listed building consent likely required for alterations',
-      'Design must demonstrate minimal harm and public benefit',
-      'Conservation officer consultation essential'
+      'Development highly unlikely to be viable given proximity of Grade II/II* asset',
+    'Heritage Impact Assessment essential',
+      'Specialist heritage consultant input required at an early stage',
+      
+      
     ],
     buildings: gradeIIOnSite
   };
@@ -105,10 +104,9 @@ export function checkAnyGradeWithin100m(buildings) {
     gradeBreakdown,
     impact: 'Development likely to affect the immediate setting of listed buildings',
     requirements: [
-      'Heritage statement or Heritage Impact Assessment required',
-      'Design and Access Statement must address heritage considerations',
-      'Detailed site analysis and historical research',
-      'Consultation with conservation officer recommended'
+        'Heritage Impact Assessment essential',
+        'Specialist heritage consultant input required at an early stage',
+        'Careful consideration of site layout required to minimise adverse impact on the setting of heritage assets'
     ],
     buildings: buildingsClose
   };

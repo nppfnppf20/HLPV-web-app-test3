@@ -12,10 +12,10 @@ export function checkAONBOnSite(aonbAreas) {
     findings: `${onSite.length} AONB area${onSite.length > 1 ? 's' : ''} intersecting site`,
     impact: 'Development within AONB faces strong protection due to national landscape importance',
     requirements: [
-      'Major weight to conserving and enhancing landscape and scenic beauty',
-      'Early engagement with landscape specialists',
-      'Landscape and visual impact assessment mandatory',
-      'Demonstrate exceptional justification and minimal harm'
+      'Major planning weight will be given to conserving and enhancing landscape and scenic beauty',
+      'Early engagement with landscape specialists required',
+      'Landscape and visual impact assessment required',
+      
     ],
     areas: onSite
   };

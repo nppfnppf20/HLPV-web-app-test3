@@ -105,7 +105,7 @@
 {#if loading}
   <div class="analysis-results">
     <div class="results-loading">
-      <p>🔍 Analyzing ecology layers...</p>
+      <p>Analyzing ecology layers...</p>
     </div>
   </div>
 {:else if error}
@@ -114,7 +114,7 @@
   </div>
 {:else}
   <div class="analysis-results">
-    <h2>🌄 {title}</h2>
+    <h2>{title}</h2>
 
     <!-- Summary Cards -->
     <div class="results-summary">
@@ -163,7 +163,7 @@
           aria-expanded={greenBeltExpanded}
         >
           <div class="section-header-content">
-            <span class="section-icon">🟢</span>
+            <span class="section-icon"></span>
             <h3 class="section-title">Green Belt ({total})</h3>
             {#if onSiteCount > 0}
               <span class="section-subtitle">{onSiteCount} on site</span>
@@ -213,9 +213,7 @@
         {/if}
       </div>
     {:else}
-      <div class="results-empty">
-        <p>🌄 No Green Belt areas found in the analyzed area.</p>
-      </div>
+      
     {/if}
 
     <!-- AONB Section -->
@@ -230,7 +228,7 @@
           aria-expanded={aonbExpanded}
         >
           <div class="section-header-content">
-            <span class="section-icon">🏞️</span>
+            <span class="section-icon"></span>
             <h3 class="section-title">Areas of Outstanding Natural Beauty</h3>
             {#if aonbStatus === 'Yes'}
               <span class="section-subtitle">On site</span>

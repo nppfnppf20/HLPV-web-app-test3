@@ -28,7 +28,7 @@
 {#if loading}
   <div class="analysis-results">
     <div class="results-loading">
-      <p>🔍 Analyzing agricultural land…</p>
+      <p>Analyzing agricultural land…</p>
     </div>
   </div>
 {:else if error}
@@ -37,7 +37,7 @@
   </div>
 {:else}
   <div class="analysis-results">
-    <h2>🌾 {title}</h2>
+    <h2>{title}</h2>
 
     <!-- Simple cards for each grade -->
     <div class="results-grid">
@@ -61,3 +61,4 @@
     </div>
   </div>
 {/if}
+

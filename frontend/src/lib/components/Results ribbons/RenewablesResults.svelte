@@ -44,17 +44,17 @@
 
   /** @param {string} techType */
   function getTechIcon(techType) {
-    if (techType === 'Solar Photovoltaics') return '☀️';
-    if (techType === 'Wind Onshore') return '💨';
-    if (techType === 'Battery') return '🔋';
-    return '⚡';
+    if (techType === 'Solar Photovoltaics') return '';
+    if (techType === 'Wind Onshore') return '';
+    if (techType === 'Battery') return '';
+    return '';
   }
 </script>
 
 {#if loading}
   <div class="analysis-results">
     <div class="results-loading">
-      <p>🔍 Analyzing renewable energy developments…</p>
+      <p>Analyzing renewable energy developments…</p>
     </div>
   </div>
 {:else if error}
@@ -63,41 +63,46 @@
   </div>
 {:else}
   <div class="analysis-results">
-    <h2>⚡ {title}</h2>
+    <h2>{title}</h2>
 
-
-    <!-- Individual development cards -->
-    <div class="results-grid">
-      {#each safeRenewables as item}
-        <div class="result-item">
-          <div class="item-header">
-            <h4 class="item-title">
-              {getTechIcon(item.technology_type)} {item.site_name || `Development ${item.id}`}
-            </h4>
-            <span class="item-distance">{getClosestBuffer(item)}</span>
-          </div>
-          <div class="item-details">
-            <div class="detail-row">
-              <span class="detail-label">Technology</span>
-              <span class="detail-value">{item.technology_type}</span>
+    {#if safeRenewables.length > 0}
+      <!-- Individual development cards -->
+      <div class="results-grid">
+        {#each safeRenewables as item}
+          <div class="result-item">
+            <div class="item-header">
+              <h4 class="item-title">
+                {getTechIcon(item.technology_type)} {item.site_name || `Development ${item.id}`}
+              </h4>
+              <span class="item-distance">{getClosestBuffer(item)}</span>
             </div>
-            <div class="detail-row">
-              <span class="detail-label">Status</span>
-              <span class="detail-value">{item.development_status_short || 'Unknown'}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Capacity</span>
-              <span class="detail-value">{item.installed_capacity_mw || 'Unknown'} MW</span>
-            </div>
-            {#if !item.on_site}
+            <div class="item-details">
               <div class="detail-row">
-                <span class="detail-label">Distance</span>
-                <span class="detail-value">{item.dist_m}m {item.direction}</span>
+                <span class="detail-label">Technology</span>
+                <span class="detail-value">{item.technology_type}</span>
               </div>
-            {/if}
+              <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value">{item.development_status_short || 'Unknown'}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Capacity</span>
+                <span class="detail-value">{item.installed_capacity_mw || 'Unknown'} MW</span>
+              </div>
+              {#if !item.on_site}
+                <div class="detail-row">
+                  <span class="detail-label">Distance</span>
+                  <span class="detail-value">{item.dist_m}m {item.direction}</span>
+                </div>
+              {/if}
+            </div>
           </div>
-        </div>
-      {/each}
-    </div>
+        {/each}
+      </div>
+    {:else}
+      <div class="results-empty">
+        <p>No results found.</p>
+      </div>
+    {/if}
   </div>
 {/if}
