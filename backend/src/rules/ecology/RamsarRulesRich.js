@@ -1,18 +1,5 @@
 import { RISK_LEVELS } from '../riskLevels.js';
 
-// Default recommendations that always appear when ANY Ramsar rules are triggered
-const DEFAULT_TRIGGERED_RECOMMENDATIONS = [
-  'Comprehensive ecological survey required to assess wetland habitats and species',
-  'Ramsar sites are wetlands of international importance - strict protection applies',
-  'Mitigation hierarchy must be followed: avoid, minimize, restore, and offset as last resort'
-];
-
-// Default recommendations when NO Ramsar rules are triggered
-const DEFAULT_NO_RULES_RECOMMENDATIONS = [
-  'No Ramsar sites identified within assessment area',
-  'Standard ecological survey protocols recommended'
-];
-
 /** @param {any[]} ramsarSites */
 export function checkRamsarOnSite(ramsarSites) {
   const onSite = (ramsarSites || []).filter(r => r.on_site);
@@ -195,8 +182,6 @@ export function processRamsarRules(analysisData) {
 
   return {
     rules: triggeredRules,
-    ramsar,
-    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
-    defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : []
+    ramsar
   };
 }

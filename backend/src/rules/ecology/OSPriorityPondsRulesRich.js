@@ -1,18 +1,5 @@
 import { RISK_LEVELS } from '../riskLevels.js';
 
-// Default recommendations that always appear when ANY OS Priority Ponds rules are triggered
-const DEFAULT_TRIGGERED_RECOMMENDATIONS = [
-  'Ecological survey required to assess pond habitats and species',
-  'Consider potential for great crested newts and other protected species',
-  'Mitigation measures may be required to protect pond ecosystems'
-];
-
-// Default recommendations when NO OS Priority Ponds rules are triggered
-const DEFAULT_NO_RULES_RECOMMENDATIONS = [
-  'No OS Priority Ponds identified within assessment area',
-  'Standard ecological survey protocols recommended'
-];
-
 /** @param {any[]} pondAreas */
 export function checkOSPriorityPondsOnSite(pondAreas) {
   const onSite = (pondAreas || []).filter(p => p.on_site);
@@ -66,10 +53,8 @@ export function processOSPriorityPondsRules(analysisData) {
     if (result.triggered) triggeredRules.push(result);
   }
   
-  return { 
-    rules: triggeredRules, 
-    os_priority_ponds: ponds,
-    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
-    defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : []
+  return {
+    rules: triggeredRules,
+    os_priority_ponds: ponds
   };
 }

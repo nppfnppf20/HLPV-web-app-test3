@@ -1,15 +1,5 @@
 import { RISK_LEVELS } from '../riskLevels.js';
 
-// Default recommendations that always appear when ANY Green Belt rules are triggered
-const DEFAULT_TRIGGERED_RECOMMENDATIONS = [
-  // TODO: Add default recommendations for when Green Belt rules are triggered
-];
-
-// Default recommendations when NO Green Belt rules are triggered
-const DEFAULT_NO_RULES_RECOMMENDATIONS = [
-  // TODO: Add default recommendations for when no Green Belt rules are triggered
-];
-
 /** @param {any[]} greenBeltAreas */
 export function checkGreenBeltOnSite(greenBeltAreas) {
   const onSiteAreas = (greenBeltAreas || []).filter(a => a.on_site);
@@ -60,11 +50,9 @@ export function processGreenBeltRules(analysisData) {
     const result = rule(greenBelt);
     if (result.triggered) triggeredRules.push(result);
   }
-  return { 
-    rules: triggeredRules, 
-    green_belt: greenBelt,
-    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
-    defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : []
+  return {
+    rules: triggeredRules,
+    green_belt: greenBelt
   };
 }
 

@@ -148,6 +148,8 @@ app.post('/analyze/landscape', async (req, res) => {
       aonb: analysisResult.aonb || [],
       rules: rulesAssessment.rules || [],
       overallRisk: rulesAssessment.overallRisk || 0,
+      defaultTriggeredRecommendations: rulesAssessment.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: rulesAssessment.defaultNoRulesRecommendations || [],
       metadata: {
         generatedAt: new Date().toISOString(),
         totalRulesProcessed: 10, // 2 Green Belt + 8 AONB rule checks
