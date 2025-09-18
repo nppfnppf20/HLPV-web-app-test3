@@ -54,7 +54,8 @@ async function deployFunctions() {
     
     // Deploy ecology analysis functions
     const ecologyFiles = [
-      'analyze_OS_priority_ponds.sql'
+      'analyze_OS_priority_ponds.sql',
+      'analyze_ramsar.sql'
     ];
     
     // for (const file of landscapeFiles) {
