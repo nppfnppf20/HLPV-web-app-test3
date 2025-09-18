@@ -112,6 +112,7 @@ RETURNS JSON AS $$
 DECLARE
   os_priority_ponds_result JSON;
   ramsar_result JSON;
+  gcn_result JSON;
   combined_result JSON;
 BEGIN
   -- Get OS Priority Ponds analysis
@@ -126,10 +127,17 @@ BEGIN
     SELECT * FROM analyze_ramsar(polygon_geojson)
   ) t;
 
+  -- Get GCN analysis
+  SELECT json_agg(row_to_json(t)) INTO gcn_result
+  FROM (
+    SELECT * FROM analyze_gcn(polygon_geojson)
+  ) t;
+
   -- Build result object
   SELECT json_build_object(
     'os_priority_ponds', COALESCE(os_priority_ponds_result, '[]'::json),
-    'ramsar', COALESCE(ramsar_result, '[]'::json)
+    'ramsar', COALESCE(ramsar_result, '[]'::json),
+    'gcn', COALESCE(gcn_result, '[]'::json)
   ) INTO combined_result;
 
   RETURN combined_result;

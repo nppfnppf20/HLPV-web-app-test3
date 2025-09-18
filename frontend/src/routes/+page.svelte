@@ -153,6 +153,7 @@
   <EcologyResults
     osPriorityPonds={ecologyResult?.os_priority_ponds}
     ramsar={ecologyResult?.ramsar}
+    gcn={ecologyResult?.gcn}
     title="Ecology"
     {loading}
     error={errorMsg}

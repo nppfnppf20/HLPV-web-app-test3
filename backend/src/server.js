@@ -301,8 +301,10 @@ app.post('/analyze/ecology', async (req, res) => {
     try {
       const pondsArr = Array.isArray(analysisResult.os_priority_ponds) ? analysisResult.os_priority_ponds : [];
       const ramsarArr = Array.isArray(analysisResult.ramsar) ? analysisResult.ramsar : [];
+      const gcnArr = Array.isArray(analysisResult.gcn) ? analysisResult.gcn : [];
       console.log('[Ecology] os_priority_ponds count:', pondsArr.length, 'on_site:', pondsArr.filter(p => p?.on_site).length, 'within_250m:', pondsArr.filter(p => p?.within_250m).length);
       console.log('[Ecology] ramsar count:', ramsarArr.length, 'on_site:', ramsarArr.filter(r => r?.on_site).length, 'within_5km:', ramsarArr.filter(r => r?.within_5km).length);
+      console.log('[Ecology] gcn count:', gcnArr.length, 'on_site:', gcnArr.filter(g => g?.on_site).length, 'within_250m:', gcnArr.filter(g => g?.within_250m).length);
     } catch {}
 
     // Compute ecology rules and overall risk on the server
@@ -312,15 +314,16 @@ app.post('/analyze/ecology', async (req, res) => {
     const response = {
       os_priority_ponds: analysisResult.os_priority_ponds || [],
       ramsar: analysisResult.ramsar || [],
+      gcn: analysisResult.gcn || [],
       rules: rulesAssessment.rules || [],
       overallRisk: rulesAssessment.overallRisk || 0,
       defaultTriggeredRecommendations: rulesAssessment.defaultTriggeredRecommendations || [],
       defaultNoRulesRecommendations: rulesAssessment.defaultNoRulesRecommendations || [],
       metadata: {
         generatedAt: new Date().toISOString(),
-        totalRulesProcessed: 10, // 2 OS Priority Ponds + 8 Ramsar rule checks
+        totalRulesProcessed: 12, // 2 OS Priority Ponds + 8 Ramsar + 2 GCN rule checks
         rulesTriggered: (rulesAssessment.rules || []).length,
-        rulesVersion: 'ecology-rules-v2'
+        rulesVersion: 'ecology-rules-v3'
       }
     };
 

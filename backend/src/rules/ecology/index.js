@@ -1,5 +1,6 @@
 import { processOSPriorityPondsRules } from './OSPriorityPondsRulesRich.js';
 import { processRamsarRules } from './RamsarRulesRich.js';
+import { processGCNRules } from './GCNRulesRich.js';
 import { RISK_LEVELS } from '../riskLevels.js';
 
 // Ecology discipline-wide default recommendations
@@ -18,13 +19,14 @@ const DEFAULT_ECOLOGY_NO_RULES_RECOMMENDATIONS = [
 
 /**
  * Aggregate ecology rules across layers
- * @param {{ os_priority_ponds?: any[], ramsar?: any[] }} analysisData
+ * @param {{ os_priority_ponds?: any[], ramsar?: any[], gcn?: any[] }} analysisData
  */
 export function processEcologyRules(analysisData) {
   const ponds = processOSPriorityPondsRules(analysisData);
   const ramsar = processRamsarRules(analysisData);
+  const gcn = processGCNRules(analysisData);
 
-  const rules = [...ponds.rules, ...ramsar.rules].map(r => ({ ...r }));
+  const rules = [...ponds.rules, ...ramsar.rules, ...gcn.rules].map(r => ({ ...r }));
 
   // Overall risk picks highest severity by order in arrays
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
@@ -37,6 +39,7 @@ export function processEcologyRules(analysisData) {
     overallRisk,
     os_priority_ponds: ponds.os_priority_ponds,
     ramsar: ramsar.ramsar,
+    gcn: gcn.gcn,
     defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_ECOLOGY_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_ECOLOGY_NO_RULES_RECOMMENDATIONS
   };

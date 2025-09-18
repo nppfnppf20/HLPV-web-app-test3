@@ -35,6 +35,8 @@
   export let osPriorityPonds = [];
   /** @type {RamsarItem[] | undefined} */
   export let ramsar = [];
+  /** @type {PondItem[] | undefined} */
+  export let gcn = [];
   /** @type {string} */
   export let title = 'Ecology Results';
   /** @type {boolean} */
@@ -44,6 +46,7 @@
 
   $: safePonds = osPriorityPonds || [];
   $: safeRamsar = ramsar || [];
+  $: safeGcn = gcn || [];
 
   /** @param {PondItem} item */
   function getStatusBadges(item) {
@@ -88,6 +91,7 @@
   // State for expandable sections
   let osPriorityPondsExpanded = false;
   let ramsarExpanded = false;
+  let gcnExpanded = false;
 
   // Computed values
   $: totalPonds = safePonds.length;
@@ -99,6 +103,11 @@
   $: onSiteRamsar = safeRamsar.filter(r => r.on_site).length;
   $: within1kmRamsar = safeRamsar.filter(r => r.dist_m <= 1000).length;
   $: ramsarStatus = onSiteRamsar > 0 ? 'Yes' : (within1kmRamsar > 0 ? 'Nearby' : 'No');
+
+  $: totalGcn = safeGcn.length;
+  $: onSiteGcn = safeGcn.filter(g => g.on_site).length;
+  $: within1kmGcn = safeGcn.filter(g => g.dist_m <= 1000).length;
+  $: gcnStatus = onSiteGcn > 0 ? 'Yes' : (within1kmGcn > 0 ? 'Nearby' : 'No');
 </script>
 
 {#if loading}
@@ -141,6 +150,20 @@
         {:else if ramsarStatus === 'Nearby'}
           <p style="font-size: 0.875rem; color: #d97706; margin: 0.25rem 0 0 0;">
             Within 1km
+          </p>
+        {/if}
+      </div>
+
+      <div class="summary-card">
+        <h3>GCN Class Survey License Returns</h3>
+        <p class="summary-value">{gcnStatus}</p>
+        {#if gcnStatus === 'Yes'}
+          <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
+            {onSiteGcn} on site
+          </p>
+        {:else if gcnStatus === 'Nearby'}
+          <p style="font-size: 0.875rem; color: #d97706; margin: 0.25rem 0 0 0;">
+            Within 250m
           </p>
         {/if}
       </div>
@@ -256,11 +279,62 @@
       </div>
     {/if}
 
+    <!-- GCN Class Survey License Returns Section -->
+    {#if totalGcn > 0}
+      <div class="results-section">
+        <div
+          class="section-header clickable"
+          on:click={() => gcnExpanded = !gcnExpanded}
+          on:keydown={(e) => e.key === 'Enter' && (gcnExpanded = !gcnExpanded)}
+          role="button"
+          tabindex="0"
+          aria-expanded={gcnExpanded}
+        >
+          <div class="section-header-content">
+            <span class="section-icon"></span>
+            <h3 class="section-title">GCN Class Survey License Returns ({totalGcn})</h3>
+            {#if onSiteGcn > 0}
+              <span class="section-subtitle">{onSiteGcn} on site</span>
+            {/if}
+          </div>
+          <span class="expand-icon">{gcnExpanded ? '▼' : '▶'}</span>
+        </div>
+        {#if gcnExpanded}
+          <div class="results-grid">
+            {#each safeGcn as item}
+              <div class="result-item">
+                <div class="item-header">
+                  <h4 class="item-title">GCN License Return {item.id}</h4>
+                  <div class="status-badges">
+                    {#each getStatusBadges(item) as badge}
+                      <span class="badge {badge.class}">{badge.text}</span>
+                    {/each}
+                  </div>
+                </div>
+                <div class="item-details">
+                  <div class="detail-row">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-value">Great Crested Newt Survey</span>
+                  </div>
+                  {#if !item.on_site}
+                    <div class="detail-row">
+                      <span class="detail-label">Distance</span>
+                      <span class="detail-value">{formatDistance(item.dist_m)} {item.direction}</span>
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
+
     <!-- Empty state -->
-    {#if totalPonds === 0 && totalRamsar === 0}
+    {#if totalPonds === 0 && totalRamsar === 0 && totalGcn === 0}
       <div class="results-empty">
         <p>No ecological designations found in the analyzed area.</p>
-        <p style="font-size: 0.875rem; margin-top: 0.5rem;">OS Priority Ponds searched within 250m, Ramsar sites within 5km.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem;">OS Priority Ponds and GCN License Returns searched within 250m, Ramsar sites within 5km.</p>
       </div>
     {/if}
   </div>
