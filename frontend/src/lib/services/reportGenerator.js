@@ -135,7 +135,9 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData)
       name: "Heritage",
       overallRisk: heritageReport.riskAssessment?.overallRisk,
       riskSummary: resolveRiskSummary(heritageReport.riskAssessment?.overallRisk),
-      triggeredRules: heritageTriggeredRules
+      triggeredRules: heritageTriggeredRules,
+      defaultTriggeredRecommendations: heritageData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: heritageData?.defaultNoRulesRecommendations || []
     });
   }
   
@@ -145,7 +147,9 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData)
       name: "Landscape", 
       overallRisk: landscapeReport.riskAssessment?.overallRisk,
       riskSummary: resolveRiskSummary(landscapeReport.riskAssessment?.overallRisk),
-      triggeredRules: landscapeTriggeredRules
+      triggeredRules: landscapeTriggeredRules,
+      defaultTriggeredRecommendations: landscapeData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: landscapeData?.defaultNoRulesRecommendations || []
     });
   }
   
@@ -155,7 +159,9 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData)
       name: "Renewable Energy", 
       overallRisk: renewablesReport.riskAssessment?.overallRisk,
       riskSummary: resolveRiskSummary(renewablesReport.riskAssessment?.overallRisk),
-      triggeredRules: renewablesTriggeredRules
+      triggeredRules: renewablesTriggeredRules,
+      defaultTriggeredRecommendations: renewablesData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: renewablesData?.defaultNoRulesRecommendations || []
     });
   }
 

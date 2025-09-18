@@ -68,20 +68,31 @@
     console.log('🔍 getAggregatedRecommendations called for:', discipline?.name);
     console.log('🔍 triggeredRules:', discipline?.triggeredRules);
     
-    if (!discipline?.triggeredRules || discipline.triggeredRules.length === 0) {
-      console.log('❌ No triggered rules found');
-      return [];
-    }
-    
-    // Collect all recommendations from triggered rules
     const allRecommendations = [];
-    discipline.triggeredRules.forEach((rule, index) => {
-      console.log(`🔍 Rule ${index}:`, rule);
-      console.log(`🔍 Rule ${index} recommendations:`, rule.recommendations);
-      if (rule.recommendations && Array.isArray(rule.recommendations)) {
-        allRecommendations.push(...rule.recommendations);
+    
+    // Add default recommendations based on whether rules are triggered or not
+    if (!discipline?.triggeredRules || discipline.triggeredRules.length === 0) {
+      console.log('❌ No triggered rules found - using default no-rules recommendations');
+      // Add default recommendations for when NO rules are triggered
+      if (discipline?.defaultNoRulesRecommendations && Array.isArray(discipline.defaultNoRulesRecommendations)) {
+        allRecommendations.push(...discipline.defaultNoRulesRecommendations);
       }
-    });
+    } else {
+      console.log('✅ Rules triggered - collecting recommendations');
+      // Add default recommendations for when ANY rules are triggered
+      if (discipline?.defaultTriggeredRecommendations && Array.isArray(discipline.defaultTriggeredRecommendations)) {
+        allRecommendations.push(...discipline.defaultTriggeredRecommendations);
+      }
+      
+      // Collect all recommendations from triggered rules
+      discipline.triggeredRules.forEach((rule, index) => {
+        console.log(`🔍 Rule ${index}:`, rule);
+        console.log(`🔍 Rule ${index} recommendations:`, rule.recommendations);
+        if (rule.recommendations && Array.isArray(rule.recommendations)) {
+          allRecommendations.push(...rule.recommendations);
+        }
+      });
+    }
     
     console.log('🔍 All recommendations collected:', allRecommendations);
     

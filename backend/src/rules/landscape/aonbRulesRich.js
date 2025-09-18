@@ -1,5 +1,15 @@
 import { RISK_LEVELS } from '../riskLevels.js';
 
+// Default recommendations that always appear when ANY AONB rules are triggered
+const DEFAULT_TRIGGERED_RECOMMENDATIONS = [
+  // TODO: Add default recommendations for when AONB rules are triggered
+];
+
+// Default recommendations when NO AONB rules are triggered
+const DEFAULT_NO_RULES_RECOMMENDATIONS = [
+  // TODO: Add default recommendations for when no AONB rules are triggered
+];
+
 /** @param {any[]} aonbAreas */
 export function checkAONBOnSite(aonbAreas) {
   const onSite = (aonbAreas || []).filter(a => a.on_site);
@@ -161,7 +171,12 @@ export function processAONBRules(analysisData) {
     const result = rule(aonb);
     if (result.triggered) triggeredRules.push(result);
   }
-  return { rules: triggeredRules, aonb };
+  return { 
+    rules: triggeredRules, 
+    aonb,
+    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
+    defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : []
+  };
 }
 
 

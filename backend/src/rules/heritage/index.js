@@ -15,10 +15,16 @@ export function processHeritageRules(analysisData) {
   // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
+  // Combine default recommendations from both sub-modules
+  const allDefaultTriggered = [...lb.defaultTriggeredRecommendations, ...ca.defaultTriggeredRecommendations];
+  const allDefaultNoRules = [...lb.defaultNoRulesRecommendations, ...ca.defaultNoRulesRecommendations];
+
   return {
     rules,
     overallRisk,
     buildings: lb.buildings,
-    conservationAreas: ca.conservationAreas
+    conservationAreas: ca.conservationAreas,
+    defaultTriggeredRecommendations: allDefaultTriggered,
+    defaultNoRulesRecommendations: allDefaultNoRules
   };
 }

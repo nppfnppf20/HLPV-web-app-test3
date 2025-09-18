@@ -1,5 +1,15 @@
 import { RISK_LEVELS } from '../riskLevels.js';
 
+// Default recommendations that always appear when ANY renewables rules are triggered
+const DEFAULT_TRIGGERED_RECOMMENDATIONS = [
+  // TODO: Add default recommendations for when renewables rules are triggered
+];
+
+// Default recommendations when NO renewables rules are triggered
+const DEFAULT_NO_RULES_RECOMMENDATIONS = [
+  // TODO: Add default recommendations for when no renewables rules are triggered
+];
+
 /**
  * Process renewables rules and generate rich output for UI
  * @param {Array} renewablesData - Array of renewable energy developments
@@ -162,6 +172,8 @@ export function processRenewablesRules(renewablesData) {
   return {
     rules: triggeredRules,
     overallRisk,
+    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
+    defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : [],
     metadata: {
       generatedAt: new Date().toISOString(),
       totalRulesProcessed: renewablesData.length,

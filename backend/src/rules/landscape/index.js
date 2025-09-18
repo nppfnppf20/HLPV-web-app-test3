@@ -15,11 +15,17 @@ export function processLandscapeRules(analysisData) {
   // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
+  // Combine default recommendations from both sub-modules
+  const allDefaultTriggered = [...gb.defaultTriggeredRecommendations, ...ab.defaultTriggeredRecommendations];
+  const allDefaultNoRules = [...gb.defaultNoRulesRecommendations, ...ab.defaultNoRulesRecommendations];
+
   return {
     rules,
     overallRisk,
     green_belt: gb.green_belt,
-    aonb: ab.aonb
+    aonb: ab.aonb,
+    defaultTriggeredRecommendations: allDefaultTriggered,
+    defaultNoRulesRecommendations: allDefaultNoRules
   };
 }
 
