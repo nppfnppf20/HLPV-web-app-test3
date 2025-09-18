@@ -62,6 +62,44 @@
   function formatRequirements(requirements) {
     return requirements || [];
   }
+
+  /** @param {any} discipline */
+  function getAggregatedRecommendations(discipline) {
+    console.log('🔍 getAggregatedRecommendations called for:', discipline?.name);
+    console.log('🔍 triggeredRules:', discipline?.triggeredRules);
+    
+    if (!discipline?.triggeredRules || discipline.triggeredRules.length === 0) {
+      console.log('❌ No triggered rules found');
+      return [];
+    }
+    
+    // Collect all recommendations from triggered rules
+    const allRecommendations = [];
+    discipline.triggeredRules.forEach((rule, index) => {
+      console.log(`🔍 Rule ${index}:`, rule);
+      console.log(`🔍 Rule ${index} recommendations:`, rule.recommendations);
+      if (rule.recommendations && Array.isArray(rule.recommendations)) {
+        allRecommendations.push(...rule.recommendations);
+      }
+    });
+    
+    console.log('🔍 All recommendations collected:', allRecommendations);
+    
+    // Deduplicate recommendations (case-insensitive)
+    const uniqueRecommendations = [];
+    const seen = new Set();
+    
+    allRecommendations.forEach(rec => {
+      const normalizedRec = rec.toLowerCase().trim();
+      if (!seen.has(normalizedRec)) {
+        seen.add(normalizedRec);
+        uniqueRecommendations.push(rec);
+      }
+    });
+    
+    console.log('🔍 Unique recommendations:', uniqueRecommendations);
+    return uniqueRecommendations;
+  }
 </script>
 
 <div class="report-modal-backdrop" on:click={handleBackdropClick} on:keydown={handleBackdropClick} role="dialog" aria-labelledby="report-title" tabindex="-1">
@@ -139,18 +177,7 @@
                       
                       <div class="rule-content">
                         <p class="rule-findings"><strong>Findings:</strong> {rule.findings}</p>
-                        <p class="rule-impact"><strong>Impact:</strong> {rule.impact}</p>
                         
-                        {#if rule.requirements && rule.requirements.length > 0}
-                          <div class="rule-requirements">
-                            <strong>Requirements:</strong>
-                            <ul>
-                              {#each formatRequirements(rule.requirements) as requirement}
-                                <li>{requirement}</li>
-                              {/each}
-                            </ul>
-                          </div>
-                        {/if}
                       </div>
                     </div>
                   {/each}
@@ -166,7 +193,15 @@
             <!-- 2c. Recommendations -->
             <div class="subsection">
               <h4>{discipline.name} Recommendations</h4>
-              <p class="placeholder">TBC - {discipline.name} recommendations placeholder</p>
+              {#if getAggregatedRecommendations(discipline).length > 0}
+                <ul class="recommendations-list">
+                  {#each getAggregatedRecommendations(discipline) as recommendation}
+                    <li>{recommendation}</li>
+                  {/each}
+                </ul>
+              {:else}
+                <p class="no-recommendations">No specific recommendations for this discipline.</p>
+              {/if}
             </div>
           </div>
         {/each}
@@ -429,6 +464,27 @@
     text-align: center;
     padding: 1rem;
     background: #ecfdf5;
+    border-radius: 8px;
+  }
+
+  .recommendations-list {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  .recommendations-list li {
+    margin-bottom: 0.5rem;
+    color: #374151;
+    line-height: 1.5;
+  }
+
+  .no-recommendations {
+    color: #6b7280;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+    background: #f9fafb;
     border-radius: 8px;
   }
 

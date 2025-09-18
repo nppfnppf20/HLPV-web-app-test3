@@ -121,24 +121,24 @@ export function processRenewablesRules(renewablesData) {
       /** Build findings sentence aligned with report expectations */
       const findings = `Large-scale solar development (${capacity} MW) ${on_site ? 'on-site' : `at ${dist_m}m ${direction}`} (${closestBuffer}). Status: ${status}.`;
 
-      /** Map context-specific recommendations to the shared 'requirements' field */
+      /** Map context-specific recommendations to the shared 'recommendations' field */
       /** @type {string[]} */
-      let requirements = [];
+      let recommendations = [];
       if (status === 'Appeal Refused' || status === 'Application Refused') {
-        requirements = [
+        recommendations = [
           "Review the decision notice and reasons for refusal",
           "Consider how reasons may indicate local policy stance",
           "Monitor for any resubmissions or appeals"
         ];
       } else if (status === 'Application Submitted' || status === 'Awaiting Construction' || status === 'Revised') {
-        requirements = [
+        recommendations = [
           "Monitor application progress and committee dates",
           "Engage with the LPA regarding cumulative and visual impacts",
           "Prepare representations if appropriate",
           "Assess construction traffic and grid connection implications"
         ];
       } else if (status === 'Under Construction' || status === 'Operational') {
-        requirements = [
+        recommendations = [
           "Account for operational/committed development in cumulative effects",
           "Mitigation options likely limited due to committed status",
           "Consider landscape and infrastructure presence in assessments"
@@ -151,8 +151,7 @@ export function processRenewablesRules(renewablesData) {
         level: riskLevel,
         rule: ruleTitle,
         findings,
-        impact: explanation,
-        requirements
+        recommendations
       });
     }
   });

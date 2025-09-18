@@ -10,12 +10,10 @@ export function checkAONBOnSite(aonbAreas) {
     level: RISK_LEVELS.EXTREMELY_HIGH_RISK,
     rule: 'AONB On-Site',
     findings: `${onSite.length} AONB area${onSite.length > 1 ? 's' : ''} intersecting site`,
-    impact: 'Development within AONB faces strong protection due to national landscape importance',
-    requirements: [
+    recommendations: [
       'Major planning weight will be given to conserving and enhancing landscape and scenic beauty',
       'Early engagement with landscape specialists required',
-      'Landscape and visual impact assessment required',
-      
+      'Landscape and visual impact assessment required'
     ],
     areas: onSite
   };
@@ -31,8 +29,7 @@ export function checkAONBWithin50m(aonbAreas) {
     level: RISK_LEVELS.HIGH_RISK,
     rule: 'AONB Within 50m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 50m of site`,
-    impact: 'Immediate proximity to AONB requires careful design to avoid harm',
-    requirements: [
+    recommendations: [
       'Detailed LVIA with viewpoints adjacent to AONB',
       'Design to respect AONB character and avoid adverse effects'
     ],
@@ -50,8 +47,7 @@ export function checkAONBWithin100m(aonbAreas) {
     level: RISK_LEVELS.HIGH_RISK,
     rule: 'AONB Within 100m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 100m of site`,
-    impact: 'Proximity to AONB necessitates strong landscape mitigation',
-    requirements: [
+    recommendations: [
       'LVIA including intervisibility analysis',
       'Materials/scale to reduce visual prominence'
     ],
@@ -69,8 +65,7 @@ export function checkAONBWithin250m(aonbAreas) {
     level: RISK_LEVELS.MEDIUM_HIGH_RISK,
     rule: 'AONB Within 250m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 250m of site`,
-    impact: 'Nearby AONB requires careful consideration of setting and views',
-    requirements: [
+    recommendations: [
       'Landscape strategy to avoid harm to setting',
       'Viewpoint verification from AONB edges'
     ],
@@ -88,8 +83,7 @@ export function checkAONBWithin500m(aonbAreas) {
     level: RISK_LEVELS.MEDIUM_RISK,
     rule: 'AONB Within 500m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 500m of site`,
-    impact: 'Moderate proximity to AONB may affect visual context',
-    requirements: [
+    recommendations: [
       'Proportionate landscape assessment',
       'Design measures to reduce visibility'
     ],
@@ -107,8 +101,7 @@ export function checkAONBWithin1km(aonbAreas) {
     level: RISK_LEVELS.MEDIUM_LOW_RISK,
     rule: 'AONB Within 1km',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 1km of site`,
-    impact: 'Potential indirect effects on AONB setting',
-    requirements: [
+    recommendations: [
       'Basic landscape context appraisal',
       'Consider mitigation planting where appropriate'
     ],
@@ -126,8 +119,7 @@ export function checkAONBWithin3km(aonbAreas) {
     level: RISK_LEVELS.LOW_RISK,
     rule: 'AONB Within 3km',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 3km of site`,
-    impact: 'Low likelihood of significant effects',
-    requirements: [
+    recommendations: [
       'No specific landscape constraints expected'
     ],
     areas
@@ -144,8 +136,7 @@ export function checkAONBWithin5km(aonbAreas) {
     level: RISK_LEVELS.LOW_RISK,
     rule: 'AONB Within 5km',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 5km of site`,
-    impact: 'Low likelihood of significant effects at this distance',
-    requirements: [
+    recommendations: [
       'No specific constraints expected due to distance'
     ],
     areas

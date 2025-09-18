@@ -10,8 +10,7 @@ export function checkGradeIOnSite(buildings) {
     level: RISK_LEVELS.SHOWSTOPPER,
     rule: 'Grade I On-Site',
     findings: `${gradeIOnSite.length} Grade I listed building(s) found on development site`,
-    impact: 'Development directly affects buildings of exceptional national importance',
-    requirements: [
+    recommendations: [
       'N/a - this consitutes a showstopping designation', 
       'Development on this site is not viable'
     ],
@@ -29,8 +28,7 @@ export function checkGradeIWithin100m(buildings) {
     level: RISK_LEVELS.HIGH_RISK,
     rule: 'Grade I Within 100m',
     findings: `${gradeIClose.length} Grade I listed building(s) within 100m of site`,
-    impact: 'Development may significantly affect the setting of exceptional heritage assets',
-    requirements: [
+    recommendations: [
       'N/a - this consitutes a showstopping designation', 
       'Development on this site is not viable'
     ],
@@ -48,12 +46,9 @@ export function checkGradeIWithin500m(buildings) {
     level: RISK_LEVELS.HIGH_RISK,
     rule: 'Grade I Within 500m',
     findings: `${gradeIWider.length} Grade I listed building(s) within 500m of site`,
-    impact: 'Development may affect wider setting of exceptional heritage assets',
-    requirements: [
+    recommendations: [
       'Development highly unlikely to be viable given proximity of Grade I asset',
       'Consider alternative site locations'
-      
-      
     ],
     buildings: gradeIWider
   };
@@ -74,13 +69,10 @@ export function checkGradeIIOnSite(buildings) {
     rule: 'Grade II/II* On-Site',
     findings: `${gradeIIOnSite.length} Grade II or II* listed building(s) found on development site`,
     gradeBreakdown,
-    impact: 'Development directly affects buildings of special architectural or historic interest',
-    requirements: [
+    recommendations: [
       'Development highly unlikely to be viable given proximity of Grade II/II* asset',
-    'Heritage Impact Assessment essential',
-      'Specialist heritage consultant input required at an early stage',
-      
-      
+      'Heritage Impact Assessment essential',
+      'Specialist heritage consultant input required at an early stage'
     ],
     buildings: gradeIIOnSite
   };
@@ -102,8 +94,7 @@ export function checkAnyGradeWithin100m(buildings) {
     rule: 'Listed Buildings Within 100m',
     findings: `${buildingsClose.length} listed building(s) within 100m of site`,
     gradeBreakdown,
-    impact: 'Development likely to affect the immediate setting of listed buildings',
-    requirements: [
+    recommendations: [
         'Heritage Impact Assessment essential',
         'Specialist heritage consultant input required at an early stage',
         'Careful consideration of site layout required to minimise adverse impact on the setting of heritage assets'

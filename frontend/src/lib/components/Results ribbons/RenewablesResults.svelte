@@ -68,6 +68,14 @@
     if (techType === 'Battery') return '';
     return '';
   }
+
+  /** @param {number} distanceInMeters */
+  function formatDistance(distanceInMeters) {
+    if (distanceInMeters >= 1000) {
+      return `${(distanceInMeters / 1000).toFixed(1)}km`;
+    }
+    return `${distanceInMeters}m`;
+  }
 </script>
 
 {#if loading}
@@ -115,7 +123,7 @@
               {#if !item.on_site}
                 <div class="detail-row">
                   <span class="detail-label">Distance</span>
-                  <span class="detail-value">{item.dist_m}m {item.direction}</span>
+                  <span class="detail-value">{formatDistance(item.dist_m)} {item.direction}</span>
                 </div>
               {/if}
             </div>

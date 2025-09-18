@@ -45,8 +45,7 @@ export function buildLandscapeReport(backend) {
     rule: r.rule,
     level: r.level,
     findings: r.findings,
-    impact: r.impact,
-    requirements: r.requirements || []
+    recommendations: r.recommendations || []
   }));
 
   // Simple designation summaries for UI
