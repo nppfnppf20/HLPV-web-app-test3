@@ -8,6 +8,7 @@ RETURNS JSON AS $$
 DECLARE
   listed_buildings_result JSON;
   conservation_areas_result JSON;
+  scheduled_monuments_result JSON;
   combined_result JSON;
 BEGIN
   -- Get listed buildings analysis
@@ -22,10 +23,17 @@ BEGIN
     SELECT * FROM analyze_conservation_areas(polygon_geojson)
   ) t;
 
+  -- Get scheduled monuments analysis
+  SELECT json_agg(row_to_json(t)) INTO scheduled_monuments_result
+  FROM (
+    SELECT * FROM analyze_scheduled_monuments(polygon_geojson)
+  ) t;
+
   -- Combine results
   SELECT json_build_object(
     'listed_buildings', COALESCE(listed_buildings_result, '[]'::json),
-    'conservation_areas', COALESCE(conservation_areas_result, '[]'::json)
+    'conservation_areas', COALESCE(conservation_areas_result, '[]'::json),
+    'scheduled_monuments', COALESCE(scheduled_monuments_result, '[]'::json)
   ) INTO combined_result;
 
   RETURN combined_result;

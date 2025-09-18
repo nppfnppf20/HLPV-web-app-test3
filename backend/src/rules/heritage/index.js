@@ -1,5 +1,6 @@
 import { processListedBuildingsRules } from './listedBuildingsRulesRich.js';
 import { processConservationAreasRules } from './conservationAreasRulesRich.js';
+import { processScheduledMonumentsRules } from './ScheduledMonumentsRulesRich.js';
 import { RISK_LEVELS } from '../riskLevels.js';
 
 // Heritage discipline-wide default recommendations
@@ -17,14 +18,15 @@ const DEFAULT_HERITAGE_NO_RULES_RECOMMENDATIONS = [
 ];
 
 /**
- * Aggregate heritage rules across listed buildings and conservation areas
+ * Aggregate heritage rules across listed buildings, conservation areas, and scheduled monuments
  * @param {any} analysisData
  */
 export function processHeritageRules(analysisData) {
   const lb = processListedBuildingsRules(analysisData);
   const ca = processConservationAreasRules(analysisData);
+  const sm = processScheduledMonumentsRules(analysisData);
 
-  const rules = [...lb.rules, ...ca.rules].map(r => ({ ...r }));
+  const rules = [...lb.rules, ...ca.rules, ...sm.rules].map(r => ({ ...r }));
 
   // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
@@ -37,6 +39,7 @@ export function processHeritageRules(analysisData) {
     overallRisk,
     buildings: lb.buildings,
     conservationAreas: ca.conservationAreas,
+    scheduledMonuments: sm.scheduled_monuments,
     defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_HERITAGE_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_HERITAGE_NO_RULES_RECOMMENDATIONS
   };

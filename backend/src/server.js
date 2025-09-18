@@ -60,6 +60,16 @@ app.post('/analyze/heritage', async (req, res) => {
     // Extract the JSON result from the PostgreSQL function
     const analysisResult = result.rows[0]?.analysis_result || {};
 
+    // Debug: log heritage data to verify data flow
+    try {
+      const listedBuildingsArr = Array.isArray(analysisResult.listed_buildings) ? analysisResult.listed_buildings : [];
+      const conservationAreasArr = Array.isArray(analysisResult.conservation_areas) ? analysisResult.conservation_areas : [];
+      const scheduledMonumentsArr = Array.isArray(analysisResult.scheduled_monuments) ? analysisResult.scheduled_monuments : [];
+      console.log('[Heritage] listed_buildings count:', listedBuildingsArr.length, 'on_site:', listedBuildingsArr.filter(lb => lb?.on_site).length);
+      console.log('[Heritage] conservation_areas count:', conservationAreasArr.length, 'on_site:', conservationAreasArr.filter(ca => ca?.on_site).length);
+      console.log('[Heritage] scheduled_monuments count:', scheduledMonumentsArr.length, 'on_site:', scheduledMonumentsArr.filter(sm => sm?.on_site).length, 'within_5km:', scheduledMonumentsArr.filter(sm => sm?.within_5km).length);
+    } catch {}
+
     // Compute heritage rules and overall risk on the server
     const rulesAssessment = processHeritageRules(analysisResult);
 
@@ -67,15 +77,16 @@ app.post('/analyze/heritage', async (req, res) => {
     const response = {
       listed_buildings: analysisResult.listed_buildings || [],
       conservation_areas: analysisResult.conservation_areas || [],
+      scheduled_monuments: analysisResult.scheduled_monuments || [],
       rules: rulesAssessment.rules || [],
       overallRisk: rulesAssessment.overallRisk || 0,
       defaultTriggeredRecommendations: rulesAssessment.defaultTriggeredRecommendations || [],
       defaultNoRulesRecommendations: rulesAssessment.defaultNoRulesRecommendations || [],
       metadata: {
         generatedAt: new Date().toISOString(),
-        totalRulesProcessed: 4, // number of rule families evaluated
+        totalRulesProcessed: 12, // 2 Listed Buildings + 2 Conservation Areas + 8 Scheduled Monuments rule checks
         rulesTriggered: (rulesAssessment.rules || []).length,
-        rulesVersion: 'heritage-rules-v1'
+        rulesVersion: 'heritage-rules-v2'
       }
     };
 
