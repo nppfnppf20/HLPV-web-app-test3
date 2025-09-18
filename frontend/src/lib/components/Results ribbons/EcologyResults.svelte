@@ -14,8 +14,27 @@
    * @property {string} direction - Compass direction
    */
 
+  /**
+   * @typedef {Object} RamsarItem
+   * @property {number} id - Ramsar site ID
+   * @property {string} name - Site name
+   * @property {string} code - Site code
+   * @property {number} dist_m - Distance in meters
+   * @property {boolean} on_site - Whether on site
+   * @property {boolean} within_50m - Within 50m buffer
+   * @property {boolean} within_100m - Within 100m buffer
+   * @property {boolean} within_250m - Within 250m buffer
+   * @property {boolean} within_500m - Within 500m buffer
+   * @property {boolean} within_1km - Within 1km buffer
+   * @property {boolean} within_3km - Within 3km buffer
+   * @property {boolean} within_5km - Within 5km buffer
+   * @property {string} direction - Compass direction
+   */
+
   /** @type {PondItem[] | undefined} */
   export let osPriorityPonds = [];
+  /** @type {RamsarItem[] | undefined} */
+  export let ramsar = [];
   /** @type {string} */
   export let title = 'Ecology Results';
   /** @type {boolean} */
@@ -24,6 +43,7 @@
   export let error = '';
 
   $: safePonds = osPriorityPonds || [];
+  $: safeRamsar = ramsar || [];
 
   /** @param {PondItem} item */
   function getStatusBadges(item) {
@@ -67,12 +87,18 @@
 
   // State for expandable sections
   let osPriorityPondsExpanded = false;
+  let ramsarExpanded = false;
 
   // Computed values
   $: totalPonds = safePonds.length;
   $: onSitePonds = safePonds.filter(p => p.on_site).length;
   $: within1kmPonds = safePonds.filter(p => p.dist_m <= 1000).length;
   $: pondStatus = onSitePonds > 0 ? 'Yes' : (within1kmPonds > 0 ? 'Nearby' : 'No');
+
+  $: totalRamsar = safeRamsar.length;
+  $: onSiteRamsar = safeRamsar.filter(r => r.on_site).length;
+  $: within1kmRamsar = safeRamsar.filter(r => r.dist_m <= 1000).length;
+  $: ramsarStatus = onSiteRamsar > 0 ? 'Yes' : (within1kmRamsar > 0 ? 'Nearby' : 'No');
 </script>
 
 {#if loading}
@@ -99,6 +125,20 @@
             {onSitePonds} on site
           </p>
         {:else if pondStatus === 'Nearby'}
+          <p style="font-size: 0.875rem; color: #d97706; margin: 0.25rem 0 0 0;">
+            Within 1km
+          </p>
+        {/if}
+      </div>
+
+      <div class="summary-card">
+        <h3>Ramsar Sites</h3>
+        <p class="summary-value">{ramsarStatus}</p>
+        {#if ramsarStatus === 'Yes'}
+          <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
+            {onSiteRamsar} on site
+          </p>
+        {:else if ramsarStatus === 'Nearby'}
           <p style="font-size: 0.875rem; color: #d97706; margin: 0.25rem 0 0 0;">
             Within 1km
           </p>
@@ -156,9 +196,71 @@
           </div>
         {/if}
       </div>
-    {:else}
+    {/if}
+
+    <!-- Ramsar Sites Section -->
+    {#if totalRamsar > 0}
+      <div class="results-section">
+        <div
+          class="section-header clickable"
+          on:click={() => ramsarExpanded = !ramsarExpanded}
+          on:keydown={(e) => e.key === 'Enter' && (ramsarExpanded = !ramsarExpanded)}
+          role="button"
+          tabindex="0"
+          aria-expanded={ramsarExpanded}
+        >
+          <div class="section-header-content">
+            <span class="section-icon"></span>
+            <h3 class="section-title">Ramsar Sites ({totalRamsar})</h3>
+            {#if onSiteRamsar > 0}
+              <span class="section-subtitle">{onSiteRamsar} on site</span>
+            {/if}
+          </div>
+          <span class="expand-icon">{ramsarExpanded ? '▼' : '▶'}</span>
+        </div>
+
+        {#if ramsarExpanded}
+          <div class="results-grid">
+            {#each safeRamsar as item}
+              <div class="result-item">
+                <div class="item-header">
+                  <h4 class="item-title">{item.name || `Ramsar Site ${item.id}`}</h4>
+                  <div class="status-badges">
+                    {#each getStatusBadges(item) as badge}
+                      <span class="badge {badge.class}">{badge.text}</span>
+                    {/each}
+                  </div>
+                </div>
+                <div class="item-details">
+                  <div class="detail-row">
+                    <span class="detail-label">Type</span>
+                    <span class="detail-value">Ramsar Wetland</span>
+                  </div>
+                  {#if item.code}
+                    <div class="detail-row">
+                      <span class="detail-label">Code</span>
+                      <span class="detail-value">{item.code}</span>
+                    </div>
+                  {/if}
+                  {#if !item.on_site}
+                    <div class="detail-row">
+                      <span class="detail-label">Distance</span>
+                      <span class="detail-value">{formatDistance(item.dist_m)} {item.direction}</span>
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Empty state -->
+    {#if totalPonds === 0 && totalRamsar === 0}
       <div class="results-empty">
-        <p>No OS Priority Ponds found within 5km.</p>
+        <p>No ecological designations found in the analyzed area.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem;">OS Priority Ponds searched within 250m, Ramsar sites within 5km.</p>
       </div>
     {/if}
   </div>

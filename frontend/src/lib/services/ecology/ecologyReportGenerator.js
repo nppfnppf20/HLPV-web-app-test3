@@ -37,6 +37,7 @@ function resolveRiskSummary(overallRisk) {
  */
 export function buildEcologyReport(backend) {
   const osPriorityPonds = backend?.os_priority_ponds ?? [];
+  const ramsar = backend?.ramsar ?? [];
   const rules = Array.isArray(backend?.rules) ? backend.rules : [];
   const overallRisk = backend?.overallRisk ?? 0;
 
@@ -52,12 +53,22 @@ export function buildEcologyReport(backend) {
   const designationSummary = (() => {
     const pondsCount = osPriorityPonds.length;
     const onSitePonds = osPriorityPonds.filter((/** @type {any} */ pond) => pond.on_site).length;
+    const ramsarCount = ramsar.length;
+    const onSiteRamsar = ramsar.filter((/** @type {any} */ site) => site.on_site).length;
     const parts = [];
+
     parts.push(
       pondsCount > 0
         ? `${pondsCount} OS Priority Pond${pondsCount > 1 ? 's' : ''}${onSitePonds > 0 ? ` (${onSitePonds} intersecting)` : ''}`
-        : 'No OS Priority Ponds identified within 5km'
+        : 'No OS Priority Ponds identified within 250m'
     );
+
+    parts.push(
+      ramsarCount > 0
+        ? `${ramsarCount} Ramsar site${ramsarCount > 1 ? 's' : ''}${onSiteRamsar > 0 ? ` (${onSiteRamsar} intersecting)` : ''}`
+        : 'No Ramsar sites identified within 5km'
+    );
+
     return parts;
   })();
 
@@ -69,9 +80,13 @@ export function buildEcologyReport(backend) {
       triggeredRules
     },
     lists: {
-      osPriorityPonds: { 
-        detailed: osPriorityPonds, 
-        within250mCount: osPriorityPonds.filter((/** @type {any} */ pond) => !pond.on_site && pond.within_250m).length 
+      osPriorityPonds: {
+        detailed: osPriorityPonds,
+        within250mCount: osPriorityPonds.filter((/** @type {any} */ pond) => !pond.on_site && pond.within_250m).length
+      },
+      ramsar: {
+        detailed: ramsar,
+        within5kmCount: ramsar.filter((/** @type {any} */ site) => !site.on_site && site.within_5km).length
       }
     },
     metadata: backend?.metadata || {}

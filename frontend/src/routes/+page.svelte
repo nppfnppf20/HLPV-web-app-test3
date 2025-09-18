@@ -150,8 +150,9 @@
 {/if}
 
 {#if ecologyResult}
-  <EcologyResults 
+  <EcologyResults
     osPriorityPonds={ecologyResult?.os_priority_ponds}
+    ramsar={ecologyResult?.ramsar}
     title="Ecology"
     {loading}
     error={errorMsg}

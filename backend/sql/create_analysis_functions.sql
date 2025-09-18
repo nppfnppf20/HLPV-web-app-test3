@@ -111,6 +111,7 @@ CREATE OR REPLACE FUNCTION analyze_site_ecology(polygon_geojson TEXT)
 RETURNS JSON AS $$
 DECLARE
   os_priority_ponds_result JSON;
+  ramsar_result JSON;
   combined_result JSON;
 BEGIN
   -- Get OS Priority Ponds analysis
@@ -119,9 +120,16 @@ BEGIN
     SELECT * FROM analyze_os_priority_ponds(polygon_geojson)
   ) t;
 
+  -- Get Ramsar sites analysis
+  SELECT json_agg(row_to_json(t)) INTO ramsar_result
+  FROM (
+    SELECT * FROM analyze_ramsar(polygon_geojson)
+  ) t;
+
   -- Build result object
   SELECT json_build_object(
-    'os_priority_ponds', COALESCE(os_priority_ponds_result, '[]'::json)
+    'os_priority_ponds', COALESCE(os_priority_ponds_result, '[]'::json),
+    'ramsar', COALESCE(ramsar_result, '[]'::json)
   ) INTO combined_result;
 
   RETURN combined_result;
