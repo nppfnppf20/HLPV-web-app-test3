@@ -30,16 +30,35 @@
   $: safeRenewables = renewables || [];
 
   /** @param {RenewableItem} item */
-  function getClosestBuffer(item) {
-    if (item.on_site) return 'On-site';
-    if (item.within_50m) return '50m';
-    if (item.within_100m) return '100m';
-    if (item.within_250m) return '250m';
-    if (item.within_500m) return '500m';
-    if (item.within_1km) return '1km';
-    if (item.within_3km) return '3km';
-    if (item.within_5km) return '5km';
-    return 'Beyond 5km';
+  function getStatusBadges(item) {
+    /** @type {{ text: string, class: string }[]} */
+    const badges = [];
+    
+    if (item.on_site) {
+      badges.push({ text: 'ON SITE', class: 'badge-on-site' });
+    } else if (item.within_50m) {
+      badges.push({ text: 'WITHIN 50M', class: 'badge-nearby' });
+    } else if (item.within_100m) {
+      badges.push({ text: 'WITHIN 100M', class: 'badge-nearby' });
+    } else if (item.within_250m) {
+      badges.push({ text: 'WITHIN 250M', class: 'badge-nearby' });
+    } else if (item.within_500m) {
+      badges.push({ text: 'WITHIN 500M', class: 'badge-nearby' });
+    } else if (item.within_1km) {
+      badges.push({ text: 'WITHIN 1KM', class: 'badge-nearby' });
+    } else if (item.within_3km) {
+      badges.push({ text: 'WITHIN 3KM', class: 'badge-nearby' });
+    } else if (item.within_5km) {
+      badges.push({ text: 'WITHIN 5KM', class: 'badge-nearby' });
+    } else {
+      badges.push({ text: 'BEYOND 5KM', class: 'badge-distant' });
+    }
+    
+    if (item.direction && item.direction !== 'N/A') {
+      badges.push({ text: item.direction, class: 'badge-direction' });
+    }
+    
+    return badges;
   }
 
   /** @param {string} techType */
@@ -74,7 +93,11 @@
               <h4 class="item-title">
                 {getTechIcon(item.technology_type)} {item.site_name || `Development ${item.id}`}
               </h4>
-              <span class="item-distance">{getClosestBuffer(item)}</span>
+              <div class="status-badges">
+                {#each getStatusBadges(item) as badge}
+                  <span class="badge {badge.class}">{badge.text}</span>
+                {/each}
+              </div>
             </div>
             <div class="item-details">
               <div class="detail-row">
