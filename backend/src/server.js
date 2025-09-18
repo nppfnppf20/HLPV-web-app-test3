@@ -68,6 +68,8 @@ app.post('/analyze/heritage', async (req, res) => {
       conservation_areas: analysisResult.conservation_areas || [],
       rules: rulesAssessment.rules || [],
       overallRisk: rulesAssessment.overallRisk || 0,
+      defaultTriggeredRecommendations: rulesAssessment.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: rulesAssessment.defaultNoRulesRecommendations || [],
       metadata: {
         generatedAt: new Date().toISOString(),
         totalRulesProcessed: 4, // number of rule families evaluated

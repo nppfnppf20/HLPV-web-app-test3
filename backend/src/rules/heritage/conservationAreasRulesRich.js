@@ -1,15 +1,5 @@
 import { RISK_LEVELS } from '../riskLevels.js';
 
-// Default recommendations that always appear when ANY conservation area rules are triggered
-const DEFAULT_TRIGGERED_RECOMMENDATIONS = [
-  // TODO: Add default recommendations for when conservation area rules are triggered
-];
-
-// Default recommendations when NO conservation area rules are triggered
-const DEFAULT_NO_RULES_RECOMMENDATIONS = [
-  // TODO: Add default recommendations for when no conservation area rules are triggered
-];
-
 /** @param {any[]} conservationAreas */
 export function checkConservationAreaOnSite(conservationAreas) {
   const onSiteAreas = (conservationAreas || []).filter(a => a.on_site);
@@ -48,8 +38,6 @@ export function processConservationAreasRules(analysisData) {
 
   return {
     rules: triggeredRules,
-    conservationAreas,
-    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
-    defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : []
+    conservationAreas
   };
 }

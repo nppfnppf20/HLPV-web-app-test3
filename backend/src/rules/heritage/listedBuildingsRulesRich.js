@@ -1,15 +1,5 @@
 import { RISK_LEVELS } from '../riskLevels.js';
 
-// Default recommendations that always appear when ANY listed buildings rules are triggered
-const DEFAULT_TRIGGERED_RECOMMENDATIONS = [
-  // TODO: Add default recommendations for when listed buildings rules are triggered
-];
-
-// Default recommendations when NO listed buildings rules are triggered
-const DEFAULT_NO_RULES_RECOMMENDATIONS = [
-  // TODO: Add default recommendations for when no listed buildings rules are triggered
-];
-
 /** @param {any[]} buildings */
 export function checkGradeIOnSite(buildings) {
   const gradeIOnSite = (buildings || []).filter(b => b.on_site && b.grade === 'I');
@@ -137,8 +127,6 @@ export function processListedBuildingsRules(analysisData) {
 
   return {
     rules: triggeredRules,
-    buildings,
-    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
-    defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : []
+    buildings
   };
 }

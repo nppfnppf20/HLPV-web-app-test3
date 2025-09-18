@@ -2,6 +2,20 @@ import { processListedBuildingsRules } from './listedBuildingsRulesRich.js';
 import { processConservationAreasRules } from './conservationAreasRulesRich.js';
 import { RISK_LEVELS } from '../riskLevels.js';
 
+// Heritage discipline-wide default recommendations
+const DEFAULT_HERITAGE_TRIGGERED_RECOMMENDATIONS = [
+  'Heritage impact assessment required to assess effects on historic assets',
+  'Early engagement with conservation officers and Historic England recommended',
+  'Consider cumulative heritage effects and setting of nearby heritage assets',
+  'Archaeological assessment may be required depending on site sensitivity'
+];
+
+const DEFAULT_HERITAGE_NO_RULES_RECOMMENDATIONS = [
+  'No significant heritage designations identified within assessment area',
+  'Standard heritage due diligence protocols recommended',
+  'Consider potential for undesignated heritage assets and archaeological remains'
+];
+
 /**
  * Aggregate heritage rules across listed buildings and conservation areas
  * @param {any} analysisData
@@ -15,16 +29,15 @@ export function processHeritageRules(analysisData) {
   // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
-  // Combine default recommendations from both sub-modules
-  const allDefaultTriggered = [...lb.defaultTriggeredRecommendations, ...ca.defaultTriggeredRecommendations];
-  const allDefaultNoRules = [...lb.defaultNoRulesRecommendations, ...ca.defaultNoRulesRecommendations];
+  // Discipline-wide recommendations based on whether ANY heritage rules triggered
+  const hasTriggeredRules = rules.length > 0;
 
   return {
     rules,
     overallRisk,
     buildings: lb.buildings,
     conservationAreas: ca.conservationAreas,
-    defaultTriggeredRecommendations: allDefaultTriggered,
-    defaultNoRulesRecommendations: allDefaultNoRules
+    defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_HERITAGE_TRIGGERED_RECOMMENDATIONS : [],
+    defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_HERITAGE_NO_RULES_RECOMMENDATIONS
   };
 }
