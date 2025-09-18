@@ -3,15 +3,18 @@
   
   /** @type {any} */
   export let heritageData = null;
-  
+
   /** @type {any} */
   export let landscapeData = null;
-  
+
   /** @type {any} */
   export let renewablesData = null;
-  
+
   /** @type {any} */
   export let ecologyData = null;
+
+  /** @type {any} */
+  export let agLandData = null;
   
   /** @type {() => void} */
   export let onClose;
@@ -19,16 +22,16 @@
   // Generate combined report when data changes
   $: report = (() => {
     try {
-      if (heritageData || landscapeData || renewablesData || ecologyData) {
-        console.log('🔄 Building combined report with:', { heritageData: !!heritageData, landscapeData: !!landscapeData, renewablesData: !!renewablesData, ecologyData: !!ecologyData });
-        const result = buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData);
+      if (heritageData || landscapeData || renewablesData || ecologyData || agLandData) {
+        console.log('🔄 Building combined report with:', { heritageData: !!heritageData, landscapeData: !!landscapeData, renewablesData: !!renewablesData, ecologyData: !!ecologyData, agLandData: !!agLandData });
+        const result = buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData, agLandData);
         console.log('✅ Report built successfully:', result);
         return result;
       }
       return null;
     } catch (error) {
       console.error('❌ Error building report:', error);
-      console.error('Data that caused error:', { heritageData, landscapeData, renewablesData, ecologyData });
+      console.error('Data that caused error:', { heritageData, landscapeData, renewablesData, ecologyData, agLandData });
       return null;
     }
   })();
@@ -164,7 +167,7 @@
         <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
         {#each disciplines as discipline}
           <div class="report-section discipline-section">
-            <h3>{discipline.name === 'Heritage' ? '🏛️' : discipline.name === 'Landscape' ? '🌳' : discipline.name === 'Renewable Energy' ? '⚡' : '📊'} {discipline.name}</h3>
+            <h3>{discipline.name === 'Heritage' ? '🏛️' : discipline.name === 'Landscape' ? '🌳' : discipline.name === 'Renewable Energy' ? '⚡' : discipline.name === 'Ecology' ? '🐸' : discipline.name === 'Agricultural Land' ? '🚜' : '📊'} {discipline.name}</h3>
             
             <!-- 2a. Overall Risk for this discipline -->
             <div class="subsection">

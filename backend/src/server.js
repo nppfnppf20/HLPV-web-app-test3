@@ -17,6 +17,7 @@ import { processHeritageRules } from './rules/heritage/index.js';
 import { processLandscapeRules } from './rules/landscape/index.js';
 import { processRenewablesRules } from './rules/renewables/index.js';
 import { processEcologyRules } from './rules/ecology/index.js';
+import { processAgLandRules } from './rules/agland/agLandRulesRich.js';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -194,13 +195,23 @@ app.post('/analyze/ag-land', async (req, res) => {
       console.log('[AgLand] ag_land count:', agLandArr.length, 'grades found:', agLandArr.map(a => a.grade).join(', '));
     } catch {}
 
-    // Return raw data (no rules processing for now - just display in ribbon)
+    // Compute agricultural land rules and overall risk on the server
+    const rulesAssessment = processAgLandRules(analysisResult);
+
+    // Build enriched response for the frontend
     const response = {
       ag_land: analysisResult.ag_land || [],
+      rules: rulesAssessment.rules || [],
+      overallRisk: rulesAssessment.overallRisk || 0,
+      defaultTriggeredRecommendations: rulesAssessment.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: rulesAssessment.defaultNoRulesRecommendations || [],
       metadata: {
         generatedAt: new Date().toISOString(),
         dataSource: 'provisional_alc',
-        analysisType: 'agricultural-land-classification'
+        analysisType: 'agricultural-land-classification',
+        totalRulesProcessed: rulesAssessment.metadata?.totalRulesProcessed || 0,
+        rulesTriggered: (rulesAssessment.rules || []).length,
+        rulesVersion: rulesAssessment.metadata?.rulesVersion || 'agland-rules-v1'
       }
     };
 

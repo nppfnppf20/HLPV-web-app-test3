@@ -4,6 +4,7 @@
 import { buildHeritageReport } from './heritage/heritageReportGenerator.js';
 import { buildLandscapeReport } from './landscape/landscapeReportGenerator.js';
 import { buildEcologyReport } from './ecology/ecologyReportGenerator.js';
+import { buildAgLandReport } from './agland/agLandReportGenerator.js';
 
 /**
  * Build renewables-specific report from backend analysis data
@@ -67,11 +68,12 @@ function resolveRiskSummary(overallRisk) {
 
 /**
  * Determine overall risk across multiple domains
- * @param {string|number|null} heritageRisk 
- * @param {string|number|null} landscapeRisk 
- * @param {string|number|null} renewablesRisk 
+ * @param {string|number|null} heritageRisk
+ * @param {string|number|null} landscapeRisk
+ * @param {string|number|null} renewablesRisk
+ * @param {string|number|null} agLandRisk
  */
-function determineOverallRisk(heritageRisk, landscapeRisk, renewablesRisk) {
+function determineOverallRisk(heritageRisk, landscapeRisk, renewablesRisk, agLandRisk) {
   // Risk hierarchy (highest to lowest)
   const riskHierarchy = [
     'showstopper',
@@ -83,7 +85,7 @@ function determineOverallRisk(heritageRisk, landscapeRisk, renewablesRisk) {
     'low_risk'
   ];
   
-  const risks = [heritageRisk, landscapeRisk, renewablesRisk].filter(Boolean);
+  const risks = [heritageRisk, landscapeRisk, renewablesRisk, agLandRisk].filter(Boolean);
   if (risks.length === 0) return 'low_risk';
   
   // Return the highest risk level found
@@ -95,24 +97,26 @@ function determineOverallRisk(heritageRisk, landscapeRisk, renewablesRisk) {
 }
 
 /**
- * Build combined heritage, landscape, renewables, and ecology report
+ * Build combined heritage, landscape, renewables, ecology, and agricultural land report
  * @param {any} heritageData - Backend heritage analysis results
- * @param {any} landscapeData - Backend landscape analysis results  
+ * @param {any} landscapeData - Backend landscape analysis results
  * @param {any} renewablesData - Backend renewables analysis results
  * @param {any} ecologyData - Backend ecology analysis results
+ * @param {any} agLandData - Backend agricultural land analysis results
  */
-export function buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData) {
+export function buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData, agLandData) {
   const heritageReport = heritageData ? buildHeritageReport(heritageData) : null;
   const landscapeReport = landscapeData ? buildLandscapeReport(landscapeData) : null;
   const renewablesReport = renewablesData ? buildRenewablesReport(renewablesData) : null;
   const ecologyReport = ecologyData ? buildEcologyReport(ecologyData) : null;
+  const agLandReport = agLandData ? buildAgLandReport(agLandData) : null;
   
   // Determine overall risk across all domains
   const overallRisk = determineOverallRisk(
     heritageReport?.riskAssessment?.overallRisk,
     landscapeReport?.riskAssessment?.overallRisk,
     renewablesReport?.riskAssessment?.overallRisk,
-    ecologyReport?.riskAssessment?.overallRisk
+    agLandReport?.riskAssessment?.overallRisk
   );
   
   // Combine triggered rules from all domains
@@ -120,7 +124,8 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData,
     ...(heritageReport?.riskAssessment?.triggeredRules || []),
     ...(landscapeReport?.riskAssessment?.triggeredRules || []),
     ...(renewablesReport?.riskAssessment?.triggeredRules || []),
-    ...(ecologyReport?.riskAssessment?.triggeredRules || [])
+    ...(ecologyReport?.riskAssessment?.triggeredRules || []),
+    ...(agLandReport?.riskAssessment?.triggeredRules || [])
   ];
   
   // Combine designation summaries
@@ -128,7 +133,8 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData,
     ...(heritageReport?.designationSummary || []),
     ...(landscapeReport?.designationSummary || []),
     ...(renewablesReport?.designationSummary || []),
-    ...(ecologyReport?.designationSummary || [])
+    ...(ecologyReport?.designationSummary || []),
+    ...(agLandReport?.designationSummary || [])
   ];
 
   // Build discipline-specific data for structured report
@@ -174,12 +180,24 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData,
   if (ecologyReport) {
     const ecologyTriggeredRules = ecologyReport.riskAssessment?.triggeredRules || [];
     disciplines.push({
-      name: "Ecology", 
+      name: "Ecology",
       overallRisk: ecologyReport.riskAssessment?.overallRisk,
       riskSummary: resolveRiskSummary(ecologyReport.riskAssessment?.overallRisk),
       triggeredRules: ecologyTriggeredRules,
       defaultTriggeredRecommendations: ecologyData?.defaultTriggeredRecommendations || [],
       defaultNoRulesRecommendations: ecologyData?.defaultNoRulesRecommendations || []
+    });
+  }
+
+  if (agLandReport) {
+    const agLandTriggeredRules = agLandReport.riskAssessment?.triggeredRules || [];
+    disciplines.push({
+      name: "Agricultural Land",
+      overallRisk: agLandReport.riskAssessment?.overallRisk,
+      riskSummary: resolveRiskSummary(agLandReport.riskAssessment?.overallRisk),
+      triggeredRules: agLandTriggeredRules,
+      defaultTriggeredRecommendations: agLandData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: agLandData?.defaultNoRulesRecommendations || []
     });
   }
 
@@ -198,6 +216,7 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData,
     landscape: landscapeReport,
     renewables: renewablesReport,
     ecology: ecologyReport,
+    agland: agLandReport,
     combined: {
       overallRisk,
       designationSummary: combinedDesignationSummary,
@@ -210,16 +229,18 @@ export function buildCombinedReport(heritageData, landscapeData, renewablesData,
         heritageData ? 'heritage' : null,
         landscapeData ? 'landscape' : null,
         renewablesData ? 'renewables' : null,
-        ecologyData ? 'ecology' : null
+        ecologyData ? 'ecology' : null,
+        agLandData ? 'agland' : null
       ].filter(Boolean),
       totalRules: allTriggeredRules.length,
-      totalRulesProcessed: (heritageReport?.metadata?.totalRulesProcessed || 0) + (landscapeReport?.metadata?.totalRulesProcessed || 0) + (renewablesReport?.metadata?.totalRulesProcessed || 0) + (ecologyReport?.metadata?.totalRulesProcessed || 0),
+      totalRulesProcessed: (heritageReport?.metadata?.totalRulesProcessed || 0) + (landscapeReport?.metadata?.totalRulesProcessed || 0) + (renewablesReport?.metadata?.totalRulesProcessed || 0) + (ecologyReport?.metadata?.totalRulesProcessed || 0) + (agLandReport?.metadata?.totalRulesProcessed || 0),
       rulesTriggered: allTriggeredRules.length,
-      rulesVersion: `combined-v2 (heritage: ${heritageReport?.metadata?.rulesVersion || 'n/a'}, landscape: ${landscapeReport?.metadata?.rulesVersion || 'n/a'}, renewables: ${renewablesReport?.metadata?.rulesVersion || 'n/a'}, ecology: ${ecologyReport?.metadata?.rulesVersion || 'n/a'})`,
+      rulesVersion: `combined-v2 (heritage: ${heritageReport?.metadata?.rulesVersion || 'n/a'}, landscape: ${landscapeReport?.metadata?.rulesVersion || 'n/a'}, renewables: ${renewablesReport?.metadata?.rulesVersion || 'n/a'}, ecology: ${ecologyReport?.metadata?.rulesVersion || 'n/a'}, agland: ${agLandReport?.metadata?.rulesVersion || 'n/a'})`,
       heritageMetadata: heritageReport?.metadata,
       landscapeMetadata: landscapeReport?.metadata,
       renewablesMetadata: renewablesReport?.metadata,
-      ecologyMetadata: ecologyReport?.metadata
+      ecologyMetadata: ecologyReport?.metadata,
+      aglandMetadata: agLandReport?.metadata
     },
 
     // NEW STRUCTURED REPORT - New organized structure

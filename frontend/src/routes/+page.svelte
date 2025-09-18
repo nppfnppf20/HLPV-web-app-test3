@@ -168,11 +168,12 @@ Generate Report
 {/if}
 
 {#if showReport}
-  <ReportGenerator 
+  <ReportGenerator
     heritageData={result}
     landscapeData={landscapeResult}
     renewablesData={renewablesResult}
     ecologyData={ecologyResult}
+    agLandData={agLandResult}
     onClose={closeReport}
   />
 {/if}
