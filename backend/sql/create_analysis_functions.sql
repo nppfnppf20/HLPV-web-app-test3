@@ -105,3 +105,25 @@ BEGIN
   RETURN combined_result;
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+-- Ecology analysis function (new domain)
+CREATE OR REPLACE FUNCTION analyze_site_ecology(polygon_geojson TEXT)
+RETURNS JSON AS $$
+DECLARE
+  os_priority_ponds_result JSON;
+  combined_result JSON;
+BEGIN
+  -- Get OS Priority Ponds analysis
+  SELECT json_agg(row_to_json(t)) INTO os_priority_ponds_result
+  FROM (
+    SELECT * FROM analyze_os_priority_ponds(polygon_geojson)
+  ) t;
+
+  -- Build result object
+  SELECT json_build_object(
+    'os_priority_ponds', COALESCE(os_priority_ponds_result, '[]'::json)
+  ) INTO combined_result;
+
+  RETURN combined_result;
+END;
+$$ LANGUAGE plpgsql STABLE;

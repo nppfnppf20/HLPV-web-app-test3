@@ -42,6 +42,13 @@ export function buildRenewablesAnalysisQuery(geojsonPolygon) {
   return { text, values };
 }
 
+// Ecology analysis using PostgreSQL functions
+export function buildEcologyAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_ecology($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
 // Legacy function for backward compatibility (if needed)
 export function buildAnalysisQuery(geojsonPolygon) {
   // For now, redirect to the new heritage analysis

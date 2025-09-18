@@ -9,12 +9,14 @@ import {
   buildConservationAreasQuery,
   buildLandscapeAnalysisQuery,
   buildAgLandAnalysisQuery,
-  buildRenewablesAnalysisQuery
+  buildRenewablesAnalysisQuery,
+  buildEcologyAnalysisQuery
 } from './queries.js';
 // Use rich, UI-aligned rules on the server
 import { processHeritageRules } from './rules/heritage/index.js';
 import { processLandscapeRules } from './rules/landscape/index.js';
 import { processRenewablesRules } from './rules/renewables/index.js';
+import { processEcologyRules } from './rules/ecology/index.js';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -256,6 +258,55 @@ app.post('/analyze/renewables', async (req, res) => {
   } catch (error) {
     // Log detailed Postgres error information when available
     console.error('Renewables analysis error:', {
+      message: error?.message,
+      detail: error?.detail,
+      hint: error?.hint,
+      position: error?.position,
+      stack: error?.stack
+    });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Ecology analysis endpoint
+app.post('/analyze/ecology', async (req, res) => {
+  try {
+    const { polygon } = req.body;
+    if (!polygon) {
+      return res.status(400).json({ error: 'polygon is required (GeoJSON Polygon or MultiPolygon)' });
+    }
+
+    const { text, values } = buildEcologyAnalysisQuery(polygon);
+    const result = await pool.query(text, values);
+    
+    // Extract the JSON result from the PostgreSQL function
+    const analysisResult = result.rows[0]?.analysis_result || {};
+
+    // Debug: log ecology data to verify data flow
+    try {
+      const pondsArr = Array.isArray(analysisResult.os_priority_ponds) ? analysisResult.os_priority_ponds : [];
+      console.log('[Ecology] os_priority_ponds count:', pondsArr.length, 'on_site:', pondsArr.filter(p => p?.on_site).length, 'within_250m:', pondsArr.filter(p => p?.within_250m).length);
+    } catch {}
+
+    // Compute ecology rules and overall risk on the server
+    const rulesAssessment = processEcologyRules(analysisResult);
+
+    // Build enriched response for the frontend
+    const response = {
+      os_priority_ponds: analysisResult.os_priority_ponds || [],
+      rules: rulesAssessment.rules || [],
+      overallRisk: rulesAssessment.overallRisk || 0,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalRulesProcessed: 2, // 2 OS Priority Ponds rule checks
+        rulesTriggered: (rulesAssessment.rules || []).length,
+        rulesVersion: 'ecology-rules-v1'
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Ecology analysis error:', {
       message: error?.message,
       detail: error?.detail,
       hint: error?.hint,

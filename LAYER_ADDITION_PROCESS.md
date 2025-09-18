@@ -298,6 +298,111 @@ export function buildLandscapeReport(backend) {
 
 To add a new analysis layer (e.g., "National Parks"), follow these steps:
 
+### 0. Table and Column Verification (CRITICAL FIRST STEP)
+
+**⚠️ ALWAYS DO THIS FIRST:** Verify table and column details before writing any SQL. This prevents deployment failures and saves significant debugging time.
+
+#### Step 0.1: Create Table Verification Script
+Create `/backend/scripts/check-tables.js` to systematically verify your data:
+
+```javascript
+import 'dotenv/config';
+import pg from 'pg';
+
+async function checkTables() {
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    max: 3,
+    connectionTimeoutMillis: 30000,
+    idleTimeoutMillis: 30000
+  });
+
+  try {
+    console.log('Checking for [YOUR_LAYER] tables...');
+    
+    // Search for tables containing your layer name
+    const tables = await pool.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND LOWER(table_name) LIKE '%your_search_term%'
+      ORDER BY table_name;
+    `);
+    
+    console.log('\nMatching tables:');
+    tables.rows.forEach(row => {
+      console.log(`  - "${row.table_name}"`);
+    });
+    
+    // If you found your table, check its structure
+    if (tables.rows.length > 0) {
+      const tableName = tables.rows[0].table_name;
+      
+      const columns = await pool.query(`
+        SELECT column_name, data_type, is_nullable
+        FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = $1
+        ORDER BY ordinal_position;
+      `, [tableName]);
+      
+      console.log(`\nColumn structure for "${tableName}":`);
+      columns.rows.forEach(col => {
+        console.log(`  - ${col.column_name} (${col.data_type})`);
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Error checking tables:', error.message);
+  } finally {
+    await pool.end();
+  }
+}
+
+checkTables().catch(console.error);
+```
+
+#### Step 0.2: Run Table Verification
+```bash
+cd /path/to/backend
+node scripts/check-tables.js
+```
+
+#### Step 0.3: Verification Checklist
+- [ ] **Verify exact table name** - Copy the EXACT name including quotes, spaces, and special characters
+- [ ] **Identify ID column** - Note if it's `OBJECTID`, `fid`, `id`, or other (and its data type)
+- [ ] **Confirm geometry column** - Verify `geom` column exists
+- [ ] **Check required fields** - Identify any name/description columns you need
+- [ ] **Test basic query** - Run `SELECT COUNT(*) FROM "exact_table_name"` to confirm access
+- [ ] **Document SRID** - Check `SELECT ST_SRID(geom) FROM "table_name" LIMIT 1;`
+
+#### Step 0.4: Common Table Name Issues
+- **Spaces in names**: `"OS priority ponds with survey data"`
+- **Special characters**: `"OS priority ponds with survey data — OS_Priority_Ponds_with_S"`
+- **Case sensitivity**: `"AONB"` vs `"aonb"`
+- **Mixed punctuation**: `--` vs `—` (double hyphen vs em dash)
+- **Trailing/leading spaces**: `" Table Name "` vs `"Table Name"`
+
+#### Step 0.5: Ecology Example - What We Found
+```sql
+-- Search query we used:
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' AND LOWER(table_name) LIKE '%pond%';
+
+-- Result:
+"OS priority ponds with survey data — OS_Priority_Ponds_with_S"
+
+-- Column check:
+SELECT column_name, data_type FROM information_schema.columns 
+WHERE table_name = 'OS priority ponds with survey data — OS_Priority_Ponds_with_S';
+
+-- Key findings:
+-- ✅ ID column: "OBJECTID" (integer)
+-- ✅ Geometry: "geom" (USER-DEFINED)
+-- ❌ No name column needed for this layer
+```
+
 ### 1. Database Setup
 - [ ] Ensure geospatial dataset is loaded into PostgreSQL with appropriate SRID
 - [ ] Verify table structure includes geometry column and identifying fields
@@ -341,10 +446,239 @@ To add a new analysis layer (e.g., "National Parks"), follow these steps:
 - [ ] Add new layer data to report structure
 - [ ] Include summary counts and display logic
 
-### 10. UI Integration
-- [ ] Update relevant Svelte components to display new layer data
-- [ ] Add any layer-specific UI components if needed
-- [ ] Test end-to-end flow
+### 10. Frontend API Integration
+- [ ] Add analysis function to `/frontend/src/lib/services/api.js`
+- [ ] Import and call new analysis function in main page component
+- [ ] Add state variables for new domain results
+- [ ] Update Promise.all() to include new analysis
+- [ ] Add results component to UI display
+- [ ] Update report button condition to include new domain
+- [ ] Pass new domain data to ReportGenerator
+
+### 11. Report Generator Integration  
+- [ ] Add new domain parameter to ReportGenerator component
+- [ ] Update buildCombinedReport function signature and calls
+- [ ] Add new domain to risk determination logic
+- [ ] Include new domain in triggered rules combination
+- [ ] Add new domain to designation summaries
+- [ ] Add new domain discipline to structured report
+- [ ] Update metadata to include new domain information
+
+### 12. UI Component Integration
+- [ ] Create or update results ribbon component for new domain/layer
+- [ ] Implement consistent styling and distance badges
+- [ ] Add appropriate icons and visual indicators
+- [ ] Test responsive design and error states
+
+---
+
+## Frontend Integration: Critical Steps Often Missed
+
+**⚠️ IMPORTANT:** The backend implementation alone is insufficient. Frontend integration is essential for the layer to appear in the UI and reports.
+
+### Step-by-Step Frontend Integration Process
+
+#### 1. API Service Integration
+**File:** `/frontend/src/lib/services/api.js`
+
+Add the new analysis function:
+```javascript
+// Ecology analysis (OS Priority Ponds and other ecological features)
+export async function analyzeEcology(/** @type {any} */ polygonGeoJSON) {
+  const res = await fetch(`${BASE_URL}/analyze/ecology`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ecology analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+```
+
+#### 2. Main Page Component Integration
+**File:** `/frontend/src/routes/+page.svelte`
+
+**2a. Add Component Imports:**
+```javascript
+import EcologyResults from '$lib/components/Results ribbons/EcologyResults.svelte';
+import { analyzeHeritage, analyzeLandscape, analyzeRenewables, analyzeEcology } from '$lib/services/api.js';
+```
+
+**2b. Add State Variables:**
+```javascript
+/** @type {Record<string, any> | null} */
+let ecologyResult = null;
+```
+
+**2c. Update Analysis Call:**
+```javascript
+// Reset all results
+ecologyResult = null;
+
+// Run all analyses in parallel
+const [heritageData, landscapeData, renewablesData, ecologyData] = await Promise.all([
+  analyzeHeritage(geometry),
+  analyzeLandscape(geometry), 
+  analyzeRenewables(geometry),
+  analyzeEcology(geometry)
+]);
+
+// Store results
+ecologyResult = ecologyData;
+```
+
+**2d. Add Results Component to UI:**
+```svelte
+{#if ecologyResult}
+  <EcologyResults 
+    osPriorityPonds={ecologyResult?.os_priority_ponds}
+    title="Ecology"
+    {loading}
+    error={errorMsg}
+  />
+{/if}
+```
+
+**2e. Update Report Button Condition:**
+```svelte
+{#if (result || landscapeResult || renewablesResult || ecologyResult) && !loading && !errorMsg}
+```
+
+**2f. Pass Data to ReportGenerator:**
+```svelte
+<ReportGenerator 
+  heritageData={result}
+  landscapeData={landscapeResult}
+  renewablesData={renewablesResult}
+  ecologyData={ecologyResult}
+  onClose={closeReport}
+/>
+```
+
+#### 3. Report Generator Component Integration
+**File:** `/frontend/src/lib/components/ReportGenerator.svelte`
+
+**3a. Add New Domain Property:**
+```javascript
+/** @type {any} */
+export let ecologyData = null;
+```
+
+**3b. Update Report Building:**
+```javascript
+if (heritageData || landscapeData || renewablesData || ecologyData) {
+  const result = buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData);
+  // ...
+}
+```
+
+#### 4. Combined Report Builder Integration
+**File:** `/frontend/src/lib/services/reportGenerator.js`
+
+**4a. Add Import:**
+```javascript
+import { buildEcologyReport } from './ecology/ecologyReportGenerator.js';
+```
+
+**4b. Update Function Signature:**
+```javascript
+export function buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData) {
+```
+
+**4c. Add Domain Report Building:**
+```javascript
+const ecologyReport = ecologyData ? buildEcologyReport(ecologyData) : null;
+```
+
+**4d. Update Risk Determination:**
+```javascript
+const overallRisk = determineOverallRisk(
+  heritageReport?.riskAssessment?.overallRisk,
+  landscapeReport?.riskAssessment?.overallRisk,
+  renewablesReport?.riskAssessment?.overallRisk,
+  ecologyReport?.riskAssessment?.overallRisk
+);
+```
+
+**4e. Add to All Aggregations:**
+```javascript
+// Triggered rules
+const allTriggeredRules = [
+  ...(heritageReport?.riskAssessment?.triggeredRules || []),
+  ...(landscapeReport?.riskAssessment?.triggeredRules || []),
+  ...(renewablesReport?.riskAssessment?.triggeredRules || []),
+  ...(ecologyReport?.riskAssessment?.triggeredRules || [])
+];
+
+// Designation summaries  
+const combinedDesignationSummary = [
+  ...(heritageReport?.designationSummary || []),
+  ...(landscapeReport?.designationSummary || []),
+  ...(renewablesReport?.designationSummary || []),
+  ...(ecologyReport?.designationSummary || [])
+];
+
+// Disciplines array
+if (ecologyReport) {
+  disciplines.push({
+    name: "Ecology", 
+    overallRisk: ecologyReport.riskAssessment?.overallRisk,
+    riskSummary: resolveRiskSummary(ecologyReport.riskAssessment?.overallRisk),
+    triggeredRules: ecologyReport.riskAssessment?.triggeredRules || [],
+    defaultTriggeredRecommendations: ecologyData?.defaultTriggeredRecommendations || [],
+    defaultNoRulesRecommendations: ecologyData?.defaultNoRulesRecommendations || []
+  });
+}
+```
+
+**4f. Update Return Object:**
+```javascript
+return {
+  // Backward compatibility
+  heritage: heritageReport,
+  landscape: landscapeReport,
+  renewables: renewablesReport,
+  ecology: ecologyReport,
+  
+  // Metadata
+  metadata: {
+    sectionsIncluded: [
+      heritageData ? 'heritage' : null,
+      landscapeData ? 'landscape' : null,
+      renewablesData ? 'renewables' : null,
+      ecologyData ? 'ecology' : null
+    ].filter(Boolean),
+    // ... other metadata updates
+  }
+};
+```
+
+### Common Integration Pitfalls
+
+1. **Skipping Table Verification** - Wrong table/column names cause deployment failures
+2. **Missing API Function** - Backend works but no API call function
+3. **Forgotten Promise.all Update** - Other analyses work but new one never gets called
+4. **Missing State Variables** - Analysis runs but results not stored
+5. **UI Component Not Added** - Results exist but no display component
+6. **Report Button Condition** - Generate Report button doesn't appear
+7. **ReportGenerator Props** - Report generates but missing new domain data
+8. **buildCombinedReport Signature** - Report shows but new domain not included
+9. **Risk Aggregation Missing** - New domain rules don't affect overall risk
+
+### Testing Checklist
+
+After frontend integration, verify:
+- [ ] New domain results ribbon appears when drawing polygon
+- [ ] Data displays correctly with proper formatting
+- [ ] Generate Report button appears when new domain has results
+- [ ] Report includes new domain in risk assessment
+- [ ] Overall risk calculation includes new domain
+- [ ] New domain appears in discipline sections
+- [ ] Error handling works for new domain
+- [ ] Loading states work properly
 
 ---
 

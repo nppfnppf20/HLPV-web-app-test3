@@ -10,22 +10,25 @@
   /** @type {any} */
   export let renewablesData = null;
   
+  /** @type {any} */
+  export let ecologyData = null;
+  
   /** @type {() => void} */
   export let onClose;
 
   // Generate combined report when data changes
   $: report = (() => {
     try {
-      if (heritageData || landscapeData || renewablesData) {
-        console.log('🔄 Building combined report with:', { heritageData: !!heritageData, landscapeData: !!landscapeData, renewablesData: !!renewablesData });
-        const result = buildCombinedReport(heritageData, landscapeData, renewablesData);
+      if (heritageData || landscapeData || renewablesData || ecologyData) {
+        console.log('🔄 Building combined report with:', { heritageData: !!heritageData, landscapeData: !!landscapeData, renewablesData: !!renewablesData, ecologyData: !!ecologyData });
+        const result = buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData);
         console.log('✅ Report built successfully:', result);
         return result;
       }
       return null;
     } catch (error) {
       console.error('❌ Error building report:', error);
-      console.error('Data that caused error:', { heritageData, landscapeData, renewablesData });
+      console.error('Data that caused error:', { heritageData, landscapeData, renewablesData, ecologyData });
       return null;
     }
   })();

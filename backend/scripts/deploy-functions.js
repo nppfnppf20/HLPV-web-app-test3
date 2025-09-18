@@ -52,6 +52,11 @@ async function deployFunctions() {
       'analyze_renewables.sql'
     ];
     
+    // Deploy ecology analysis functions
+    const ecologyFiles = [
+      'analyze_OS_priority_ponds.sql'
+    ];
+    
     // for (const file of landscapeFiles) {
     //   const path = join(__dirname, '..', 'sql', 'landscape_analysis', file);
     //   try {
@@ -77,6 +82,18 @@ async function deployFunctions() {
     
     for (const file of renewablesFiles) {
       const path = join(__dirname, '..', 'sql', 'renewables_analysis', file);
+      try {
+        const sql = readFileSync(path, 'utf8');
+        await pool.query(sql);
+        console.log(`✅ ${file} deployed`);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+      } catch (e) {
+        console.warn(`⚠️ Could not execute ${file}:`, e?.message || e);
+      }
+    }
+    
+    for (const file of ecologyFiles) {
+      const path = join(__dirname, '..', 'sql', 'ecology_analysis', file);
       try {
         const sql = readFileSync(path, 'utf8');
         await pool.query(sql);

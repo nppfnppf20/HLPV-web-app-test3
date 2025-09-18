@@ -98,4 +98,18 @@ export async function analyzeRenewables(/** @type {any} */ polygonGeoJSON) {
   return res.json();
 }
 
+// Ecology analysis (OS Priority Ponds and other ecological features)
+export async function analyzeEcology(/** @type {any} */ polygonGeoJSON) {
+  const res = await fetch(`${BASE_URL}/analyze/ecology`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Ecology analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 

@@ -4,8 +4,9 @@
   import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
   import AgLandResults from '$lib/components/Results ribbons/Ag_landResults.svelte';
   import RenewablesResults from '$lib/components/Results ribbons/RenewablesResults.svelte';
+  import EcologyResults from '$lib/components/Results ribbons/EcologyResults.svelte';
   import ReportGenerator from '$lib/components/ReportGenerator.svelte';
-  import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables } from '$lib/services/api.js';
+  import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables, analyzeEcology } from '$lib/services/api.js';
   
   /** @type {Record<string, any> | null} */
   let result = null;
@@ -15,6 +16,8 @@
   let agLandResult = null;
   /** @type {Record<string, any> | null} */
   let renewablesResult = null;
+  /** @type {Record<string, any> | null} */
+  let ecologyResult = null;
   /** @type {string} */
   let errorMsg = '';
   /** @type {boolean} */
@@ -29,28 +32,32 @@
     landscapeResult = null;
     agLandResult = null;
     renewablesResult = null;
+    ecologyResult = null;
     loading = true;
     
     try {
-      // Run heritage, landscape, agricultural land, and renewables analysis in parallel
-      const [heritageData, landscapeData, agLandData, renewablesData] = await Promise.all([
+      // Run heritage, landscape, agricultural land, renewables, and ecology analysis in parallel
+      const [heritageData, landscapeData, agLandData, renewablesData, ecologyData] = await Promise.all([
         analyzeHeritage(geometry),
         analyzeLandscape(geometry),
         analyzeAgLand(geometry),
-        analyzeRenewables(geometry)
+        analyzeRenewables(geometry),
+        analyzeEcology(geometry)
       ]);
       
       console.log('🔍 API Results:', {
         heritage: heritageData,
         landscape: landscapeData,
         agLand: agLandData,
-        renewables: renewablesData
+        renewables: renewablesData,
+        ecology: ecologyData
       });
       
       result = heritageData;
       landscapeResult = landscapeData;
       agLandResult = agLandData;
       renewablesResult = renewablesData;
+      ecologyResult = ecologyData;
     } catch (/** @type {any} */ err) {
       errorMsg = err?.message || String(err);
     } finally {
@@ -142,7 +149,16 @@
   />
 {/if}
 
-{#if (result || landscapeResult || renewablesResult) && !loading && !errorMsg}
+{#if ecologyResult}
+  <EcologyResults 
+    osPriorityPonds={ecologyResult?.os_priority_ponds}
+    title="Ecology"
+    {loading}
+    error={errorMsg}
+  />
+{/if}
+
+{#if (result || landscapeResult || renewablesResult || ecologyResult) && !loading && !errorMsg}
   <div class="report-button-container">
     <button class="generate-report-btn" on:click={openReport}>
 Generate Report
@@ -155,6 +171,7 @@ Generate Report
     heritageData={result}
     landscapeData={landscapeResult}
     renewablesData={renewablesResult}
+    ecologyData={ecologyResult}
     onClose={closeReport}
   />
 {/if}
