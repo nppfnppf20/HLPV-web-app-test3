@@ -2,16 +2,14 @@ import { RISK_LEVELS } from '../riskLevels.js';
 
 // Agricultural land discipline-wide default recommendations
 const DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS = [
-  'Agricultural land assessment required in planning submissions',
-  'Consider alternative site locations to avoid high-quality agricultural land',
-  'Mitigation measures may be required to demonstrate exceptional circumstances',
-  'Early engagement with Natural England recommended for Grade 1 and 2 land'
+
+  
 ];
 
 const DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS = [
   'No significant agricultural land constraints identified',
-  'Standard planning considerations for agricultural land apply',
-  'Consider agricultural context in design and layout planning'
+  'Standard planning considerations apply',
+  
 ];
 
 /** @param {any[]} agLandAreas */
@@ -26,11 +24,12 @@ export function checkGrade1OnSite(agLandAreas) {
     triggered: true,
     level: RISK_LEVELS.EXTREMELY_HIGH_RISK,
     rule: 'Grade 1 Agricultural Land On-Site',
-    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 1 agricultural land (${grade1Areas.length} area${grade1Areas.length > 1 ? 's' : ''})`,
+    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 1 agricultural land`,
     recommendations: [
-      'Development on Grade 1 land strongly discouraged - exceptional circumstances required',
+      'Presence of Grade 1 land constitutes a very high risk',
       'Comprehensive agricultural land assessment essential',
-      'Alternative site locations should be considered'
+      'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
+      'Early engagement with Natural England recommended for Grade 1 and 2 land'
     ],
     areas: grade1Areas
   };
@@ -48,59 +47,39 @@ export function checkGrade2OnSite(agLandAreas) {
     triggered: true,
     level: RISK_LEVELS.HIGH_RISK,
     rule: 'Grade 2 Agricultural Land On-Site',
-    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 2 agricultural land (${grade2Areas.length} area${grade2Areas.length > 1 ? 's' : ''})`,
+    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 2 agricultural land`,
     recommendations: [
-      'High quality agricultural land - strong policy protection applies',
-      'Exceptional circumstances required to justify development',
-      'Agricultural land assessment required in planning submissions'
+      'Presence of Grade 2 land constitutes high risk. Whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
+      'Early engagement with Natural England recommended for Grade 1 and 2 land',
+      'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
+
     ],
     areas: grade2Areas
   };
 }
 
 /** @param {any[]} agLandAreas */
-export function checkGrade3aOnSite(agLandAreas) {
-  const grade3aAreas = (agLandAreas || []).filter(a => a.grade === 'Grade 3a' || a.grade === '3a');
-  if (grade3aAreas.length === 0) return { triggered: false };
+export function checkGrade3OnSite(agLandAreas) {
+  const grade3Areas = (agLandAreas || []).filter(a => a.grade === 'Grade 3' || a.grade === '3');
+  if (grade3Areas.length === 0) return { triggered: false };
 
-  const totalCoverage = grade3aAreas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
-
-  return {
-    id: 'grade_3a_on_site',
-    triggered: true,
-    level: RISK_LEVELS.MEDIUM_HIGH_RISK,
-    rule: 'Grade 3a Agricultural Land On-Site',
-    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 3a agricultural land (${grade3aAreas.length} area${grade3aAreas.length > 1 ? 's' : ''})`,
-    recommendations: [
-      'Good quality agricultural land - policy protection applies',
-      'Agricultural land assessment recommended',
-      'Consider agricultural context in site design'
-    ],
-    areas: grade3aAreas
-  };
-}
-
-/** @param {any[]} agLandAreas */
-export function checkGrade3bOnSite(agLandAreas) {
-  const grade3bAreas = (agLandAreas || []).filter(a => a.grade === 'Grade 3b' || a.grade === '3b');
-  if (grade3bAreas.length === 0) return { triggered: false };
-
-  const totalCoverage = grade3bAreas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
+  const totalCoverage = grade3Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
 
   return {
-    id: 'grade_3b_on_site',
+    id: 'grade_3_on_site',
     triggered: true,
     level: RISK_LEVELS.MEDIUM_RISK,
-    rule: 'Grade 3b Agricultural Land On-Site',
-    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 3b agricultural land (${grade3bAreas.length} area${grade3bAreas.length > 1 ? 's' : ''})`,
+    rule: 'Grade 3 Agricultural Land On-Site',
+    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 3 agricultural land`,
     recommendations: [
-      'Moderate quality agricultural land',
-      'Standard agricultural considerations apply',
-      'Consider agricultural context in planning applications'
+      'Planning risk is high and, whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
+      'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
+
     ],
-    areas: grade3bAreas
+    areas: grade3Areas
   };
 }
+
 
 /** @param {any[]} agLandAreas */
 export function checkGrade4OnSite(agLandAreas) {
@@ -156,8 +135,7 @@ export function processAgLandRules(analysisData) {
   const agLandRules = [
     checkGrade1OnSite,
     checkGrade2OnSite,
-    checkGrade3aOnSite,
-    checkGrade3bOnSite,
+    checkGrade3OnSite,
     checkGrade4OnSite,
     checkGrade5OnSite
   ];
@@ -180,9 +158,9 @@ export function processAgLandRules(analysisData) {
     defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS,
     metadata: {
-      totalRulesProcessed: 6, // 6 agricultural grade checks
+      totalRulesProcessed: 5, // 5 agricultural grade checks
       rulesTriggered: triggeredRules.length,
-      rulesVersion: 'agland-rules-v1'
+      rulesVersion: 'agland-rules-v2'
     }
   };
 }

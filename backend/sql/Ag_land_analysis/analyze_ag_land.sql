@@ -64,11 +64,10 @@ ORDER BY
   CASE gc.grade 
     WHEN '1' THEN 1
     WHEN '2' THEN 2  
-    WHEN '3a' THEN 3
-    WHEN '3b' THEN 4
-    WHEN '4' THEN 5
-    WHEN '5' THEN 6
-    ELSE 7
+    WHEN '3' THEN 3
+    WHEN '4' THEN 4
+    WHEN '5' THEN 5
+    ELSE 6
   END;
 
 $$ LANGUAGE sql STABLE;
