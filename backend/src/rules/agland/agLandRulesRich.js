@@ -27,7 +27,7 @@ export function checkGrade1OnSite(agLandAreas) {
     findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 1 agricultural land`,
     recommendations: [
       'Presence of Grade 1 land constitutes a very high risk',
-      'Comprehensive agricultural land assessment essential',
+     
       'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
       'Early engagement with Natural England recommended for Grade 1 and 2 land'
     ],
@@ -82,44 +82,53 @@ export function checkGrade3OnSite(agLandAreas) {
 
 
 /** @param {any[]} agLandAreas */
-export function checkGrade4OnSite(agLandAreas) {
-  const grade4Areas = (agLandAreas || []).filter(a => a.grade === 'Grade 4' || a.grade === '4');
-  if (grade4Areas.length === 0) return { triggered: false };
+export function checkGrade4Or5OnlyOnSite(agLandAreas) {
+  const allAreas = agLandAreas || [];
+  
+  // Check if there are any higher quality grades (1, 2, 3) present
+  const higherGrades = allAreas.filter(a => 
+    a.grade === 'Grade 1' || a.grade === '1' ||
+    a.grade === 'Grade 2' || a.grade === '2' ||
+    a.grade === 'Grade 3' || a.grade === '3'
+  );
+  
+  // If higher grades are present, this rule doesn't apply
+  if (higherGrades.length > 0) return { triggered: false };
+  
+  // Check for Grade 4 or 5 areas
+  const grade4Or5Areas = allAreas.filter(a => 
+    a.grade === 'Grade 4' || a.grade === '4' ||
+    a.grade === 'Grade 5' || a.grade === '5'
+  );
+  
+  if (grade4Or5Areas.length === 0) return { triggered: false };
 
-  const totalCoverage = grade4Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
+  const totalCoverage = grade4Or5Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
+  const grade4Areas = grade4Or5Areas.filter(a => a.grade === 'Grade 4' || a.grade === '4');
+  const grade5Areas = grade4Or5Areas.filter(a => a.grade === 'Grade 5' || a.grade === '5');
+  
+  const gradeBreakdown = [];
+  if (grade4Areas.length > 0) {
+    const grade4Coverage = grade4Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
+    gradeBreakdown.push(`Grade 4 (${grade4Coverage.toFixed(1)}%)`);
+  }
+  if (grade5Areas.length > 0) {
+    const grade5Coverage = grade5Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
+    gradeBreakdown.push(`Grade 5 (${grade5Coverage.toFixed(1)}%)`);
+  }
 
   return {
-    id: 'grade_4_on_site',
+    id: 'grade_4_or_5_only_on_site',
     triggered: true,
     level: RISK_LEVELS.LOW_RISK,
-    rule: 'Grade 4 Agricultural Land On-Site',
-    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 4 agricultural land (${grade4Areas.length} area${grade4Areas.length > 1 ? 's' : ''})`,
+    rule: 'Grade 4 or 5 Agricultural Land Only',
+    findings: `Site consists only of lower quality agricultural land: ${gradeBreakdown.join(', ')}`,
     recommendations: [
-      'Poor quality agricultural land - limited agricultural value',
-      'Minimal agricultural land constraints for development'
+      'Lower quality agricultural land with limited agricultural value',
+      
+      'Although the provisional land classification is indicates that the land is unlikely to contain BMV, an ALC survey is still advisable to confirm this'
     ],
-    areas: grade4Areas
-  };
-}
-
-/** @param {any[]} agLandAreas */
-export function checkGrade5OnSite(agLandAreas) {
-  const grade5Areas = (agLandAreas || []).filter(a => a.grade === 'Grade 5' || a.grade === '5');
-  if (grade5Areas.length === 0) return { triggered: false };
-
-  const totalCoverage = grade5Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
-
-  return {
-    id: 'grade_5_on_site',
-    triggered: true,
-    level: RISK_LEVELS.LOW_RISK,
-    rule: 'Grade 5 Agricultural Land On-Site',
-    findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 5 agricultural land (${grade5Areas.length} area${grade5Areas.length > 1 ? 's' : ''})`,
-    recommendations: [
-      'Very poor quality agricultural land - very limited agricultural value',
-      'No significant agricultural land constraints for development'
-    ],
-    areas: grade5Areas
+    areas: grade4Or5Areas
   };
 }
 
@@ -136,8 +145,7 @@ export function processAgLandRules(analysisData) {
     checkGrade1OnSite,
     checkGrade2OnSite,
     checkGrade3OnSite,
-    checkGrade4OnSite,
-    checkGrade5OnSite
+    checkGrade4Or5OnlyOnSite
   ];
 
   for (const rule of agLandRules) {
@@ -158,9 +166,9 @@ export function processAgLandRules(analysisData) {
     defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS,
     metadata: {
-      totalRulesProcessed: 5, // 5 agricultural grade checks
+      totalRulesProcessed: 4, // 4 agricultural grade checks
       rulesTriggered: triggeredRules.length,
-      rulesVersion: 'agland-rules-v2'
+      rulesVersion: 'agland-rules-v3'
     }
   };
 }
