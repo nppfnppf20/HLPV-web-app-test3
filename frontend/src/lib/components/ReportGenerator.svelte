@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { buildCombinedReport } from '../services/reportGenerator.js';
   
   /** @type {any} */
@@ -91,7 +91,7 @@
       }
       
       // Collect all recommendations from triggered rules
-      discipline.triggeredRules.forEach((rule, index) => {
+      discipline.triggeredRules.forEach((rule: any, index: number) => {
         console.log(`🔍 Rule ${index}:`, rule);
         console.log(`🔍 Rule ${index} recommendations:`, rule.recommendations);
         if (rule.recommendations && Array.isArray(rule.recommendations)) {
@@ -103,7 +103,7 @@
     console.log('🔍 All recommendations collected:', allRecommendations);
     
     // Deduplicate recommendations (case-insensitive)
-    const uniqueRecommendations = [];
+    const uniqueRecommendations: string[] = [];
     const seen = new Set();
     
     allRecommendations.forEach(rec => {
@@ -116,6 +116,69 @@
     
     console.log('🔍 Unique recommendations:', uniqueRecommendations);
     return uniqueRecommendations;
+  }
+
+  function groupRulesByType(rules: any[]) {
+    const groups: Record<string, any[]> = {};
+    
+    rules.forEach((rule: any) => {
+      // Extract base type by removing distance/location suffixes
+      let baseType = rule.rule
+        .replace(/ On-Site$/, '')
+        .replace(/ Within \d+m$/, '')
+        .replace(/ Within \d+km$/, '')
+        .replace(/ Within \d+-\d+km$/, '')
+        .replace(/ \(.*\)$/, ''); // Remove anything in parentheses
+      
+      if (!groups[baseType]) {
+        groups[baseType] = [];
+      }
+      groups[baseType].push(rule);
+    });
+    
+    return groups;
+  }
+
+  function createGroupedRuleDisplay(baseType: string, rules: any[]) {
+    // Sort rules by risk level (highest first)
+    const riskOrder: Record<string, number> = { 'showstopper': 7, 'extremely_high_risk': 6, 'high_risk': 5, 'medium_high_risk': 4, 'medium_risk': 3, 'medium_low_risk': 2, 'low_risk': 1 };
+    const sortedRules = rules.sort((a: any, b: any) => (riskOrder[b.level] || 0) - (riskOrder[a.level] || 0));
+    
+    const findings = sortedRules.map((rule: any) => {
+      const riskLabel = rule.level?.replace('_', '-').toUpperCase() || 'UNKNOWN';
+      
+      // Extract count and location from findings with better pattern matching
+      let simplifiedFindings = rule.findings;
+      
+      // Pattern for "X within Ykm" or "X within Ym"
+      const withinMatch = rule.findings.match(/(\d+).*?within (\d+)([km]+)/i);
+      if (withinMatch) {
+        simplifiedFindings = `${withinMatch[1]} within ${withinMatch[2]}${withinMatch[3]} - ${riskLabel}`;
+      } 
+      // Pattern for "X on site" or "on-site"
+      else if (rule.rule.includes('On-Site') || rule.findings.toLowerCase().includes('on site')) {
+        const onSiteMatch = rule.findings.match(/(\d+)/);
+        if (onSiteMatch) {
+          simplifiedFindings = `${onSiteMatch[1]} on-site - ${riskLabel}`;
+        }
+      }
+      // Pattern for range "X between Y-Z km"
+      else if (rule.findings.includes('between')) {
+        const betweenMatch = rule.findings.match(/(\d+).*?between (\d+-\d+)([km]+)/i);
+        if (betweenMatch) {
+          simplifiedFindings = `${betweenMatch[1]} between ${betweenMatch[2]}${betweenMatch[3]} - ${riskLabel}`;
+        }
+      }
+      
+      return simplifiedFindings;
+    }).join('\n');
+    
+    return {
+      title: baseType,
+      findings: findings,
+      highestRisk: sortedRules[0].level,
+      allRecommendations: [...new Set(sortedRules.flatMap((r: any) => r.recommendations || []))]
+    };
   }
 </script>
 
@@ -183,21 +246,45 @@
               <div class="subsection">
                 <h4>{discipline.name} Assessment Rules Triggered</h4>
                 <div class="rules-container">
-                  {#each discipline.triggeredRules as rule}
-                    <div class="rule-card" style="border-left-color: {discipline.riskSummary?.color};">
-                      <div class="rule-header">
-                        <h4 class="rule-title">{rule.rule}</h4>
-                        <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
-                          {rule.level?.replace('_', '-').toUpperCase()}
-                        </span>
-                      </div>
-                      
-                      <div class="rule-content">
-                        <p class="rule-findings"><strong>Findings:</strong> {rule.findings}</p>
+                  {#if discipline.name === 'Agricultural Land'}
+                    <!-- Agricultural Land: Show individual rules (no grouping) -->
+                    {#each discipline.triggeredRules as rule}
+                      <div class="rule-card" style="border-left-color: {discipline.riskSummary?.color};">
+                        <div class="rule-header">
+                          <h4 class="rule-title">{rule.rule}</h4>
+                          <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+                            {rule.level?.replace('_', '-').toUpperCase()}
+                          </span>
+                        </div>
                         
+                        <div class="rule-content">
+                          <p class="rule-findings"><strong>Findings:</strong> {rule.findings}</p>
+                        </div>
                       </div>
-                    </div>
-                  {/each}
+                    {/each}
+                  {:else}
+                    <!-- Other disciplines: Use grouped rules display -->
+                    {#each Object.entries(groupRulesByType(discipline.triggeredRules)) as [baseType, rules]}
+                      {@const groupedRule = createGroupedRuleDisplay(baseType, rules)}
+                      <div class="rule-card" style="border-left-color: {discipline.riskSummary?.color};">
+                        <div class="rule-header">
+                          <h4 class="rule-title">{groupedRule.title}</h4>
+                          <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+                            {groupedRule.highestRisk?.replace('_', '-').toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        <div class="rule-content">
+                          <div class="rule-findings">
+                            <strong>Findings:</strong>
+                            <div style="white-space: pre-line; margin-top: 0.5rem;">
+                              {groupedRule.findings}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {/each}
+                  {/if}
                 </div>
               </div>
             {:else}

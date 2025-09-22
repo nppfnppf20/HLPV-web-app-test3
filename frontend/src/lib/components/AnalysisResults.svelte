@@ -82,9 +82,26 @@
   $: listedBuildings = data?.listed_buildings || [];
   $: conservationAreas = data?.conservation_areas || [];
   $: scheduledMonuments = data?.scheduled_monuments || [];
+
+  // All results (for expandable sections - up to 5km)
   $: totalListedBuildings = listedBuildings.length;
   $: totalConservationAreas = conservationAreas.length;
   $: totalScheduledMonuments = scheduledMonuments.length;
+
+  // Within 1km only (for summary boxes)
+  $: listedBuildingsWithin1km = listedBuildings.filter(b => b.on_site || b.dist_m <= 1000);
+  $: conservationAreasWithin1km = conservationAreas.filter(a => a.on_site || a.dist_m <= 1000);
+  $: scheduledMonumentsWithin1km = scheduledMonuments.filter(sm => sm.on_site || sm.dist_m <= 1000);
+
+  $: totalListedBuildingsWithin1km = listedBuildingsWithin1km.length;
+  $: totalConservationAreasWithin1km = conservationAreasWithin1km.length;
+  $: totalScheduledMonumentsWithin1km = scheduledMonumentsWithin1km.length;
+
+  // Surrounding area counts (within 1km but not on site)
+  $: surroundingBuildings = listedBuildingsWithin1km.filter(b => !b.on_site).length;
+  $: surroundingAreas = conservationAreasWithin1km.filter(a => !a.on_site).length;
+  $: surroundingMonuments = scheduledMonumentsWithin1km.filter(sm => !sm.on_site).length;
+
   $: onSiteBuildings = listedBuildings.filter(b => b.on_site).length;
   $: onSiteAreas = conservationAreas.filter(a => a.on_site).length;
   $: onSiteMonuments = scheduledMonuments.filter(sm => sm.on_site).length;
@@ -108,32 +125,26 @@
     <div class="results-summary">
       <div class="summary-card">
         <h3>Listed Buildings</h3>
-        <p class="summary-value">{totalListedBuildings}</p>
-        {#if onSiteBuildings > 0}
-          <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
-            {onSiteBuildings} on site
-          </p>
-        {/if}
+        <p class="summary-value">{onSiteBuildings > 0 ? 'Yes' : (surroundingBuildings > 0 ? 'Nearby' : 'No')}</p>
+        <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
+          {onSiteBuildings > 0 ? `(${onSiteBuildings} on-site)` : (surroundingBuildings > 0 ? `(${surroundingBuildings} within 1km)` : `(0 within 1km)`)}
+        </p>
       </div>
       
       <div class="summary-card">
         <h3>Conservation Areas</h3>
-        <p class="summary-value">{totalConservationAreas}</p>
-        {#if onSiteAreas > 0}
-          <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
-            {onSiteAreas} intersecting
-          </p>
-        {/if}
+        <p class="summary-value">{onSiteAreas > 0 ? 'Yes' : (surroundingAreas > 0 ? 'Nearby' : 'No')}</p>
+        <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
+          {onSiteAreas > 0 ? `(${onSiteAreas} on-site)` : (surroundingAreas > 0 ? `(${surroundingAreas} within 1km)` : `(0 within 1km)`)}
+        </p>
       </div>
 
       <div class="summary-card">
         <h3>Scheduled Monuments</h3>
-        <p class="summary-value">{totalScheduledMonuments}</p>
-        {#if onSiteMonuments > 0}
-          <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
-            {onSiteMonuments} on site
-          </p>
-        {/if}
+        <p class="summary-value">{onSiteMonuments > 0 ? 'Yes' : (surroundingMonuments > 0 ? 'Nearby' : 'No')}</p>
+        <p style="font-size: 0.875rem; color: #059669; margin: 0.25rem 0 0 0;">
+          {onSiteMonuments > 0 ? `(${onSiteMonuments} on-site)` : (surroundingMonuments > 0 ? `(${surroundingMonuments} within 1km)` : `(0 within 1km)`)}
+        </p>
       </div>
     </div>
 

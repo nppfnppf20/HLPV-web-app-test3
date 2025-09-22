@@ -92,3 +92,4 @@ export function buildEcologyReport(backend) {
     metadata: backend?.metadata || {}
   };
 }
+
