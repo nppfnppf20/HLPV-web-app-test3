@@ -1,8 +1,7 @@
 <script>
+  import Header from '$lib/components/Header.svelte';
+  import Sidebar from '$lib/components/Sidebar.svelte';
   import Map from '$lib/components/Map.svelte';
-  import AnalysisResults from '$lib/components/AnalysisResults.svelte';
-  import LandscapeResults from '$lib/components/Results ribbons/LandscapeResults.svelte';
-  import AgLandResults from '$lib/components/Results ribbons/Ag_landResults.svelte';
   import ReportGenerator from '$lib/components/ReportGenerator.svelte';
   import { analyzeHeritage, analyzeLandscape, analyzeAgLand } from '$lib/services/api.js';
   
@@ -18,6 +17,8 @@
   let loading = false;
   /** @type {boolean} */
   let showReport = false;
+  /** @type {boolean} */
+  let sidebarCollapsed = false;
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
@@ -52,106 +53,131 @@
     showReport = false;
   }
 
-  // Derive AONB data into the shape expected by LandscapeResults (buffers + nearest)
-  /** @type {{ buffers?: any[], nearest_within_1km?: { name?: string, distance_m?: number, direction?: string } } | null} */
-  $: aonbUi = (() => {
-    const arr = landscapeResult?.aonb || [];
-    if (!Array.isArray(arr) || arr.length === 0) return null;
+  function handleSidebarToggle(/** @type {CustomEvent<boolean>} */ event) {
+    sidebarCollapsed = event.detail;
+  }
 
-    /** @type {any[]} */
-    const onSite = arr.filter((/** @type {any} */ a) => a.on_site);
-    /** @type {any[]} */
-    const within1km = arr.filter((/** @type {any} */ a) => !a.on_site && a.within_1km);
+  function handleNewAnalysis() {
+    // Clear current results and reset map
+    result = null;
+    landscapeResult = null;
+    agLandResult = null;
+    errorMsg = '';
+    loading = false;
+  }
 
-    const nearest = within1km.length > 0
-      ? within1km.reduce((/** @type {any} */ min, /** @type {any} */ a) => (a.dist_m < min.dist_m ? a : min), within1km[0])
-      : null;
+  function handleGenerateReport() {
+    showReport = true;
+  }
 
-    /** @type {{ distance_m: number, feature_count: number, name?: string }[]} */
-    const buffers = [
-      { distance_m: 0, feature_count: onSite.length, name: onSite[0]?.name },
-      { distance_m: 1000, feature_count: within1km.length }
-    ];
+  function handleSearch(/** @type {CustomEvent<{query: string}>} */ event) {
+    // Handle location search - could integrate with geocoding service
+    console.log('Search query:', event.detail.query);
+  }
 
-    /** @type {{ buffers?: any[], nearest_within_1km?: { name?: string, distance_m?: number, direction?: string } }} */
-    const shaped = { buffers };
-    if (nearest) {
-      shaped.nearest_within_1km = { name: nearest.name, distance_m: nearest.dist_m, direction: nearest.direction };
-    }
-    return shaped;
-  })();
+  function handleFiltersChanged(/** @type {CustomEvent<any>} */ event) {
+    // Handle filter changes - could update map visibility
+    console.log('Filters changed:', event.detail);
+  }
 </script>
 
-<h1>Draw an area to analyze</h1>
-<Map onPolygonDrawn={handlePolygonDrawn} heritageData={result} />
-
-<AnalysisResults 
-  data={result} 
-  title="Heritage Analysis Results"
-  {loading}
-  error={errorMsg}
-/>
-
-{#if landscapeResult}
-  <LandscapeResults 
-    greenBelt={landscapeResult?.green_belt}
-    aonb={landscapeResult?.aonb}
-    title="Landscape Analysis Results"
-    {loading}
-    error={errorMsg}
-  />
-{/if}
-
-{#if agLandResult}
-  <AgLandResults 
-    agLand={agLandResult?.ag_land}
-    title="Agricultural Land Analysis Results"
-    {loading}
-    error={errorMsg}
-  />
-{/if}
-
-{#if (result || landscapeResult) && !loading && !errorMsg}
-  <div class="report-button-container">
-    <button class="generate-report-btn" on:click={openReport}>
-      📄 Generate Report
-    </button>
+<div class="app-layout">
+  <!-- Header -->
+  <Header on:search={handleSearch} />
+  
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Sidebar -->
+    <Sidebar
+      bind:isCollapsed={sidebarCollapsed}
+      heritageData={result}
+      landscapeData={landscapeResult}
+      agLandData={agLandResult}
+      {loading}
+      error={errorMsg}
+      on:toggle={handleSidebarToggle}
+      on:new-analysis={handleNewAnalysis}
+      on:generate-report={handleGenerateReport}
+      on:filters-changed={handleFiltersChanged}
+    />
+    
+    <!-- Map Container -->
+    <div class="map-container" class:expanded={sidebarCollapsed}>
+      <Map onPolygonDrawn={handlePolygonDrawn} heritageData={result} />
+    </div>
   </div>
-{/if}
+</div>
 
 {#if showReport}
   <ReportGenerator
     heritageData={result}
     landscapeData={landscapeResult}
+    agLandData={agLandResult}
     onClose={closeReport}
   />
 {/if}
 
 <style>
-  .report-button-container {
+  .app-layout {
+    height: 100vh;
     display: flex;
-    justify-content: center;
-    margin: 2rem 0;
+    flex-direction: column;
+    background: #f8fafc;
   }
 
-  .generate-report-btn {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  .main-content {
+    flex: 1;
+    display: flex;
+    height: calc(100vh - 64px); /* Adjust for header height */
+    overflow: hidden;
   }
 
-  .generate-report-btn:hover {
-    background: #2563eb;
+  .map-container {
+    flex: 1;
+    background: white;
+    transition: all 0.3s ease;
+    position: relative;
   }
 
-  .generate-report-btn:active {
-    transform: translateY(1px);
+  .map-container.expanded {
+    margin-left: -350px; /* Compensate for collapsed sidebar */
+  }
+
+  /* Global layout adjustments */
+  :global(body) {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    background: #f8fafc;
+  }
+
+  :global(#app) {
+    height: 100vh;
+  }
+
+  /* Map styling adjustments */
+  :global(.map-container .leaflet-container) {
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  :global(.leaflet-control-container) {
+    z-index: 100;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .main-content {
+      flex-direction: column;
+    }
+    
+    .map-container {
+      height: 60vh;
+    }
+    
+    .map-container.expanded {
+      margin-left: 0;
+      height: 80vh;
+    }
   }
 </style>
