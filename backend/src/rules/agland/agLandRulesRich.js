@@ -49,7 +49,8 @@ export function checkGrade2OnSite(agLandAreas) {
     rule: 'Grade 2 Agricultural Land On-Site',
     findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 2 agricultural land`,
     recommendations: [
-      'Presence of Grade 2 land constitutes high risk. Whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
+      'Presence of Grade 2 land constitutes a high risk',
+      'Whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
       'Early engagement with Natural England recommended for Grade 1 and 2 land',
       'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
 
@@ -72,7 +73,8 @@ export function checkGrade3OnSite(agLandAreas) {
     rule: 'Grade 3 Agricultural Land On-Site',
     findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 3 agricultural land`,
     recommendations: [
-      'Planning risk is high and, whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
+      'Presence of Grade 3 land consitutes a medium level risk',
+      'Whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
       'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
 
     ],
@@ -153,17 +155,26 @@ export function processAgLandRules(analysisData) {
     if (result.triggered) triggeredRules.push(result);
   }
 
+  // SHOWSTOPPER LOGIC: If any rule is a showstopper, only show showstopper rules
+  const showstopperRules = triggeredRules.filter(r => r.level === RISK_LEVELS.SHOWSTOPPER);
+  if (showstopperRules.length > 0) {
+    triggeredRules = showstopperRules;
+  }
+
   // Determine overall risk based on highest risk rule triggered
   const overallRisk = triggeredRules.length > 0 ? triggeredRules[0].level : RISK_LEVELS.LOW_RISK;
 
   // Discipline-wide recommendations based on whether ANY agricultural land rules triggered
   const hasTriggeredRules = triggeredRules.length > 0;
+  
+  // SHOWSTOPPER OVERRIDE: If showstoppers are present, don't show default triggered recommendations
+  const isShowstopperOnly = showstopperRules.length > 0;
 
   return {
     rules: triggeredRules,
     overallRisk,
     agLand,
-    defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS : [],
+    defaultTriggeredRecommendations: (hasTriggeredRules && !isShowstopperOnly) ? DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS,
     metadata: {
       totalRulesProcessed: 4, // 4 agricultural grade checks

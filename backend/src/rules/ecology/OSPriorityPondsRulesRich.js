@@ -11,10 +11,7 @@ export function checkOSPriorityPondsOnSite(pondAreas) {
     rule: 'OS Priority Ponds On-Site',
     findings: `${onSite.length} OS Priority Pond${onSite.length > 1 ? 's' : ''} intersecting site`,
     recommendations: [
-      'Detailed ecological assessment of pond habitats required',
       'Great crested newt survey likely required',
-      'Pond impact assessment and mitigation strategy needed',
-      'Consider pond creation/enhancement as compensation'
     ],
     areas: onSite
   };
@@ -31,9 +28,7 @@ export function checkOSPriorityPondsWithin250m(pondAreas) {
     rule: 'OS Priority Ponds Within 250m',
     findings: `${areas.length} OS Priority Pond${areas.length > 1 ? 's' : ''} within 250m of site`,
     recommendations: [
-      'Ecological survey to assess potential connectivity',
-      'Consider great crested newt presence/absence survey',
-      'Assessment of potential indirect impacts on pond ecosystems'
+      'Great crested newt survey likely required',
     ],
     areas
   };

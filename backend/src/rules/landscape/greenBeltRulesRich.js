@@ -11,12 +11,9 @@ export function checkGreenBeltOnSite(greenBeltAreas) {
     rule: 'Green Belt On-Site',
     findings: `Development site intersects with ${onSiteAreas.length} Green Belt area${onSiteAreas.length > 1 ? 's' : ''}`,
     recommendations: [
-      'Very special circumstances must be demonstrated',
-      'Green Belt assessment required to prove compliance with policy',
-      'Alternative sites outside Green Belt must be explored and discounted',
-      'Detailed justification for Green Belt development required',
-      'Landscape and visual impact assessment mandatory',
-      'Assessment of harm to Green Belt openness and purposes'
+      'A Green Belt assessment is likely to be necessary.',
+      'A robust Very Special Circumstances (VSC) case is likely to be required, supported by benefits such as biodiversity gain, socio-economic outcomes, PRoW improvements, and the temporary nature of the scheme.',
+      'Further assessment will be required to ascertain whether an argument for Grey Belt is appropriate.'
     ],
     areas: onSiteAreas
   };
@@ -33,10 +30,7 @@ export function checkGreenBeltWithin1km(greenBeltAreas) {
     rule: 'Green Belt Within 1km',
     findings: `${nearbyAreas.length} Green Belt area${nearbyAreas.length > 1 ? 's' : ''} within 1km of development site`,
     recommendations: [
-      'Green Belt setting assessment recommended',
-      'Visual impact assessment from Green Belt boundary',
-      'Design to minimize impact on Green Belt openness',
-      'Landscape mitigation measures to screen development'
+  
     ],
     areas: nearbyAreas
   };

@@ -70,11 +70,35 @@ export function checkGradeIIOnSite(buildings) {
     findings: `${gradeIIOnSite.length} Grade II or II* listed building(s) found on development site`,
     gradeBreakdown,
     recommendations: [
-      'Development highly unlikely to be viable given proximity of Grade II/II* asset',
+      'Grade II/II* asset on site. Development highly unlikely to be viable given proximity.',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.'
+    ],
+    buildings: gradeIIOnSite
+  };
+}
+
+/** @param {any[]} buildings */
+export function checkGradeIIWithin500m(buildings) {
+  const gradeIIWithin500m = (buildings || []).filter(b => !b.on_site && (b.grade === 'II' || b.grade === 'II*') && b.dist_m <= 500);
+  if (gradeIIWithin500m.length === 0) return { triggered: false };
+  const gradeBreakdown = {
+    'II*': gradeIIWithin500m.filter(b => b.grade === 'II*').length,
+    'II': gradeIIWithin500m.filter(b => b.grade === 'II').length
+  };
+  return {
+    id: 'grade_ii_or_ii_star_within_500m',
+    triggered: true,
+    level: RISK_LEVELS.HIGH_RISK,
+    rule: 'Grade II/II* Within 500m',
+    findings: `${gradeIIWithin500m.length} Grade II or II* listed building(s) within 500m of development site`,
+    gradeBreakdown,
+    recommendations: [
+      'Grade II/II* asset within 500m. This presents a planning risk. Care will need to be taken to avoid adverse impact on the setting of the listed building/s.',
       'Heritage Impact Assessment essential',
       'Specialist heritage consultant input required at an early stage'
     ],
-    buildings: gradeIIOnSite
+    buildings: gradeIIWithin500m
   };
 }
 
@@ -95,9 +119,8 @@ export function checkAnyGradeWithin100m(buildings) {
     findings: `${buildingsClose.length} listed building(s) within 100m of site`,
     gradeBreakdown,
     recommendations: [
-        'Heritage Impact Assessment essential',
-        'Specialist heritage consultant input required at an early stage',
-        'Careful consideration of site layout required to minimise adverse impact on the setting of heritage assets'
+      'A Heritage Statement or Heritage Impact Assessment will be required',
+      'Specialist heritage consultant input required at an early stage',
     ],
     buildings: buildingsClose
   };
@@ -117,6 +140,7 @@ export function processListedBuildingsRules(analysisData) {
     checkGradeIWithin100m,
     checkGradeIWithin500m,
     checkGradeIIOnSite,
+    checkGradeIIWithin500m,
     checkAnyGradeWithin100m
   ];
 

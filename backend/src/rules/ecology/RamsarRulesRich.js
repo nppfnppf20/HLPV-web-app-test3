@@ -13,8 +13,7 @@ export function checkRamsarOnSite(ramsarSites) {
     recommendations: [
       'Development within Ramsar sites is extremely unlikely to be acceptable',
       'Immediate consultation with Natural England required',
-      'Assessment under the Habitats Regulations required',
-      'Alternative site locations must be considered'
+      'Alternative site locations should be considered'
     ],
     areas: onSite
   };
@@ -31,10 +30,7 @@ export function checkRamsarWithin50m(ramsarSites) {
     rule: 'Ramsar Site Within 50m',
     findings: `${sites.length} Ramsar site${sites.length > 1 ? 's' : ''} within 50m of site`,
     recommendations: [
-      'Likely significant effects on the Ramsar site must be assessed',
-      'Appropriate Assessment under the Habitats Regulations required',
-      'Detailed hydrological and ecological impact assessment needed',
-      'Construction methodology to prevent any impacts on wetland systems'
+      'Likely effects on the Ramsar site must be assessed',
     ],
     areas: sites
   };
@@ -51,10 +47,7 @@ export function checkRamsarWithin100m(ramsarSites) {
     rule: 'Ramsar Site Within 100m',
     findings: `${sites.length} Ramsar site${sites.length > 1 ? 's' : ''} within 100m of site`,
     recommendations: [
-      'Appropriate Assessment under the Habitats Regulations likely required',
-      'Comprehensive hydrological impact assessment essential',
-      'Assessment of potential impacts on qualifying wetland features',
-      'Mitigation measures to prevent any adverse effects'
+      'Likely effects on the Ramsar site must be assessed',
     ],
     areas: sites
   };
@@ -71,10 +64,7 @@ export function checkRamsarWithin250m(ramsarSites) {
     rule: 'Ramsar Site Within 250m',
     findings: `${sites.length} Ramsar site${sites.length > 1 ? 's' : ''} within 250m of site`,
     recommendations: [
-      'Screening for likely significant effects required',
-      'Hydrological connectivity assessment needed',
-      'Assessment of potential noise, dust, and lighting impacts',
-      'Buffer zones and protective measures may be required'
+      'Likely effects on the Ramsar site must be assessed',
     ],
     areas: sites
   };
@@ -91,10 +81,8 @@ export function checkRamsarWithin500m(ramsarSites) {
     rule: 'Ramsar Site Within 500m',
     findings: `${sites.length} Ramsar site${sites.length > 1 ? 's' : ''} within 500m of site`,
     recommendations: [
-      'Assessment of potential indirect effects required',
-      'Evaluation of hydrological connections and drainage patterns',
-      'Consider potential impacts on wetland bird populations',
-      'Mitigation measures to prevent any adverse effects'
+      'Likely effects on the Ramsar site must be assessed',
+      'Appropriate buffer zones and mitigation measures may be required'
     ],
     areas: sites
   };
@@ -111,10 +99,8 @@ export function checkRamsarWithin1km(ramsarSites) {
     rule: 'Ramsar Site Within 1km',
     findings: `${sites.length} Ramsar site${sites.length > 1 ? 's' : ''} within 1km of site`,
     recommendations: [
-      'Ecological survey to assess potential connectivity',
-      'Assessment of cumulative effects with other developments',
-      'Consider potential impacts on mobile species using the wetland',
-      'Appropriate buffer zones and mitigation measures'
+      'Likely effects on the Ramsar site must be assessed',
+      'Appropriate buffer zones and mitigation measures may be required'
     ],
     areas: sites
   };
@@ -131,10 +117,7 @@ export function checkRamsarWithin3km(ramsarSites) {
     rule: 'Ramsar Site Within 3km',
     findings: `${sites.length} Ramsar site${sites.length > 1 ? 's' : ''} within 3km of site`,
     recommendations: [
-      'Assessment of potential impacts on mobile species',
-      'Consider air quality and noise impacts during construction',
-      'Evaluation of cumulative effects with other developments',
-      'Standard ecological mitigation measures recommended'
+      'Ramsar site within 3km - effects of development may need to be assessed',
     ],
     areas: sites
   };
@@ -151,10 +134,6 @@ export function checkRamsarWithin5km(ramsarSites) {
     rule: 'Ramsar Site Within 5km',
     findings: `${sites.length} Ramsar site${sites.length > 1 ? 's' : ''} within 5km of site`,
     recommendations: [
-      'Assessment of potential impacts on highly mobile species',
-      'Consider cumulative effects with other developments',
-      'Standard ecological survey and mitigation protocols',
-      'Monitor for any unforeseen connectivity issues'
     ],
     areas: sites
   };

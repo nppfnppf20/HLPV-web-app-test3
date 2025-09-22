@@ -11,10 +11,7 @@ export function checkGCNOnSite(gcnAreas) {
     rule: 'GCN Class Survey License Returns On-Site',
     findings: `${onSite.length} GCN Class Survey License Return${onSite.length > 1 ? 's' : ''} intersecting site`,
     recommendations: [
-      'Detailed ecological assessment of GCN habitats required',
       'Great crested newt survey likely required',
-      'GCN impact assessment and mitigation strategy needed',
-      'Consider habitat creation/enhancement as compensation'
     ],
     areas: onSite
   };
@@ -31,9 +28,7 @@ export function checkGCNWithin250m(gcnAreas) {
     rule: 'GCN Class Survey License Returns Within 250m',
     findings: `${areas.length} GCN Class Survey License Return${areas.length > 1 ? 's' : ''} within 250m of site`,
     recommendations: [
-      'Ecological survey to assess potential connectivity',
-      'Consider great crested newt presence/absence survey',
-      'Assessment of potential indirect impacts on GCN ecosystems'
+     'Great crested newt survey likely required',
     ],
     areas
   };

@@ -5,15 +5,16 @@ import { RISK_LEVELS } from '../riskLevels.js';
 
 // Ecology discipline-wide default recommendations
 const DEFAULT_ECOLOGY_TRIGGERED_RECOMMENDATIONS = [
-  'Comprehensive ecological survey required to assess all identified ecological features',
+  'Preliminary Ecological Appraisal will be required. This will guide requirement for further surveys and assessments',
   'Consider cumulative effects of development on ecological connectivity',
-  'Mitigation hierarchy must be followed: avoid, minimize, restore, and offset as last resort',
+  'Mitigation hierarchy should be followed: avoid, minimise, restore, and offset as last resort',
+  'Consider seasonal constraints and optimal survey timings for ecological assessments',
   'Early engagement with ecologists and statutory consultees recommended'
 ];
 
 const DEFAULT_ECOLOGY_NO_RULES_RECOMMENDATIONS = [
   'No significant ecological designations identified within assessment area',
-  'Standard ecological survey protocols recommended to identify any undesignated features',
+  'A Preliminary Ecological Appraisal will be required. This will guide requirement for further surveys and assessments',
   'Consider seasonal constraints and optimal survey timings for ecological assessments'
 ];
 
@@ -26,13 +27,22 @@ export function processEcologyRules(analysisData) {
   const ramsar = processRamsarRules(analysisData);
   const gcn = processGCNRules(analysisData);
 
-  const rules = [...ponds.rules, ...ramsar.rules, ...gcn.rules].map(r => ({ ...r }));
+  let rules = [...ponds.rules, ...ramsar.rules, ...gcn.rules].map(r => ({ ...r }));
+
+  // SHOWSTOPPER LOGIC: If any rule is a showstopper, only show showstopper rules
+  const showstopperRules = rules.filter(r => r.level === RISK_LEVELS.SHOWSTOPPER);
+  if (showstopperRules.length > 0) {
+    rules = showstopperRules;
+  }
 
   // Overall risk picks highest severity by order in arrays
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
   // Discipline-wide recommendations based on whether ANY ecology rules triggered
   const hasTriggeredRules = rules.length > 0;
+  
+  // SHOWSTOPPER OVERRIDE: If showstoppers are present, don't show default triggered recommendations
+  const isShowstopperOnly = showstopperRules.length > 0;
 
   return {
     rules,
@@ -40,7 +50,7 @@ export function processEcologyRules(analysisData) {
     os_priority_ponds: ponds.os_priority_ponds,
     ramsar: ramsar.ramsar,
     gcn: gcn.gcn,
-    defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_ECOLOGY_TRIGGERED_RECOMMENDATIONS : [],
+    defaultTriggeredRecommendations: (hasTriggeredRules && !isShowstopperOnly) ? DEFAULT_ECOLOGY_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_ECOLOGY_NO_RULES_RECOMMENDATIONS
   };
 }

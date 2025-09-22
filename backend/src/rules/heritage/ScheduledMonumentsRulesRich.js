@@ -11,10 +11,9 @@ export function checkScheduledMonumentsOnSite(scheduledMonuments) {
     rule: 'Scheduled Monuments On-Site',
     findings: `${onSite.length} Scheduled Monument${onSite.length > 1 ? 's' : ''} intersecting site`,
     recommendations: [
-      'Scheduled Monument Consent required from Historic England',
-      'Detailed archaeological assessment and impact statement required',
-      'Extensive consultation with Historic England and local archaeology team',
-      'Consider alternative site location to avoid direct impact'
+      'A Heritage Statement or Heritage Impact Assessment will be required',
+      'Specialist heritage consultant input required at an early stage',
+      'Scheduled monument on site.'
     ],
     areas: onSite
   };
@@ -31,10 +30,9 @@ export function checkScheduledMonumentsWithin50m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 50m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 50m of site`,
     recommendations: [
-      'High archaeological potential - detailed assessment required',
-      'Early consultation with Historic England essential',
-      'Archaeological watching brief likely required during construction',
-      'Consider setting and visual impact assessment'
+      'A Heritage Statement or Heritage Impact Assessment will be required',
+      'Specialist heritage consultant input required at an early stage',
+      'Scheduled monument within 50m of site.'
     ],
     areas
   };
@@ -51,10 +49,9 @@ export function checkScheduledMonumentsWithin100m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 100m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 100m of site`,
     recommendations: [
-      'Archaeological desk-based assessment required',
-      'Consultation with Historic England and county archaeologist',
-      'Potential for archaeological remains - evaluation may be needed',
-      'Assessment of impact on monument setting required'
+      'A Heritage Statement or Heritage Impact Assessment will be required',
+      'Specialist heritage consultant input required at an early stage',
+      'Scheduled monument within 100m of site.'
     ],
     areas
   };
@@ -71,10 +68,9 @@ export function checkScheduledMonumentsWithin250m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 250m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 250m of site`,
     recommendations: [
-      'Archaeological desk-based assessment recommended',
-      'Consider potential for associated archaeological features',
-      'Consult Historic Environment Record for additional context',
-      'Evaluate visual impact on monument setting'
+      'A Heritage Statement or Heritage Impact Assessment will be required',
+      'Specialist heritage consultant input required at an early stage',
+      'Scheduled monument within 250m of site.'
     ],
     areas
   };
@@ -91,10 +87,9 @@ export function checkScheduledMonumentsWithin500m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 500m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 500m of site`,
     recommendations: [
-      'Archaeological desk-based assessment advisable',
-      'Consider cumulative impact on historic landscape',
-      'Review for potential archaeological associations',
-      'Assess visual impact considerations'
+      'A Heritage Statement or Heritage Impact Assessment will be required',
+      'Specialist heritage consultant input required at an early stage',
+      'Scheduled monument within 500m of site.'
     ],
     areas
   };
@@ -111,9 +106,9 @@ export function checkScheduledMonumentsWithin1km(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 1km',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 1km of site`,
     recommendations: [
-      'Basic archaeological desk-based assessment recommended',
-      'Consider wider historic landscape context',
-      'Review potential for indirect archaeological associations'
+      'A Heritage Statement or Heritage Impact Assessment will be required',
+      'Specialist heritage consultant input required at an early stage',
+      'Scheduled monument within 1km of site.'
     ],
     areas
   };
@@ -130,9 +125,7 @@ export function checkScheduledMonumentsWithin3km(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 3km',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 3km of site`,
     recommendations: [
-      'Consider regional archaeological context',
-      'Review Historic Environment Record for area',
-      'Assess potential for related archaeological features'
+     
     ],
     areas
   };

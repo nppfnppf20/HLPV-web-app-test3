@@ -11,9 +11,8 @@ export function checkAONBOnSite(aonbAreas) {
     rule: 'AONB On-Site',
     findings: `${onSite.length} AONB area${onSite.length > 1 ? 's' : ''} intersecting site`,
     recommendations: [
-      'Major planning weight will be given to conserving and enhancing landscape and scenic beauty',
-      'Early engagement with landscape specialists required',
-      'Landscape and visual impact assessment required'
+      'Site’s location within an AONB means that planning risk is high and a robust landscape assessment is essential.',
+     
     ],
     areas: onSite
   };
@@ -48,8 +47,7 @@ export function checkAONBWithin100m(aonbAreas) {
     rule: 'AONB Within 100m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 100m of site`,
     recommendations: [
-      'LVIA including intervisibility analysis',
-      'Materials/scale to reduce visual prominence'
+      'Site’s proximity to an AONB means that planning risk is high and a robust landscape assessment is essential.',
     ],
     areas
   };

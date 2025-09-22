@@ -166,13 +166,22 @@ export function processRenewablesRules(renewablesData) {
     }
   });
 
+  // SHOWSTOPPER LOGIC: If any rule is a showstopper, only show showstopper rules
+  const showstopperRules = triggeredRules.filter(r => r.level === RISK_LEVELS.SHOWSTOPPER);
+  if (showstopperRules.length > 0) {
+    triggeredRules = showstopperRules;
+  }
+
   // Calculate overall risk level
   const overallRisk = calculateOverallRisk(triggeredRules);
+
+  // SHOWSTOPPER OVERRIDE: If showstoppers are present, don't show default triggered recommendations
+  const isShowstopperOnly = showstopperRules.length > 0;
 
   return {
     rules: triggeredRules,
     overallRisk,
-    defaultTriggeredRecommendations: triggeredRules.length > 0 ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
+    defaultTriggeredRecommendations: (triggeredRules.length > 0 && !isShowstopperOnly) ? DEFAULT_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: triggeredRules.length === 0 ? DEFAULT_NO_RULES_RECOMMENDATIONS : [],
     metadata: {
       generatedAt: new Date().toISOString(),

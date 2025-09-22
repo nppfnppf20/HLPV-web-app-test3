@@ -4,10 +4,9 @@ import { RISK_LEVELS } from '../riskLevels.js';
 
 // Landscape discipline-wide default recommendations
 const DEFAULT_LANDSCAPE_TRIGGERED_RECOMMENDATIONS = [
-  'Landscape and visual impact assessment required to assess effects on landscape character',
-  'Major weight will be given to conserving and enhancing landscape and scenic beauty',
-  'Early engagement with landscape specialists and statutory consultees recommended',
-  'Consider cumulative landscape effects with other developments in the area'
+  'Landscape and visual impact assessment will be required to assess effects on landscape character',
+  'Consider cumulative landscape effects with any other developments in the area',
+  'Early input from landscape specialists will be required.'
 ];
 
 const DEFAULT_LANDSCAPE_NO_RULES_RECOMMENDATIONS = [
@@ -24,20 +23,29 @@ export function processLandscapeRules(analysisData) {
   const gb = processGreenBeltRules(analysisData);
   const ab = processAONBRules(analysisData);
 
-  const rules = [...gb.rules, ...ab.rules].map(r => ({ ...r }));
+  let rules = [...gb.rules, ...ab.rules].map(r => ({ ...r }));
+
+  // SHOWSTOPPER LOGIC: If any rule is a showstopper, only show showstopper rules
+  const showstopperRules = rules.filter(r => r.level === RISK_LEVELS.SHOWSTOPPER);
+  if (showstopperRules.length > 0) {
+    rules = showstopperRules;
+  }
 
   // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
   // Discipline-wide recommendations based on whether ANY landscape rules triggered
   const hasTriggeredRules = rules.length > 0;
+  
+  // SHOWSTOPPER OVERRIDE: If showstoppers are present, don't show default triggered recommendations
+  const isShowstopperOnly = showstopperRules.length > 0;
 
   return {
     rules,
     overallRisk,
     green_belt: gb.green_belt,
     aonb: ab.aonb,
-    defaultTriggeredRecommendations: hasTriggeredRules ? DEFAULT_LANDSCAPE_TRIGGERED_RECOMMENDATIONS : [],
+    defaultTriggeredRecommendations: (hasTriggeredRules && !isShowstopperOnly) ? DEFAULT_LANDSCAPE_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_LANDSCAPE_NO_RULES_RECOMMENDATIONS
   };
 }
