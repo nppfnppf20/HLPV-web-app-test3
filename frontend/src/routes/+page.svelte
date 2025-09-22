@@ -120,7 +120,7 @@
 {/if}
 
 {#if showReport}
-  <ReportGenerator 
+  <ReportGenerator
     heritageData={result}
     landscapeData={landscapeResult}
     onClose={closeReport}

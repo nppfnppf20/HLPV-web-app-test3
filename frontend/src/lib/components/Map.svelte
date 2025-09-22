@@ -74,6 +74,7 @@
     return riskFilters[riskLevel] === true;
   }
 
+
   /**
    * Update layer visibility based on current risk filter settings
    */
@@ -500,6 +501,7 @@
   :global(.risk-filter-control .risk-label.low) {
     color: #059669;
   }
+
 </style>
 
 

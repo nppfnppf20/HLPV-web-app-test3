@@ -6,7 +6,8 @@
   
   /** @type {any} */
   export let landscapeData = null;
-  
+
+
   /** @type {() => void} */
   export let onClose;
 
@@ -30,6 +31,49 @@
   /** @param {string[]} requirements */
   function formatRequirements(requirements) {
     return requirements || [];
+  }
+
+  /** @param {ClipboardEvent} event */
+  function handlePaste(event) {
+    event.preventDefault();
+
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+
+      if (item.type.indexOf('image') !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target?.result;
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.borderRadius = '6px';
+            img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+
+            // Clear the paste zone and add the image
+            const target = event.target;
+            target.innerHTML = '';
+            target.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        }
+        break;
+      }
+    }
+  }
+
+  /** @param {FocusEvent} event */
+  function handleFocus(event) {
+    const target = event.target;
+    // If the zone is empty (only contains instructions), clear it when focused
+    if (target.querySelector('.paste-instruction')) {
+      // Don't clear on focus, wait for actual paste
+    }
   }
 </script>
 
@@ -102,6 +146,48 @@
             <p class="no-rules">No heritage risk rules were triggered. Standard development considerations apply.</p>
           </div>
         {/if}
+
+        <!-- Screenshots Section -->
+        <div class="report-section">
+          <h3>📷 Map Screenshots</h3>
+          <p class="screenshots-description">Map views and site context images - click and paste (Ctrl+V) images below</p>
+          <div class="screenshot-areas">
+            <div class="paste-area">
+              <h4>Map Screenshot</h4>
+              <div
+                class="image-paste-zone"
+                contenteditable="true"
+                on:paste={handlePaste}
+                on:focus={handleFocus}
+                tabindex="0"
+                role="textbox"
+                aria-label="Paste map screenshot here"
+              >
+                <div class="paste-instruction">
+                  <span class="paste-icon">📷</span>
+                  <p>Click here and paste your map screenshot (Ctrl+V)</p>
+                </div>
+              </div>
+            </div>
+            <div class="paste-area">
+              <h4>Additional Context Image</h4>
+              <div
+                class="image-paste-zone"
+                contenteditable="true"
+                on:paste={handlePaste}
+                on:focus={handleFocus}
+                tabindex="0"
+                role="textbox"
+                aria-label="Paste additional context image here"
+              >
+                <div class="paste-instruction">
+                  <span class="paste-icon">🗺️</span>
+                  <p>Click here and paste additional image (Ctrl+V)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Report Metadata -->
         <div class="report-section">
@@ -377,5 +463,86 @@
     background: #9ca3af;
     border-color: #9ca3af;
     cursor: not-allowed;
+  }
+
+  /* Screenshots Section Styles */
+  .screenshots-description {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    font-style: italic;
+  }
+
+  .screenshot-areas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .paste-area h4 {
+    margin: 0 0 0.5rem 0;
+    color: #374151;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .image-paste-zone {
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    min-height: 200px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .image-paste-zone:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+
+  .image-paste-zone:focus {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .paste-instruction {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 160px;
+    text-align: center;
+  }
+
+  .paste-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .paste-instruction p {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* Style for pasted images */
+  .image-paste-zone img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    .screenshot-areas {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
