@@ -29,8 +29,7 @@ export function checkAONBWithin50m(aonbAreas) {
     rule: 'AONB Within 50m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 50m of site`,
     recommendations: [
-      'Detailed LVIA with viewpoints adjacent to AONB',
-      'Design to respect AONB character and avoid adverse effects'
+      'Site’s proximity to an AONB means that planning risk is high and a robust landscape assessment is essential.'
     ],
     areas
   };
@@ -64,8 +63,7 @@ export function checkAONBWithin250m(aonbAreas) {
     rule: 'AONB Within 250m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 250m of site`,
     recommendations: [
-      'Landscape strategy to avoid harm to setting',
-      'Viewpoint verification from AONB edges'
+      'Proximity to AONB may elevate planning risk'
     ],
     areas
   };
@@ -82,8 +80,7 @@ export function checkAONBWithin500m(aonbAreas) {
     rule: 'AONB Within 500m',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 500m of site`,
     recommendations: [
-      'Proportionate landscape assessment',
-      'Design measures to reduce visibility'
+    
     ],
     areas
   };
@@ -118,7 +115,7 @@ export function checkAONBWithin3km(aonbAreas) {
     rule: 'AONB Within 3km',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 3km of site`,
     recommendations: [
-      'No specific landscape constraints expected'
+      'AONB - No specific constraints expected due to distance'
     ],
     areas
   };
@@ -135,7 +132,7 @@ export function checkAONBWithin5km(aonbAreas) {
     rule: 'AONB Within 5km',
     findings: `${areas.length} AONB area${areas.length > 1 ? 's' : ''} within 5km of site`,
     recommendations: [
-      'No specific constraints expected due to distance'
+      'AONB - No specific constraints expected due to distance'
     ],
     areas
   };
