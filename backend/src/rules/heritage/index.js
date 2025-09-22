@@ -6,7 +6,7 @@ import { RISK_LEVELS } from '../riskLevels.js';
 // Heritage discipline-wide default recommendations
 const DEFAULT_HERITAGE_TRIGGERED_RECOMMENDATIONS = [
 
-  'Early engagement with a heritage specialist is recommended',
+  
   'Consider any cumulative heritage effects and setting of nearby heritage assets',
   'Archaeological work, including Geophysical Surveys or trial trenching may be required following further assessment'
 ];

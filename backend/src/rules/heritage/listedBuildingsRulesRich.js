@@ -119,8 +119,8 @@ export function checkAnyGradeWithin100m(buildings) {
     findings: `${buildingsClose.length} listed building(s) within 100m of site`,
     gradeBreakdown,
     recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
     ],
     buildings: buildingsClose
   };

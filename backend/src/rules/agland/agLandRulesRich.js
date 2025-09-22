@@ -164,18 +164,49 @@ export function processAgLandRules(analysisData) {
   // Determine overall risk based on highest risk rule triggered
   const overallRisk = triggeredRules.length > 0 ? triggeredRules[0].level : RISK_LEVELS.LOW_RISK;
 
+  // Create site breakdown summary
+  const createSiteBreakdown = () => {
+    if (agLand.length === 0) return null;
+    
+    const gradesSummary = agLand
+      .sort((a, b) => {
+        // Sort by grade quality (1 is best, 5 is worst)
+        const gradeOrder = { '1': 1, 'Grade 1': 1, '2': 2, 'Grade 2': 2, '3': 3, 'Grade 3': 3, '4': 4, 'Grade 4': 4, '5': 5, 'Grade 5': 5 };
+        const aOrder = gradeOrder[a.grade] || 99;
+        const bOrder = gradeOrder[b.grade] || 99;
+        return aOrder - bOrder;
+      })
+      .map(area => `${area.percentage_coverage?.toFixed(1) || 0}% ${area.grade}`)
+      .join(', ');
+    
+    return `Site breakdown: ${gradesSummary}`;
+  };
+
   // Discipline-wide recommendations based on whether ANY agricultural land rules triggered
   const hasTriggeredRules = triggeredRules.length > 0;
   
   // SHOWSTOPPER OVERRIDE: If showstoppers are present, don't show default triggered recommendations
   const isShowstopperOnly = showstopperRules.length > 0;
 
+  // Build recommendations with site breakdown
+  const siteBreakdown = createSiteBreakdown();
+  const triggeredRecommendations = (hasTriggeredRules && !isShowstopperOnly) 
+    ? (siteBreakdown 
+        ? [siteBreakdown, ...DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS] 
+        : DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS)
+    : [];
+  const noRulesRecommendations = hasTriggeredRules 
+    ? [] 
+    : (siteBreakdown 
+        ? [siteBreakdown, ...DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS] 
+        : DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS);
+
   return {
     rules: triggeredRules,
     overallRisk,
     agLand,
-    defaultTriggeredRecommendations: (hasTriggeredRules && !isShowstopperOnly) ? DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS : [],
-    defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS,
+    defaultTriggeredRecommendations: triggeredRecommendations,
+    defaultNoRulesRecommendations: noRulesRecommendations,
     metadata: {
       totalRulesProcessed: 4, // 4 agricultural grade checks
       rulesTriggered: triggeredRules.length,

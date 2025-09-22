@@ -11,8 +11,8 @@ export function checkConservationAreaOnSite(conservationAreas) {
     rule: 'Conservation Area On-Site',
     findings: `Development site intersects with ${onSiteAreas.length} conservation area${onSiteAreas.length > 1 ? 's' : ''}`,
     recommendations: [
-      'A Heritage Statement will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Consideration should be given to design, layout and mitigation in order to minimise adverse impact on the Conservation Area',
       'Development will be required to demonstrate that character and appearance of the Conservation Area will be preserved or enhanced'
     ],
@@ -31,8 +31,8 @@ export function checkConservationAreaWithin250m(conservationAreas) {
     rule: 'Conservation Area Within 250m',
     findings: `${within250mAreas.length} conservation area${within250mAreas.length > 1 ? 's' : ''} within 250m of development site`,
     recommendations: [
-      'A Heritage Statement will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Consideration should be given to design, layout and mitigation in order to minimise adverse impact on the Conservation Area',
       'Development will be required to demonstrate that character and appearance of the Conservation Area will be preserved or enhanced'
     ],
@@ -51,8 +51,8 @@ export function checkConservationAreaWithin1km(conservationAreas) {
     rule: 'Conservation Area Within 1km',
     findings: `${within1kmAreas.length} conservation area${within1kmAreas.length > 1 ? 's' : ''} within 1km of development site`,
     recommendations: [
-      'A Heritage Statement will be required',
-      'Specialist heritage consultant input required at an early stage',
+    'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Consideration should be given to design, layout and mitigation in order to minimise adverse impact on the Conservation Area',
       'Development may be required to demonstrate that character and appearance of the Conservation Area will be preserved or enhanced'
     ],

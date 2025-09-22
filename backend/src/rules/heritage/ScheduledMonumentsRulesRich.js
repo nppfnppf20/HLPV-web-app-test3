@@ -11,8 +11,8 @@ export function checkScheduledMonumentsOnSite(scheduledMonuments) {
     rule: 'Scheduled Monuments On-Site',
     findings: `${onSite.length} Scheduled Monument${onSite.length > 1 ? 's' : ''} intersecting site`,
     recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Scheduled monument on site.'
     ],
     areas: onSite
@@ -30,8 +30,8 @@ export function checkScheduledMonumentsWithin50m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 50m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 50m of site`,
     recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Scheduled monument within 50m of site.'
     ],
     areas
@@ -49,8 +49,8 @@ export function checkScheduledMonumentsWithin100m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 100m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 100m of site`,
     recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required',
-      'Specialist heritage consultant input required at an early stage',
+     'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Scheduled monument within 100m of site.'
     ],
     areas
@@ -68,8 +68,8 @@ export function checkScheduledMonumentsWithin250m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 250m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 250m of site`,
     recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Scheduled monument within 250m of site.'
     ],
     areas
@@ -87,8 +87,8 @@ export function checkScheduledMonumentsWithin500m(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 500m',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 500m of site`,
     recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Scheduled monument within 500m of site.'
     ],
     areas
@@ -106,8 +106,8 @@ export function checkScheduledMonumentsWithin1km(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 1km',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 1km of site`,
     recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required',
-      'Specialist heritage consultant input required at an early stage',
+      'A Heritage Statement or Heritage Impact Assessment will be required.',
+      'Specialist heritage consultant input required at an early stage.',
       'Scheduled monument within 1km of site.'
     ],
     areas
@@ -142,9 +142,7 @@ export function checkScheduledMonumentsWithin5km(scheduledMonuments) {
     rule: 'Scheduled Monuments Within 5km',
     findings: `${areas.length} Scheduled Monument${areas.length > 1 ? 's' : ''} within 5km of site`,
     recommendations: [
-      'Consider broader archaeological landscape context',
-      'Review regional Historic Environment Record',
-      'Basic awareness of archaeological potential in wider area'
+     
     ],
     areas
   };
