@@ -78,7 +78,7 @@
         </div>
         <div class="step">
           <span class="step-number">4</span>
-          <span class="step-text">Select Generate Report to view planning constraints and recommendations</span>
+          <span class="step-text">Select Report tab to view planning constraints and recommendations</span>
         </div>
       </div>
     </div>
