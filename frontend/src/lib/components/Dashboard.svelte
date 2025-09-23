@@ -1,5 +1,5 @@
 <script>
-  import Navbar from './Navbar.svelte';
+  import Navbar from './NavBar.svelte';
   import FindingsPanel from './FindingsPanel.svelte';
   import MapPanel from './MapPanel.svelte';
   import ReportGenerator from './ReportGenerator.svelte';
@@ -87,13 +87,13 @@
 </script>
 
 <div class="dashboard">
-  <Navbar 
-    {hasResults} 
-    {loading}
-    onGenerateReport={openReport}
-  />
-  
-  <div class="dashboard-content">
+  <div class="findings-section">
+    <Navbar 
+      {hasResults} 
+      {loading}
+      onGenerateReport={openReport}
+    />
+    
     <FindingsPanel 
       {heritageResult}
       {landscapeResult}
@@ -103,12 +103,12 @@
       {loading}
       {errorMsg}
     />
-    
-    <MapPanel 
-      onPolygonDrawn={handlePolygonDrawn}
-      {loading}
-    />
   </div>
+  
+  <MapPanel 
+    onPolygonDrawn={handlePolygonDrawn}
+    {loading}
+  />
 </div>
 
 {#if showReport}

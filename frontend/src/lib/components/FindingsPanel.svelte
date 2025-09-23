@@ -76,6 +76,10 @@
           <span class="step-number">3</span>
           <span class="step-text">View analysis results here</span>
         </div>
+        <div class="step">
+          <span class="step-number">4</span>
+          <span class="step-text">Select Generate Report to view planning constraints and recommendations</span>
+        </div>
       </div>
     </div>
   {:else}
@@ -144,6 +148,7 @@
     text-align: center;
     padding: 2rem;
     color: #64748b;
+    margin-top: -60px; /* Move up to account for navbar height */
   }
 
   .findings-empty h3 {
@@ -168,7 +173,7 @@
 
   .step {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
     text-align: left;
   }
@@ -190,6 +195,8 @@
   .step-text {
     font-size: 0.875rem;
     color: #4b5563;
+    line-height: 1.4;
+    flex: 1;
   }
 
   .findings-content {
