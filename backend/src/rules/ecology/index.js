@@ -5,8 +5,8 @@ import { RISK_LEVELS } from '../riskLevels.js';
 
 // Ecology discipline-wide default recommendations
 const DEFAULT_ECOLOGY_TRIGGERED_RECOMMENDATIONS = [
-  'Preliminary Ecological Appraisal will be required. This will guide requirement for further surveys and assessments',
-  'Consider cumulative effects of development on ecological connectivity',
+  'Preliminary Ecological Appraisal will be required. This will guide requirement for further surveys and assessments.',
+  'Consider cumulative effects of development on ecological connectivity.',
   'Mitigation hierarchy should be followed: avoid, minimise, restore, and offset as last resort',
   'Consider seasonal constraints and optimal survey timings for ecological assessments',
   'Early engagement with ecologists and statutory consultees recommended'
