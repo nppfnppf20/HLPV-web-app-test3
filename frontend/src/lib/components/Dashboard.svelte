@@ -130,8 +130,6 @@
           renewablesData={renewablesResult}
           ecologyData={ecologyResult}
           agLandData={agLandResult}
-          onClose={() => {}}
-          isModal={false}
         />
       {/if}
     </div>

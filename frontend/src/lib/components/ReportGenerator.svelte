@@ -16,9 +16,6 @@
   /** @type {any} */
   export let agLandData = null;
   
-  /** @type {() => void} */
-  export let onClose = () => {};
-
   // Generate combined report when data changes
   $: report = (() => {
     try {
@@ -52,17 +49,6 @@
   $: designationSummary = report?.combined?.designationSummary || [];
   $: riskAssessment = report?.combined || report?.heritage?.riskAssessment || report?.landscape?.riskAssessment;
   $: triggeredRules = report?.combined?.triggeredRules || [];
-
-  function handleClose() {
-    onClose();
-  }
-
-  /** @param {Event} event */
-  function handleBackdropClick(event) {
-    if (event.target === event.currentTarget) {
-      handleClose();
-    }
-  }
 
   /** @param {string[]} requirements */
   function formatRequirements(requirements) {
@@ -182,20 +168,16 @@
   }
 </script>
 
-<div class="report-modal-backdrop" on:click={handleBackdropClick} on:keydown={handleBackdropClick} role="dialog" aria-labelledby="report-title" tabindex="-1">
-  <div class="report-modal">
-    <div class="report-header">
-      <h2 id="report-title">📄 Planning Constraints Assessment Report</h2>
-      <button class="close-btn" on:click={handleClose} aria-label="Close report">
-        ✕
-      </button>
-    </div>
-    
-    <div class="report-content">
+<div class="report-container">
+  <div class="report-header">
+    <h2 id="report-title">Planning Constraints Assessment Report</h2>
+  </div>
+  
+  <div class="report-content">
       {#if structuredReport}
         <!-- 1. SUMMARY SECTION -->
         <div class="report-section">
-          <h3>📋 Summary</h3>
+          <h3>Summary</h3>
           
           <!-- 1a. Site Summary -->
           <div class="subsection">
@@ -230,7 +212,7 @@
         <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
         {#each disciplines as discipline}
           <div class="report-section discipline-section">
-            <h3>{discipline.name === 'Heritage' ? '🏛️' : discipline.name === 'Landscape' ? '🌳' : discipline.name === 'Renewable Energy' ? '⚡' : discipline.name === 'Ecology' ? '🐸' : discipline.name === 'Agricultural Land' ? '🚜' : '📊'} {discipline.name}</h3>
+            <h3>{discipline.name}</h3>
             
             <!-- 2a. Overall Risk for this discipline -->
             <div class="subsection">
@@ -313,7 +295,7 @@
         <!-- Report Metadata -->
         {#if report?.metadata}
           <div class="report-section">
-            <h3>📋 Report Information</h3>
+            <h3>Report Information</h3>
             <div class="metadata">
               <p><strong>Generated:</strong> {new Date(report.metadata.generatedAt).toLocaleString()}</p>
               <p><strong>Rules Processed:</strong> {report.metadata.totalRulesProcessed}</p>
@@ -328,44 +310,16 @@
           <p>Please run an analysis first to generate a report.</p>
         </div>
       {/if}
-    </div>
-    
-    <div class="report-footer">
-      <button class="btn-secondary" on:click={handleClose}>
-        Close
-      </button>
-      <button class="btn-primary" disabled>
-        Generate PDF (Coming Soon)
-      </button>
-    </div>
   </div>
 </div>
 
 <style>
-  .report-modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 40%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 0;
-  }
-
-  .report-modal {
+  .report-container {
     background: white;
-    border-radius: 0;
     width: 100%;
     height: 100%;
-    max-width: none;
-    max-height: none;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   }
 
   .report-header {
@@ -382,25 +336,12 @@
     font-size: 1.5rem;
   }
 
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    color: #6b7280;
-    border-radius: 4px;
-  }
-
-  .close-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
-  }
 
   .report-content {
     flex: 1;
     padding: 1.5rem;
     overflow-y: auto;
+    height: 0; /* Force flex item to shrink */
   }
 
   .report-placeholder {
