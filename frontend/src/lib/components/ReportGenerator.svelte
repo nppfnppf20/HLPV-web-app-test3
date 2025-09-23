@@ -346,22 +346,23 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 40%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    padding: 1rem;
+    padding: 0;
   }
 
   .report-modal {
     background: white;
-    border-radius: 12px;
+    border-radius: 0;
     width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
+    height: 100%;
+    max-width: none;
+    max-height: none;
     display: flex;
     flex-direction: column;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
@@ -640,5 +641,18 @@
     background: #9ca3af;
     border-color: #9ca3af;
     cursor: not-allowed;
+  }
+
+  /* Responsive adjustments for modal positioning */
+  @media (max-width: 1024px) {
+    .report-modal-backdrop {
+      width: 45%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .report-modal-backdrop {
+      width: 100%;
+    }
   }
 </style>
