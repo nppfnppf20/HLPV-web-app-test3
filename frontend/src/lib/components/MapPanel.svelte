@@ -16,7 +16,7 @@
       <div class="map-loading-overlay">
         <div class="loading-spinner">
           <div class="spinner"></div>
-          <p>Analyzing site constraints...</p>
+          <p>Analysing site constraints...</p>
         </div>
       </div>
     {/if}

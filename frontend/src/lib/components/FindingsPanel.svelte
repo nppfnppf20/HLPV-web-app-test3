@@ -59,10 +59,9 @@
 </script>
 
 <div class="findings-panel">
-  {#if !hasAnyResults && !loading && !errorMsg}
+  {#if !hasAnyResults && !errorMsg}
     <div class="findings-empty">
-      <div class="empty-icon">🗺️</div>
-      <h3>Ready to Analyze</h3>
+      <h3>Ready to Analyse</h3>
       <p>Draw an area on the map to start your planning assessment.</p>
       <div class="instruction-steps">
         <div class="step">
@@ -85,7 +84,7 @@
       <AnalysisResults 
         data={heritageResult} 
         title="Heritage Analysis"
-        {loading}
+        loading={false}
         error={errorMsg}
       />
 
@@ -95,7 +94,7 @@
           greenBelt={landscapeResult?.green_belt}
           aonb={landscapeResult?.aonb}
           title="Landscape Analysis"
-          {loading}
+          loading={false}
           error={errorMsg}
         />
       {/if}
@@ -105,7 +104,7 @@
         <AgLandResults 
           agLand={agLandResult?.ag_land}
           title="Agricultural Land Classification"
-          {loading}
+          loading={false}
           error={errorMsg}
         />
       {/if}
@@ -115,7 +114,7 @@
         <RenewablesResults 
           renewables={renewablesResult?.renewables}
           title="Cumulative Development"
-          {loading}
+          loading={false}
           error={errorMsg}
         />
       {/if}
@@ -127,7 +126,7 @@
           ramsar={ecologyResult?.ramsar}
           gcn={ecologyResult?.gcn}
           title="Ecology Assessment"
-          {loading}
+          loading={false}
           error={errorMsg}
         />
       {/if}
@@ -145,12 +144,6 @@
     text-align: center;
     padding: 2rem;
     color: #64748b;
-  }
-
-  .empty-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    opacity: 0.6;
   }
 
   .findings-empty h3 {
