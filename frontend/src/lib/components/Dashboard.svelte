@@ -88,11 +88,7 @@
 
 <div class="dashboard">
   <div class="findings-section">
-    <Navbar
-      {hasResults}
-      {loading}
-      onGenerateReport={openReport}
-    />
+    <Navbar />
 
     <!-- Tab Navigation -->
     <div class="tab-navigation">
