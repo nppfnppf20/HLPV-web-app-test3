@@ -17,7 +17,7 @@
   export let agLandData = null;
   
   /** @type {() => void} */
-  export let onClose;
+  export let onClose = () => {};
 
   // Generate combined report when data changes
   $: report = (() => {
@@ -552,15 +552,6 @@
     margin-bottom: 0;
   }
 
-  .rule-requirements ul {
-    margin: 0.5rem 0 0 0;
-    padding-left: 1.5rem;
-  }
-
-  .rule-requirements li {
-    margin-bottom: 0.5rem;
-    color: #4b5563;
-  }
 
   .no-rules {
     color: #059669;
