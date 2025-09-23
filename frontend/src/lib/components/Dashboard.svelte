@@ -19,8 +19,8 @@
   let errorMsg = '';
   /** @type {boolean} */
   let loading = false;
-  /** @type {boolean} */
-  let showReport = false;
+  /** @type {string} */
+  let activeTab = 'analysis';
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
@@ -65,7 +65,7 @@
   function openReport() {
     console.log('🔍 Opening report with data:', {
       heritage: !!heritageResult,
-      landscape: !!landscapeResult, 
+      landscape: !!landscapeResult,
       renewables: !!renewablesResult,
       ecology: !!ecologyResult,
       agLand: !!agLandResult,
@@ -75,11 +75,11 @@
       ecologyData: ecologyResult,
       agLandData: agLandResult
     });
-    showReport = true;
+    activeTab = 'report';
   }
 
-  function closeReport() {
-    showReport = false;
+  function setActiveTab(tab) {
+    activeTab = tab;
   }
 
   // Check if we have any results for the Generate Report button
@@ -88,36 +88,57 @@
 
 <div class="dashboard">
   <div class="findings-section">
-    <Navbar 
-      {hasResults} 
+    <Navbar
+      {hasResults}
       {loading}
       onGenerateReport={openReport}
     />
-    
-    <FindingsPanel 
-      {heritageResult}
-      {landscapeResult}
-      {agLandResult}
-      {renewablesResult}
-      {ecologyResult}
-      {loading}
-      {errorMsg}
-    />
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button
+        class="tab-button {activeTab === 'analysis' ? 'active' : ''}"
+        on:click={() => setActiveTab('analysis')}
+      >
+        Site Analysis
+      </button>
+      <button
+        class="tab-button {activeTab === 'report' ? 'active' : ''}"
+        on:click={() => setActiveTab('report')}
+        disabled={!hasResults}
+      >
+        Report
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      {#if activeTab === 'analysis'}
+        <FindingsPanel
+          {heritageResult}
+          {landscapeResult}
+          {agLandResult}
+          {renewablesResult}
+          {ecologyResult}
+          {loading}
+          {errorMsg}
+        />
+      {:else if activeTab === 'report'}
+        <ReportGenerator
+          heritageData={heritageResult}
+          landscapeData={landscapeResult}
+          renewablesData={renewablesResult}
+          ecologyData={ecologyResult}
+          agLandData={agLandResult}
+          onClose={() => {}}
+          isModal={false}
+        />
+      {/if}
+    </div>
   </div>
-  
-  <MapPanel 
+
+  <MapPanel
     onPolygonDrawn={handlePolygonDrawn}
     {loading}
   />
 </div>
-
-{#if showReport}
-  <ReportGenerator
-    heritageData={heritageResult}
-    landscapeData={landscapeResult}
-    renewablesData={renewablesResult}
-    ecologyData={ecologyResult}
-    agLandData={agLandResult}
-    onClose={closeReport}
-  />
-{/if}
