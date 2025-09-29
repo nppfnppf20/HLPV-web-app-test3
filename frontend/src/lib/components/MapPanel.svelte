@@ -6,11 +6,14 @@
 
   /** @type {boolean} */
   export let loading = false;
+
+  /** @type {Record<string, any> | null} */
+  export let heritageData = null;
 </script>
 
 <div class="map-panel">
   <div class="map-panel-content">
-    <Map {onPolygonDrawn} />
+    <Map {onPolygonDrawn} {heritageData} />
     
     {#if loading}
       <div class="map-loading-overlay">

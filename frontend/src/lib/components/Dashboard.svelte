@@ -134,5 +134,6 @@
   <MapPanel
     onPolygonDrawn={handlePolygonDrawn}
     {loading}
+    heritageData={heritageResult}
   />
 </div>

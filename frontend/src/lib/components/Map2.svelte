@@ -43,16 +43,16 @@
       if (building.grade === 'I') return 'showstopper';
       if (building.grade === 'II*' || building.grade === 'II') return 'high_risk';
     }
-
+    
     if (!building.on_site && building.dist_m <= 100) {
       if (building.grade === 'I') return 'high_risk';
       return 'medium_high_risk';
     }
-
+    
     if (!building.on_site && building.dist_m <= 500 && building.grade === 'I') {
       return 'high_risk';
     }
-
+    
     return 'low_risk';
   }
 
@@ -83,15 +83,15 @@
 
     // Refresh layers with current filter settings
     if (heritageData?.conservation_areas) {
-      setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({
+      setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({ 
         name: r.name,
         riskLevel: getConservationAreaRiskLevel(r)
       }), true);
     }
 
     if (heritageData?.listed_buildings) {
-      setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({
-        name: r.name,
+      setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({ 
+        name: r.name, 
         grade: r.grade,
         riskLevel: getBuildingRiskLevel(r)
       }), true);
@@ -141,7 +141,7 @@
     // Layer control
     layerControl = L.control.layers(
       { 'OSM': base },
-      {
+      { 
         'Conservation areas': conservationAreasLayer,
         'Listed buildings': listedBuildingsLayer
       },
@@ -246,7 +246,7 @@
           </div>
         </div>
       `;
-
+      
       // Add event listeners for checkboxes
       Object.keys(riskFilters).forEach(riskLevel => {
         const checkbox = div.querySelector(`#risk-${riskLevel}`);
@@ -257,11 +257,11 @@
           });
         }
       });
-
+      
       // Prevent map interaction when clicking on control
       L.DomEvent.disableClickPropagation(div);
       L.DomEvent.disableScrollPropagation(div);
-
+      
       return div;
     };
     riskFilterControl.addTo(map);
@@ -308,9 +308,9 @@
     if (!layer) return;
     layer.clearLayers();
     if (!Array.isArray(rows) || rows.length === 0) return;
-
+    
     let filteredRows = rows.filter((r) => r?.geometry);
-
+    
     // Apply risk level filtering if requested
     if (applyRiskFilter) {
       filteredRows = filteredRows.filter((r) => {
@@ -318,26 +318,26 @@
         return props.riskLevel ? isRiskLevelVisible(props.riskLevel) : true;
       });
     }
-
+    
     const features = filteredRows.map((r) => ({
       type: 'Feature',
       geometry: r.geometry,
       properties: propsMapper(r)
     }));
-
+    
     if (features.length > 0) layer.addData({ type: 'FeatureCollection', features });
   }
 
   $: if (heritageData?.conservation_areas) {
-    setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({
+    setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({ 
       name: r.name,
       riskLevel: getConservationAreaRiskLevel(r)
     }), true);
   }
 
   $: if (heritageData?.listed_buildings) {
-    setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({
-      name: r.name,
+    setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({ 
+      name: r.name, 
       grade: r.grade,
       riskLevel: getBuildingRiskLevel(r)
     }), true);
@@ -502,6 +502,7 @@
   :global(.risk-filter-control .risk-label.low) {
     color: #059669;
   }
+
 </style>
 
 
