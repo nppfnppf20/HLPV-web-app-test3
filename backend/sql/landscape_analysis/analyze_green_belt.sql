@@ -1,6 +1,9 @@
 -- PostgreSQL function for Green Belt spatial analysis
 -- This function analyzes Green Belt areas relative to a drawn polygon
 
+-- Drop existing function to allow signature change
+DROP FUNCTION IF EXISTS analyze_green_belt(TEXT);
+
 -- Function to analyze Green Belt relative to a drawn polygon
 CREATE OR REPLACE FUNCTION analyze_green_belt(polygon_geojson TEXT)
 RETURNS TABLE (
@@ -8,8 +11,10 @@ RETURNS TABLE (
   name TEXT,
   dist_m INTEGER,
   on_site BOOLEAN,
+  within_100m BOOLEAN,
   within_1km BOOLEAN,
-  direction TEXT
+  direction TEXT,
+  geometry JSON
 ) AS $$
 WITH
 -- Convert input GeoJSON polygon to geometry
@@ -41,9 +46,9 @@ gb_polys AS (
            ELSE ST_Transform(gb.geom, 27700)
       END
     ) AS geom,
-    gb."OBJECTID" AS id,
-    COALESCE(gb."NAME", gb."name", 'Green Belt Area') AS name
-  FROM public.green_belt gb  -- Adjust table name as needed
+    gb."fid" AS id,
+    COALESCE(gb."name", 'Green Belt Area') AS name
+  FROM public."Green_belt" gb  -- Using correct table name with quotes for case sensitivity
   WHERE gb.geom IS NOT NULL
 ),
 
@@ -52,8 +57,10 @@ with_bearing AS (
   SELECT
     p.id,
     p.name,
+    p.geom,
     ROUND(ST_Distance(sr.geom, p.geom))::INTEGER               AS dist_m,   -- rounded to nearest meter
     ST_Intersects(sr.geom, p.geom)                             AS on_site,  -- polygon intersection
+    ST_DWithin(sr.geom, p.geom, 100.0)                         AS within_100m, -- flag for within 100m
     ST_DWithin(sr.geom, p.geom, 1000.0)                        AS within_1km, -- flag for within 1km
     degrees(ST_Azimuth(sr.ref_pt, ST_ClosestPoint(p.geom, sr.geom))) AS az_deg
   FROM gb_polys p
@@ -65,6 +72,7 @@ SELECT
   wb.name,
   wb.dist_m,
   wb.on_site,
+  wb.within_100m,
   wb.within_1km,
   CASE
     WHEN wb.on_site THEN 'N/A'
@@ -77,7 +85,8 @@ SELECT
     WHEN wb.az_deg >= 247.5 AND wb.az_deg < 292.5 THEN 'W'
     WHEN wb.az_deg >= 292.5 AND wb.az_deg < 337.5 THEN 'NW'
     ELSE NULL
-  END AS direction
+  END AS direction,
+  ST_AsGeoJSON(ST_Transform(wb.geom, 4326))::JSON AS geometry
 FROM with_bearing wb
 WHERE
   wb.on_site

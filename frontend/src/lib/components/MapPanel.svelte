@@ -9,11 +9,13 @@
 
   /** @type {Record<string, any> | null} */
   export let heritageData = null;
+  /** @type {Record<string, any> | null} */
+  export let landscapeData = null;
 </script>
 
 <div class="map-panel">
   <div class="map-panel-content">
-    <Map {onPolygonDrawn} {heritageData} />
+    <Map {onPolygonDrawn} {heritageData} {landscapeData} />
     
     {#if loading}
       <div class="map-loading-overlay">

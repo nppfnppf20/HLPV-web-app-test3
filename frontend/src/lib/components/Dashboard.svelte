@@ -135,5 +135,6 @@
     onPolygonDrawn={handlePolygonDrawn}
     {loading}
     heritageData={heritageResult}
+    landscapeData={landscapeResult}
   />
 </div>

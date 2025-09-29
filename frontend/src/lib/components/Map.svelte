@@ -10,11 +10,17 @@
   export let onPolygonDrawn = (geojson) => {};
   /** @type {Record<string, any> | null} */
   export let heritageData = null;
+  /** @type {Record<string, any> | null} */
+  export let landscapeData = null;
+
+  $: console.log('🔍 Map received landscapeData:', landscapeData);
 
   /** @type {import('leaflet').GeoJSON | null} */
   let conservationAreasLayer = null;
   /** @type {import('leaflet').GeoJSON | null} */
   let listedBuildingsLayer = null;
+  /** @type {import('leaflet').GeoJSON | null} */
+  let greenBeltLayer = null;
   /** @type {any} */
   let layerControl = null;
   /** @type {any} */
@@ -67,6 +73,16 @@
   }
 
   /**
+   * Determine risk level for Green Belt based on its properties
+   * @param {any} greenBelt
+   */
+  function getGreenBeltRiskLevel(greenBelt) {
+    if (greenBelt.on_site) return 'medium_high_risk';
+    if (greenBelt.within_1km) return 'low_risk';
+    return 'low_risk';
+  }
+
+  /**
    * Check if a feature should be visible based on current risk filters
    * @param {string} riskLevel
    */
@@ -80,6 +96,7 @@
    */
   function updateLayerVisibility() {
     if (!conservationAreasLayer || !listedBuildingsLayer) return;
+    console.log('🔄 Updating layer visibility...');
 
     // Refresh layers with current filter settings
     if (heritageData?.conservation_areas) {
@@ -94,6 +111,13 @@
         name: r.name,
         grade: r.grade,
         riskLevel: getBuildingRiskLevel(r)
+      }), true);
+    }
+
+    if (landscapeData?.green_belt) {
+      setLayerData(greenBeltLayer, landscapeData.green_belt, (r) => ({
+        name: r.name || 'Green Belt',
+        riskLevel: getGreenBeltRiskLevel(r)
       }), true);
     }
   }
@@ -138,12 +162,22 @@
       }
     });
 
+    // Overlay: Green Belt
+    greenBeltLayer = L.geoJSON(null, {
+      style: { color: '#22c55e', weight: 3, fillOpacity: 0.2 },
+      onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
+        const name = f?.properties?.name || 'Green Belt';
+        layer.bindPopup(`${name}<br><strong>Green Belt Area</strong>`);
+      }
+    });
+
     // Layer control
     layerControl = L.control.layers(
       { 'OSM': base },
       {
         'Conservation areas': conservationAreasLayer,
-        'Listed buildings': listedBuildingsLayer
+        'Listed buildings': listedBuildingsLayer,
+        'Green Belt': greenBeltLayer
       },
       { collapsed: false }
     ).addTo(map);
@@ -179,6 +213,15 @@
                 <div class="legend-item">
                   <span class="legend-symbol" style="background: rgba(14, 165, 233, 0.15); border: 2px solid #0ea5e9;"></span>
                   Conservation Area
+                </div>
+              </div>
+            </div>
+            <div class="legend-section">
+              <div class="legend-title">Landscape</div>
+              <div class="legend-items-row">
+                <div class="legend-item">
+                  <span class="legend-symbol" style="background: rgba(34, 197, 94, 0.2); border: 3px solid #22c55e;"></span>
+                  Green Belt
                 </div>
               </div>
             </div>
@@ -287,18 +330,30 @@
    * @param {boolean} applyRiskFilter
    */
   function setLayerData(layer, rows, propsMapper = (r) => r, applyRiskFilter = false) {
-    if (!layer) return;
+    if (!layer) {
+      console.log('❌ setLayerData called with null layer');
+      return;
+    }
+    console.log('📊 setLayerData called with', rows.length, 'rows, applyRiskFilter:', applyRiskFilter);
     layer.clearLayers();
-    if (!Array.isArray(rows) || rows.length === 0) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      console.log('⚠️ No rows to add to layer');
+      return;
+    }
 
     let filteredRows = rows.filter((r) => r?.geometry);
+    console.log('📍 After geometry filter:', filteredRows.length, 'rows');
 
     // Apply risk level filtering if requested
     if (applyRiskFilter) {
+      const beforeRiskFilter = filteredRows.length;
       filteredRows = filteredRows.filter((r) => {
         const props = propsMapper(r);
-        return props.riskLevel ? isRiskLevelVisible(props.riskLevel) : true;
+        const visible = props.riskLevel ? isRiskLevelVisible(props.riskLevel) : true;
+        if (!visible) console.log('🚫 Filtering out', r.name || 'feature', 'with risk level:', props.riskLevel);
+        return visible;
       });
+      console.log('⚡ After risk filter:', filteredRows.length, 'rows (was', beforeRiskFilter, ')');
     }
 
     const features = filteredRows.map((r) => ({
@@ -307,10 +362,15 @@
       properties: propsMapper(r)
     }));
 
-    if (features.length > 0) layer.addData({ type: 'FeatureCollection', features });
+    console.log('🗺️ Adding', features.length, 'features to layer');
+    if (features.length > 0) {
+      layer.addData({ type: 'FeatureCollection', features });
+      console.log('✅ Features added to layer successfully');
+    }
   }
 
   $: if (heritageData?.conservation_areas) {
+    console.log('🏛️ First conservation area structure:', heritageData.conservation_areas[0]);
     setLayerData(conservationAreasLayer, heritageData.conservation_areas, (r) => ({
       name: r.name,
       riskLevel: getConservationAreaRiskLevel(r)
@@ -323,6 +383,17 @@
       grade: r.grade,
       riskLevel: getBuildingRiskLevel(r)
     }), true);
+  }
+
+  $: if (landscapeData?.green_belt) {
+    console.log('🟢 Green Belt data received:', landscapeData.green_belt);
+    console.log('🟢 Green Belt count:', landscapeData.green_belt.length);
+    console.log('🔍 First Green Belt feature structure:', landscapeData.green_belt[0]);
+    // Green Belt data doesn't have geometry, so we skip the geometry filter
+    setLayerData(greenBeltLayer, landscapeData.green_belt, (r) => ({
+      name: r.name || 'Green Belt',
+      riskLevel: getGreenBeltRiskLevel(r)
+    }), false); // false = don't apply risk filter which requires geometry
   }
 </script>
 
