@@ -21,6 +21,34 @@ export function buildConservationAreasQuery(geojsonPolygon) {
   return { text, values };
 }
 
+// Landscape analysis using PostgreSQL functions
+export function buildLandscapeAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_landscape($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
+// Agricultural land analysis using PostgreSQL functions
+export function buildAgLandAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_ag_land($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
+// Renewables analysis using PostgreSQL functions
+export function buildRenewablesAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_renewables($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
+// Ecology analysis using PostgreSQL functions
+export function buildEcologyAnalysisQuery(geojsonPolygon) {
+  const text = `SELECT analyze_site_ecology($1) as analysis_result;`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
 // Legacy function for backward compatibility (if needed)
 export function buildAnalysisQuery(geojsonPolygon) {
   // For now, redirect to the new heritage analysis

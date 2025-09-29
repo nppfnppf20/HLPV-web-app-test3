@@ -1,153 +1,263 @@
-/**
- * HERITAGE REPORT GENERATOR
- * 
- * Generates standardized heritage impact assessment reports based on
- * analysis data and rule-based risk assessment.
- */
+// Main report aggregator: combines heritage and landscape reports
+// This is the primary entry point for all report generation
 
-import { processHeritageRules, RISK_LEVELS } from '../rules/heritageRules.js';
+import { buildHeritageReport } from './heritage/heritageReportGenerator.js';
+import { buildLandscapeReport } from './landscape/landscapeReportGenerator.js';
+import { buildEcologyReport } from './ecology/ecologyReportGenerator.js';
+import { buildAgLandReport } from './agland/agLandReportGenerator.js';
 
 /**
- * Generate descriptive text about heritage designations found
- * 
- * PURPOSE: Create plain English summary of what heritage assets were identified
- * OUTPUT: Array of summary strings describing buildings and conservation areas
- * @param {any} analysisData
+ * Build renewables-specific report from backend analysis data
+ * @param {any} renewablesData - Backend renewables analysis results
  */
-export function generateDesignationSummary(analysisData) {
-  const buildings = analysisData?.listed_buildings || [];
-  const conservationAreas = analysisData?.conservation_areas || [];
-  
-  const summary = [];
-  
-  // Listed Buildings Summary
-  if (buildings.length > 0) {
-    const onSite = buildings.filter(/** @param {any} b */ b => b.on_site);
-    const nearby = buildings.filter(/** @param {any} b */ b => !b.on_site);
+function buildRenewablesReport(renewablesData) {
+  const rules = renewablesData?.rules || [];
+  const overallRisk = renewablesData?.overallRisk || null;
+  const renewablesArray = renewablesData?.renewables || [];
+
+  // Build designation summary for renewables
+  const designationSummary = [];
+  if (renewablesArray.length > 0) {
+    const onSite = renewablesArray.filter(/** @param {any} r */ r => r.on_site).length;
+    const nearby = renewablesArray.filter(/** @param {any} r */ r => !r.on_site).length;
     
-    // Grade breakdown
-    const grades = {
-      'I': buildings.filter(/** @param {any} b */ b => b.grade === 'I').length,
-      'II*': buildings.filter(/** @param {any} b */ b => b.grade === 'II*').length,
-      'II': buildings.filter(/** @param {any} b */ b => b.grade === 'II').length
-    };
+    const summaryItems = [
+      `${renewablesArray.length} renewable energy development${renewablesArray.length === 1 ? '' : 's'} identified`,
+      onSite > 0 ? `${onSite} on-site` : null,
+      nearby > 0 ? `${nearby} nearby` : null
+    ].filter(/** @param {any} item */ item => Boolean(item));
     
-    let buildingText = `${buildings.length} listed building${buildings.length > 1 ? 's' : ''} identified`;
-    
-    if (onSite.length > 0) {
-      buildingText += ` (${onSite.length} on site, ${nearby.length} nearby)`;
-    }
-    
-    // Add grade breakdown
-    const gradeTexts = [];
-    if (grades.I > 0) gradeTexts.push(`${grades.I} Grade I`);
-    if (grades['II*'] > 0) gradeTexts.push(`${grades['II*']} Grade II*`);
-    if (grades.II > 0) gradeTexts.push(`${grades.II} Grade II`);
-    
-    if (gradeTexts.length > 0) {
-      buildingText += `: ${gradeTexts.join(', ')}`;
-    }
-    
-    summary.push(buildingText);
-  } else {
-    summary.push('No listed buildings identified within the search area');
+    designationSummary.push(...summaryItems);
   }
-  
-  // Conservation Areas Summary
-  if (conservationAreas.length > 0) {
-    const intersecting = conservationAreas.filter(/** @param {any} a */ a => a.on_site);
-    const nearby = conservationAreas.filter(/** @param {any} a */ a => !a.on_site);
-    
-    let areaText = `${conservationAreas.length} conservation area${conservationAreas.length > 1 ? 's' : ''} identified`;
-    
-    if (intersecting.length > 0) {
-      areaText += ` (${intersecting.length} intersecting with site, ${nearby.length} nearby)`;
-    }
-    
-    summary.push(areaText);
-  } else {
-    summary.push('No conservation areas identified within the search area');
-  }
-  
-  return summary;
+
+  return {
+    riskAssessment: {
+      overallRisk,
+      riskSummary: `${rules.length} renewable energy rule${rules.length === 1 ? '' : 's'} triggered`,
+      triggeredRules: rules
+    },
+    designationSummary,
+    metadata: renewablesData?.metadata || {}
+  };
 }
 
+
+
 /**
- * Generate risk assessment summary with color coding
- * 
- * PURPOSE: Provide visual and textual representation of overall development risk
- * OUTPUT: Object with styling and descriptive information for each risk level
- * @param {string} overallRisk
+ * Resolve a risk summary object from either numeric or string overallRisk
+ * @param {number | string} overallRisk
  */
-export function getRiskSummary(overallRisk) {
-  const riskConfig = {
-    [RISK_LEVELS.SHOWSTOPPER]: {
-      label: 'SHOWSTOPPER',
-      description: 'Development likely not viable without major redesign',
-      color: '#dc2626', // red-600
-      bgColor: '#fef2f2' // red-50
-    },
-    [RISK_LEVELS.EXTREMELY_HIGH_RISK]: {
-      label: 'EXTREMELY HIGH RISK',
-      description: 'Major constraints, extensive specialist input required',
-      color: '#b91c1c', // red-700
-      bgColor: '#fee2e2' // red-100
-    },
-    [RISK_LEVELS.HIGH_RISK]: {
-      label: 'HIGH RISK',
-      description: 'Significant constraints, specialist assessment required',
-      color: '#ea580c', // orange-600
-      bgColor: '#fff7ed' // orange-50
-    },
-    [RISK_LEVELS.MEDIUM_HIGH_RISK]: {
-      label: 'MEDIUM-HIGH RISK',
-      description: 'Moderate constraints, careful design required',
-      color: '#d97706', // amber-600
-      bgColor: '#fffbeb' // amber-50
-    },
-    [RISK_LEVELS.LOW_RISK]: {
-      label: 'LOW RISK',
-      description: 'Minimal constraints, standard mitigation measures',
-      color: '#059669', // emerald-600
-      bgColor: '#ecfdf5' // emerald-50
-    }
+function resolveRiskSummary(overallRisk) {
+  const stringMap = {
+    showstopper: { label: 'SHOWSTOPPER', description: 'Development likely not viable without major redesign', color: '#dc2626', bgColor: '#fef2f2' },
+    extremely_high_risk: { label: 'EXTREMELY HIGH RISK', description: 'Major constraints, extensive specialist input required', color: '#b91c1c', bgColor: '#fee2e2' },
+    high_risk: { label: 'HIGH RISK', description: 'Significant constraints, specialist assessment required', color: '#ea580c', bgColor: '#fff7ed' },
+    medium_risk: { label: 'MEDIUM RISK', description: 'Notable constraints, proportionate assessment required', color: '#f59e0b', bgColor: '#fff7ed' },
+    medium_high_risk: { label: 'MEDIUM-HIGH RISK', description: 'Moderate constraints, careful design required', color: '#d97706', bgColor: '#fffbeb' },
+    medium_low_risk: { label: 'MEDIUM-LOW RISK', description: 'Minor constraints, basic mitigation measures', color: '#10b981', bgColor: '#ecfdf5' },
+    low_risk: { label: 'LOW RISK', description: 'Minimal constraints, standard mitigation measures', color: '#059669', bgColor: '#ecfdf5' }
   };
   
-  return riskConfig[overallRisk] || riskConfig[RISK_LEVELS.LOW_RISK];
+  if (typeof overallRisk === 'string') {
+    return stringMap[/** @type {keyof typeof stringMap} */ (overallRisk)] || stringMap.low_risk;
+  }
+  
+  // For numeric values, fall back to low risk
+  return stringMap.low_risk;
 }
 
 /**
- * Generate complete heritage report
- * 
- * PURPOSE: Main orchestrator function that combines all report elements
- * PROCESS: 
- *   1. Generate plain English designation summary
- *   2. Run heritage rules to assess risk
- *   3. Format results for display
- * OUTPUT: Complete report object ready for UI rendering
- * @param {any} analysisData
+ * Determine overall risk across multiple domains
+ * @param {string|number|null} heritageRisk
+ * @param {string|number|null} landscapeRisk
+ * @param {string|number|null} renewablesRisk
+ * @param {string|number|null} agLandRisk
  */
-export function generateHeritageReport(analysisData) {
-  const designationSummary = generateDesignationSummary(analysisData);
-  const ruleResults = processHeritageRules(analysisData);
-  const riskSummary = getRiskSummary(ruleResults.overallRisk || RISK_LEVELS.LOW_RISK);
+function determineOverallRisk(heritageRisk, landscapeRisk, renewablesRisk, agLandRisk) {
+  // Risk hierarchy (highest to lowest)
+  const riskHierarchy = [
+    'showstopper',
+    'extremely_high_risk', 
+    'high_risk',
+    'medium_high_risk',
+    'medium_risk',
+    'medium_low_risk',
+    'low_risk'
+  ];
+  
+  const risks = [heritageRisk, landscapeRisk, renewablesRisk, agLandRisk].filter(Boolean);
+  if (risks.length === 0) return 'low_risk';
+  
+  // Return the highest risk level found
+  for (const riskLevel of riskHierarchy) {
+    if (risks.includes(riskLevel)) return riskLevel;
+  }
+  
+  return 'low_risk';
+}
+
+/**
+ * Build combined heritage, landscape, renewables, ecology, and agricultural land report
+ * @param {any} heritageData - Backend heritage analysis results
+ * @param {any} landscapeData - Backend landscape analysis results
+ * @param {any} renewablesData - Backend renewables analysis results
+ * @param {any} ecologyData - Backend ecology analysis results
+ * @param {any} agLandData - Backend agricultural land analysis results
+ */
+export function buildCombinedReport(heritageData, landscapeData, renewablesData, ecologyData, agLandData) {
+  const heritageReport = heritageData ? buildHeritageReport(heritageData) : null;
+  const landscapeReport = landscapeData ? buildLandscapeReport(landscapeData) : null;
+  const renewablesReport = renewablesData ? buildRenewablesReport(renewablesData) : null;
+  const ecologyReport = ecologyData ? buildEcologyReport(ecologyData) : null;
+  const agLandReport = agLandData ? buildAgLandReport(agLandData) : null;
+  
+  // Determine overall risk across all domains
+  const overallRisk = determineOverallRisk(
+    heritageReport?.riskAssessment?.overallRisk,
+    landscapeReport?.riskAssessment?.overallRisk,
+    renewablesReport?.riskAssessment?.overallRisk,
+    agLandReport?.riskAssessment?.overallRisk
+  );
+  
+  // Combine triggered rules from all domains
+  const allTriggeredRules = [
+    ...(heritageReport?.riskAssessment?.triggeredRules || []),
+    ...(landscapeReport?.riskAssessment?.triggeredRules || []),
+    ...(renewablesReport?.riskAssessment?.triggeredRules || []),
+    ...(ecologyReport?.riskAssessment?.triggeredRules || []),
+    ...(agLandReport?.riskAssessment?.triggeredRules || [])
+  ];
+  
+  // Combine designation summaries
+  const combinedDesignationSummary = [
+    ...(heritageReport?.designationSummary || []),
+    ...(landscapeReport?.designationSummary || []),
+    ...(renewablesReport?.designationSummary || []),
+    ...(ecologyReport?.designationSummary || []),
+    ...(agLandReport?.designationSummary || [])
+  ];
+
+  // Build discipline-specific data for structured report
+  // Use the rules that are already separated by domain in individual reports
+  const disciplines = [];
+  
+  if (heritageReport) {
+    const heritageTriggeredRules = heritageReport.riskAssessment?.triggeredRules || [];
+    disciplines.push({
+      name: "Heritage",
+      overallRisk: heritageReport.riskAssessment?.overallRisk,
+      riskSummary: resolveRiskSummary(heritageReport.riskAssessment?.overallRisk),
+      triggeredRules: heritageTriggeredRules,
+      defaultTriggeredRecommendations: heritageData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: heritageData?.defaultNoRulesRecommendations || []
+    });
+  }
+  
+  if (landscapeReport) {
+    const landscapeTriggeredRules = landscapeReport.riskAssessment?.triggeredRules || [];
+    disciplines.push({
+      name: "Landscape", 
+      overallRisk: landscapeReport.riskAssessment?.overallRisk,
+      riskSummary: resolveRiskSummary(landscapeReport.riskAssessment?.overallRisk),
+      triggeredRules: landscapeTriggeredRules,
+      defaultTriggeredRecommendations: landscapeData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: landscapeData?.defaultNoRulesRecommendations || []
+    });
+  }
+  
+  if (renewablesReport) {
+    const renewablesTriggeredRules = renewablesReport.riskAssessment?.triggeredRules || [];
+    disciplines.push({
+      name: "Renewable Energy", 
+      overallRisk: renewablesReport.riskAssessment?.overallRisk,
+      riskSummary: resolveRiskSummary(renewablesReport.riskAssessment?.overallRisk),
+      triggeredRules: renewablesTriggeredRules,
+      defaultTriggeredRecommendations: renewablesData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: renewablesData?.defaultNoRulesRecommendations || []
+    });
+  }
+  
+  if (ecologyReport) {
+    const ecologyTriggeredRules = ecologyReport.riskAssessment?.triggeredRules || [];
+    disciplines.push({
+      name: "Ecology",
+      overallRisk: ecologyReport.riskAssessment?.overallRisk,
+      riskSummary: resolveRiskSummary(ecologyReport.riskAssessment?.overallRisk),
+      triggeredRules: ecologyTriggeredRules,
+      defaultTriggeredRecommendations: ecologyData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: ecologyData?.defaultNoRulesRecommendations || []
+    });
+  }
+
+  if (agLandReport) {
+    const agLandTriggeredRules = agLandReport.riskAssessment?.triggeredRules || [];
+    disciplines.push({
+      name: "Agricultural Land",
+      overallRisk: agLandReport.riskAssessment?.overallRisk,
+      riskSummary: resolveRiskSummary(agLandReport.riskAssessment?.overallRisk),
+      triggeredRules: agLandTriggeredRules,
+      defaultTriggeredRecommendations: agLandData?.defaultTriggeredRecommendations || [],
+      defaultNoRulesRecommendations: agLandData?.defaultNoRulesRecommendations || []
+    });
+  }
+
+  // Build risk by discipline summary for the summary section
+  const riskByDiscipline = disciplines
+    .filter(d => d.overallRisk) // Only include disciplines with risk data
+    .map(d => ({
+      name: d.name,
+      risk: d.overallRisk,
+      riskSummary: resolveRiskSummary(d.overallRisk)
+    }));
   
   return {
-    designationSummary,
-    riskAssessment: {
-      overallRisk: ruleResults.overallRisk,
-      riskSummary,
-      triggeredRules: ruleResults.rules
-    },
-    rawData: {
-      buildings: ruleResults.buildings,
-      conservationAreas: ruleResults.conservationAreas
+    // EXISTING STRUCTURE - Keep for backward compatibility
+    heritage: heritageReport,
+    landscape: landscapeReport,
+    renewables: renewablesReport,
+    ecology: ecologyReport,
+    agland: agLandReport,
+    combined: {
+      overallRisk,
+      designationSummary: combinedDesignationSummary,
+      triggeredRules: allTriggeredRules,
+      riskSummary: heritageReport?.riskAssessment?.riskSummary || landscapeReport?.riskAssessment?.riskSummary || renewablesReport?.riskAssessment?.riskSummary || ecologyReport?.riskAssessment?.riskSummary
     },
     metadata: {
       generatedAt: new Date().toISOString(),
-      rulesVersion: '1.0.0',
-      totalRulesProcessed: 6,
-      rulesTriggered: ruleResults.rules.length
+      sectionsIncluded: [
+        heritageData ? 'heritage' : null,
+        landscapeData ? 'landscape' : null,
+        renewablesData ? 'renewables' : null,
+        ecologyData ? 'ecology' : null,
+        agLandData ? 'agland' : null
+      ].filter(Boolean),
+      totalRules: allTriggeredRules.length,
+      totalRulesProcessed: (heritageReport?.metadata?.totalRulesProcessed || 0) + (landscapeReport?.metadata?.totalRulesProcessed || 0) + (renewablesReport?.metadata?.totalRulesProcessed || 0) + (ecologyReport?.metadata?.totalRulesProcessed || 0) + (agLandReport?.metadata?.totalRulesProcessed || 0),
+      rulesTriggered: allTriggeredRules.length,
+      rulesVersion: `combined-v2 (heritage: ${heritageReport?.metadata?.rulesVersion || 'n/a'}, landscape: ${landscapeReport?.metadata?.rulesVersion || 'n/a'}, renewables: ${renewablesReport?.metadata?.rulesVersion || 'n/a'}, ecology: ${ecologyReport?.metadata?.rulesVersion || 'n/a'}, agland: ${agLandReport?.metadata?.rulesVersion || 'n/a'})`,
+      heritageMetadata: heritageReport?.metadata,
+      landscapeMetadata: landscapeReport?.metadata,
+      renewablesMetadata: renewablesReport?.metadata,
+      ecologyMetadata: ecologyReport?.metadata,
+      aglandMetadata: agLandReport?.metadata
+    },
+
+    // NEW STRUCTURED REPORT - New organized structure
+    structuredReport: {
+      summary: {
+        site: "TBC - Site summary placeholder",
+        riskByDiscipline,
+        overallRisk,
+        overallRiskSummary: resolveRiskSummary(overallRisk)
+      },
+      disciplines: disciplines.filter(d => d.overallRisk) // Only include disciplines with data
     }
   };
 }
+
+/**
+ * Legacy function for backward compatibility - builds heritage report only
+ * @param {any} backend 
+ */
+export { buildHeritageReport } from './heritage/heritageReportGenerator.js';
