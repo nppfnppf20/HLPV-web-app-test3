@@ -149,56 +149,38 @@
     ).addTo(map);
 
     // Custom legend
-    legend = L.control({ position: 'bottomright' });
+    legend = L.control({ position: 'bottomleft' });
     legend.onAdd = function() {
       const div = L.DomUtil.create('div', 'map-legend');
       div.innerHTML = `
         <div class="legend-content">
           <h4>Heritage Assets</h4>
-          <div class="legend-section">
-            <div class="legend-title">Listed Buildings</div>
-            <div class="legend-item">
-              <span class="legend-symbol" style="background: #dc2626;"></span>
-              Grade I
+          <div class="legend-sections">
+            <div class="legend-section">
+              <div class="legend-title">Listed Buildings</div>
+              <div class="legend-items-row">
+                <div class="legend-item">
+                  <span class="legend-symbol" style="background: #dc2626;"></span>
+                  Grade I
+                </div>
+                <div class="legend-item">
+                  <span class="legend-symbol" style="background: #ea580c;"></span>
+                  Grade II*
+                </div>
+                <div class="legend-item">
+                  <span class="legend-symbol" style="background: #8b5cf6;"></span>
+                  Grade II
+                </div>
+              </div>
             </div>
-            <div class="legend-item">
-              <span class="legend-symbol" style="background: #ea580c;"></span>
-              Grade II*
-            </div>
-            <div class="legend-item">
-              <span class="legend-symbol" style="background: #8b5cf6;"></span>
-              Grade II
-            </div>
-          </div>
-          <div class="legend-section">
-            <div class="legend-title">Conservation Areas</div>
-            <div class="legend-item">
-              <span class="legend-symbol" style="background: rgba(14, 165, 233, 0.15); border: 2px solid #0ea5e9;"></span>
-              Conservation Area
-            </div>
-          </div>
-          <div class="legend-section">
-            <div class="legend-title">Risk Levels</div>
-            <div class="legend-note">Features are filtered by risk level. Use the Risk Filter control above to toggle visibility.</div>
-            <div class="legend-item">
-              <span class="legend-dot" style="color: #dc2626;">●</span>
-              Showstopper
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot" style="color: #ea580c;">●</span>
-              High Risk
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot" style="color: #d97706;">●</span>
-              Medium-High
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot" style="color: #f59e0b;">●</span>
-              Medium Risk
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot" style="color: #059669;">●</span>
-              Low Risk
+            <div class="legend-section">
+              <div class="legend-title">Conservation Areas</div>
+              <div class="legend-items-row">
+                <div class="legend-item">
+                  <span class="legend-symbol" style="background: rgba(14, 165, 233, 0.15); border: 2px solid #0ea5e9;"></span>
+                  Conservation Area
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -351,6 +333,17 @@
     height: 100%;
     width: 100%;
     min-height: 400px;
+    position: relative;
+  }
+
+  :global(.leaflet-bottom .leaflet-control-container) {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  :global(.leaflet-bottom .leaflet-control-container .leaflet-control) {
+    margin: 0 !important;
   }
 
   :global(.map-legend) {
@@ -361,7 +354,8 @@
     font-family: Arial, sans-serif;
     font-size: 12px;
     line-height: 1.4;
-    min-width: 180px;
+    min-width: 400px;
+    max-width: 600px;
   }
 
   :global(.map-legend .legend-content h4) {
@@ -373,12 +367,21 @@
     padding-bottom: 4px;
   }
 
-  :global(.map-legend .legend-section) {
-    margin-bottom: 12px;
+  :global(.map-legend .legend-sections) {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
   }
 
-  :global(.map-legend .legend-section:last-child) {
-    margin-bottom: 0;
+  :global(.map-legend .legend-section) {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  :global(.map-legend .legend-items-row) {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
   }
 
   :global(.map-legend .legend-title) {
