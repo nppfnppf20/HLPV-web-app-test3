@@ -29,7 +29,7 @@ export function processRenewablesRules(renewablesData) {
     };
   }
 
-  const triggeredRules = [];
+  let triggeredRules = [];
 
   // Process each renewable development
   renewablesData.forEach(development => {

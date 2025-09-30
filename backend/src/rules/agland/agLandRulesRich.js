@@ -19,15 +19,26 @@ export function checkGrade1OnSite(agLandAreas) {
 
   const totalCoverage = grade1Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
 
+  // Grade 1 thresholds: 100-60% = showstopper, 60-20% = extremely high
+  if (totalCoverage < 20) return { triggered: false };
+
+  let riskLevel, riskDescription;
+  if (totalCoverage >= 60) {
+    riskLevel = RISK_LEVELS.SHOWSTOPPER;
+    riskDescription = 'showstopper risk';
+  } else {
+    riskLevel = RISK_LEVELS.EXTREMELY_HIGH_RISK;
+    riskDescription = 'extremely high risk';
+  }
+
   return {
     id: 'grade_1_on_site',
     triggered: true,
-    level: RISK_LEVELS.EXTREMELY_HIGH_RISK,
+    level: riskLevel,
     rule: 'Grade 1 Agricultural Land On-Site',
     findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 1 agricultural land`,
     recommendations: [
-      'Presence of Grade 1 land constitutes a very high risk',
-     
+      `Presence of Grade 1 land constitutes a ${riskDescription}`,
       'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
       'Early engagement with Natural England recommended for Grade 1 and 2 land'
     ],
@@ -42,18 +53,32 @@ export function checkGrade2OnSite(agLandAreas) {
 
   const totalCoverage = grade2Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
 
+  // Grade 2 thresholds: 100-80% = high, 60-40% = medium-high, 40-20% = medium
+  if (totalCoverage < 20) return { triggered: false };
+
+  let riskLevel, riskDescription;
+  if (totalCoverage >= 80) {
+    riskLevel = RISK_LEVELS.HIGH_RISK;
+    riskDescription = 'high risk';
+  } else if (totalCoverage >= 40) {
+    riskLevel = RISK_LEVELS.MEDIUM_HIGH_RISK;
+    riskDescription = 'medium-high risk';
+  } else {
+    riskLevel = RISK_LEVELS.MEDIUM_RISK;
+    riskDescription = 'medium risk';
+  }
+
   return {
     id: 'grade_2_on_site',
     triggered: true,
-    level: RISK_LEVELS.HIGH_RISK,
+    level: riskLevel,
     rule: 'Grade 2 Agricultural Land On-Site',
     findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 2 agricultural land`,
     recommendations: [
-      'Presence of Grade 2 land constitutes a high risk',
+      `Presence of Grade 2 land constitutes a ${riskDescription}`,
       'Whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
       'Early engagement with Natural England recommended for Grade 1 and 2 land',
       'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
-
     ],
     areas: grade2Areas
   };
@@ -66,6 +91,9 @@ export function checkGrade3OnSite(agLandAreas) {
 
   const totalCoverage = grade3Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
 
+  // Grade 3 thresholds: 100-20% = medium
+  if (totalCoverage < 20) return { triggered: false };
+
   return {
     id: 'grade_3_on_site',
     triggered: true,
@@ -73,10 +101,9 @@ export function checkGrade3OnSite(agLandAreas) {
     rule: 'Grade 3 Agricultural Land On-Site',
     findings: `${totalCoverage.toFixed(1)}% of site consists of Grade 3 agricultural land`,
     recommendations: [
-      'Presence of Grade 3 land consitutes a medium level risk',
+      'Presence of Grade 3 land constitutes a medium level risk',
       'Whilst not necessarily a showstopper, strong justification will be needed for development on BMV land',
       'Additional supporting material such as a Site Justification Document, farm diversification/business case, and policy justification will likely be required',
-
     ],
     areas: grade3Areas
   };
@@ -86,29 +113,34 @@ export function checkGrade3OnSite(agLandAreas) {
 /** @param {any[]} agLandAreas */
 export function checkGrade4Or5OnlyOnSite(agLandAreas) {
   const allAreas = agLandAreas || [];
-  
-  // Check if there are any higher quality grades (1, 2, 3) present
-  const higherGrades = allAreas.filter(a => 
-    a.grade === 'Grade 1' || a.grade === '1' ||
-    a.grade === 'Grade 2' || a.grade === '2' ||
-    a.grade === 'Grade 3' || a.grade === '3'
-  );
-  
-  // If higher grades are present, this rule doesn't apply
+
+  // Check if there are any higher quality grades (1, 2, 3) present with significant coverage (>=20%)
+  const higherGrades = allAreas.filter(a => {
+    const isHigherGrade = a.grade === 'Grade 1' || a.grade === '1' ||
+                         a.grade === 'Grade 2' || a.grade === '2' ||
+                         a.grade === 'Grade 3' || a.grade === '3';
+    return isHigherGrade && (a.percentage_coverage || 0) >= 20;
+  });
+
+  // If higher grades with significant coverage are present, this rule doesn't apply
   if (higherGrades.length > 0) return { triggered: false };
-  
+
   // Check for Grade 4 or 5 areas
-  const grade4Or5Areas = allAreas.filter(a => 
+  const grade4Or5Areas = allAreas.filter(a =>
     a.grade === 'Grade 4' || a.grade === '4' ||
     a.grade === 'Grade 5' || a.grade === '5'
   );
-  
+
   if (grade4Or5Areas.length === 0) return { triggered: false };
 
   const totalCoverage = grade4Or5Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
+
+  // Grade 4 & 5 thresholds: 100-20% = low risk
+  if (totalCoverage < 20) return { triggered: false };
+
   const grade4Areas = grade4Or5Areas.filter(a => a.grade === 'Grade 4' || a.grade === '4');
   const grade5Areas = grade4Or5Areas.filter(a => a.grade === 'Grade 5' || a.grade === '5');
-  
+
   const gradeBreakdown = [];
   if (grade4Areas.length > 0) {
     const grade4Coverage = grade4Areas.reduce((sum, area) => sum + (area.percentage_coverage || 0), 0);
@@ -127,8 +159,7 @@ export function checkGrade4Or5OnlyOnSite(agLandAreas) {
     findings: `Site consists only of lower quality agricultural land: ${gradeBreakdown.join(', ')}`,
     recommendations: [
       'Lower quality agricultural land with limited agricultural value',
-      
-      'Although the provisional land classification is indicates that the land is unlikely to contain BMV, an ALC survey is still advisable to confirm this'
+      'Although the provisional land classification indicates that the land is unlikely to contain BMV, an ALC survey is still advisable to confirm this'
     ],
     areas: grade4Or5Areas
   };
