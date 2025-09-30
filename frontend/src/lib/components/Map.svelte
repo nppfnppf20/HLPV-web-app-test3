@@ -18,7 +18,11 @@
   /** @type {import('leaflet').GeoJSON | null} */
   let conservationAreasLayer = null;
   /** @type {import('leaflet').GeoJSON | null} */
-  let listedBuildingsLayer = null;
+  let listedBuildingsGradeILayer = null;
+  /** @type {import('leaflet').GeoJSON | null} */
+  let listedBuildingsGradeIIStarLayer = null;
+  /** @type {import('leaflet').GeoJSON | null} */
+  let listedBuildingsGradeIILayer = null;
   /** @type {import('leaflet').GeoJSON | null} */
   let greenBeltLayer = null;
   /** @type {any} */
@@ -95,7 +99,7 @@
    * Update layer visibility based on current risk filter settings
    */
   function updateLayerVisibility() {
-    if (!conservationAreasLayer || !listedBuildingsLayer) return;
+    if (!conservationAreasLayer || !listedBuildingsGradeILayer || !listedBuildingsGradeIIStarLayer || !listedBuildingsGradeIILayer) return;
     console.log('🔄 Updating layer visibility...');
 
     // Refresh layers with current filter settings
@@ -107,7 +111,24 @@
     }
 
     if (heritageData?.listed_buildings) {
-      setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({
+      // Filter buildings by grade and apply to appropriate layers
+      const gradeIBuildings = heritageData.listed_buildings.filter(b => b.grade === 'I');
+      const gradeIIStarBuildings = heritageData.listed_buildings.filter(b => b.grade === 'II*');
+      const gradeIIBuildings = heritageData.listed_buildings.filter(b => b.grade === 'II');
+
+      setLayerData(listedBuildingsGradeILayer, gradeIBuildings, (r) => ({
+        name: r.name,
+        grade: r.grade,
+        riskLevel: getBuildingRiskLevel(r)
+      }), true);
+
+      setLayerData(listedBuildingsGradeIIStarLayer, gradeIIStarBuildings, (r) => ({
+        name: r.name,
+        grade: r.grade,
+        riskLevel: getBuildingRiskLevel(r)
+      }), true);
+
+      setLayerData(listedBuildingsGradeIILayer, gradeIIBuildings, (r) => ({
         name: r.name,
         grade: r.grade,
         riskLevel: getBuildingRiskLevel(r)
@@ -148,17 +169,36 @@
       }
     });
 
-    // Overlay: Listed Buildings (points)
-    listedBuildingsLayer = L.geoJSON(null, {
+    // Overlay: Grade I Listed Buildings
+    listedBuildingsGradeILayer = L.geoJSON(null, {
       pointToLayer: (/** @type {any} */ feat, /** @type {any} */ latlng) => {
-        const grade = feat?.properties?.grade || '';
-        const color = grade === 'I' ? '#dc2626' : grade.includes('II*') ? '#ea580c' : '#8b5cf6';
-        return L.circleMarker(latlng, { radius: 6, color, fillColor: color, fillOpacity: 0.8, weight: 2 });
+        return L.circleMarker(latlng, { radius: 6, color: '#dc2626', fillColor: '#dc2626', fillOpacity: 0.8, weight: 2 });
       },
       onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
         const name = f?.properties?.name || 'Listed building';
-        const grade = f?.properties?.grade || '';
-        layer.bindPopup(`${name}<br><strong>Grade ${grade}</strong>`);
+        layer.bindPopup(`${name}<br><strong>Grade I</strong>`);
+      }
+    });
+
+    // Overlay: Grade II* Listed Buildings
+    listedBuildingsGradeIIStarLayer = L.geoJSON(null, {
+      pointToLayer: (/** @type {any} */ feat, /** @type {any} */ latlng) => {
+        return L.circleMarker(latlng, { radius: 6, color: '#ea580c', fillColor: '#ea580c', fillOpacity: 0.8, weight: 2 });
+      },
+      onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
+        const name = f?.properties?.name || 'Listed building';
+        layer.bindPopup(`${name}<br><strong>Grade II*</strong>`);
+      }
+    });
+
+    // Overlay: Grade II Listed Buildings
+    listedBuildingsGradeIILayer = L.geoJSON(null, {
+      pointToLayer: (/** @type {any} */ feat, /** @type {any} */ latlng) => {
+        return L.circleMarker(latlng, { radius: 6, color: '#8b5cf6', fillColor: '#8b5cf6', fillOpacity: 0.8, weight: 2 });
+      },
+      onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
+        const name = f?.properties?.name || 'Listed building';
+        layer.bindPopup(`${name}<br><strong>Grade II</strong>`);
       }
     });
 
@@ -171,69 +211,22 @@
       }
     });
 
-    // Layer control
+    // Layer control with symbols
     layerControl = L.control.layers(
       { 'OSM': base },
       {
-        'Conservation areas': conservationAreasLayer,
-        'Listed buildings': listedBuildingsLayer,
-        'Green Belt': greenBeltLayer
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 16px; height: 12px; background: rgba(14, 165, 233, 0.15); border: 2px solid #0ea5e9; margin-right: 8px; border-radius: 3px;"></span>Conservation areas</span>': conservationAreasLayer,
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #dc2626; border-radius: 50%; margin-right: 8px;"></span>Grade I Listed</span>': listedBuildingsGradeILayer,
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #ea580c; border-radius: 50%; margin-right: 8px;"></span>Grade II* Listed</span>': listedBuildingsGradeIIStarLayer,
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 50%; margin-right: 8px;"></span>Grade II Listed</span>': listedBuildingsGradeIILayer,
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 16px; height: 12px; background: rgba(34, 197, 94, 0.2); border: 3px solid #22c55e; margin-right: 8px; border-radius: 3px;"></span>Green Belt</span>': greenBeltLayer
       },
       { collapsed: false }
     ).addTo(map);
 
-    // Custom legend
-    legend = L.control({ position: 'bottomleft' });
-    legend.onAdd = function() {
-      const div = L.DomUtil.create('div', 'map-legend');
-      div.innerHTML = `
-        <div class="legend-content">
-          <h4>Heritage Assets</h4>
-          <div class="legend-sections">
-            <div class="legend-section">
-              <div class="legend-title">Listed Buildings</div>
-              <div class="legend-items-row">
-                <div class="legend-item">
-                  <span class="legend-symbol" style="background: #dc2626;"></span>
-                  Grade I
-                </div>
-                <div class="legend-item">
-                  <span class="legend-symbol" style="background: #ea580c;"></span>
-                  Grade II*
-                </div>
-                <div class="legend-item">
-                  <span class="legend-symbol" style="background: #8b5cf6;"></span>
-                  Grade II
-                </div>
-              </div>
-            </div>
-            <div class="legend-section">
-              <div class="legend-title">Conservation Areas</div>
-              <div class="legend-items-row">
-                <div class="legend-item">
-                  <span class="legend-symbol" style="background: rgba(14, 165, 233, 0.15); border: 2px solid #0ea5e9;"></span>
-                  Conservation Area
-                </div>
-              </div>
-            </div>
-            <div class="legend-section">
-              <div class="legend-title">Landscape</div>
-              <div class="legend-items-row">
-                <div class="legend-item">
-                  <span class="legend-symbol" style="background: rgba(34, 197, 94, 0.2); border: 3px solid #22c55e;"></span>
-                  Green Belt
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-      return div;
-    };
-    legend.addTo(map);
 
     // Create risk filter control
-    riskFilterControl = L.control({ position: 'topleft' });
+    riskFilterControl = L.control({ position: 'topright' });
     riskFilterControl.onAdd = function() {
       const div = L.DomUtil.create('div', 'risk-filter-control');
       div.innerHTML = `
@@ -378,7 +371,24 @@
   }
 
   $: if (heritageData?.listed_buildings) {
-    setLayerData(listedBuildingsLayer, heritageData.listed_buildings, (r) => ({
+    // Filter buildings by grade and apply to appropriate layers
+    const gradeIBuildings = heritageData.listed_buildings.filter(b => b.grade === 'I');
+    const gradeIIStarBuildings = heritageData.listed_buildings.filter(b => b.grade === 'II*');
+    const gradeIIBuildings = heritageData.listed_buildings.filter(b => b.grade === 'II');
+
+    setLayerData(listedBuildingsGradeILayer, gradeIBuildings, (r) => ({
+      name: r.name,
+      grade: r.grade,
+      riskLevel: getBuildingRiskLevel(r)
+    }), true);
+
+    setLayerData(listedBuildingsGradeIIStarLayer, gradeIIStarBuildings, (r) => ({
+      name: r.name,
+      grade: r.grade,
+      riskLevel: getBuildingRiskLevel(r)
+    }), true);
+
+    setLayerData(listedBuildingsGradeIILayer, gradeIIBuildings, (r) => ({
       name: r.name,
       grade: r.grade,
       riskLevel: getBuildingRiskLevel(r)
@@ -407,101 +417,6 @@
     position: relative;
   }
 
-  :global(.leaflet-bottom .leaflet-control-container) {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-
-  :global(.leaflet-bottom .leaflet-control-container .leaflet-control) {
-    margin: 0 !important;
-  }
-
-  :global(.map-legend) {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 12px;
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    line-height: 1.4;
-    min-width: 400px;
-    max-width: 600px;
-  }
-
-  :global(.map-legend .legend-content h4) {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 4px;
-  }
-
-  :global(.map-legend .legend-sections) {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
-
-  :global(.map-legend .legend-section) {
-    flex: 1;
-    min-width: 150px;
-  }
-
-  :global(.map-legend .legend-items-row) {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  :global(.map-legend .legend-title) {
-    font-weight: 600;
-    color: #4b5563;
-    margin-bottom: 6px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  :global(.map-legend .legend-item) {
-    display: flex;
-    align-items: center;
-    margin-bottom: 4px;
-    color: #6b7280;
-  }
-
-  :global(.map-legend .legend-item:last-child) {
-    margin-bottom: 0;
-  }
-
-  :global(.map-legend .legend-symbol) {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 8px;
-    flex-shrink: 0;
-  }
-
-  :global(.map-legend .legend-symbol[style*="border"]) {
-    border-radius: 3px;
-    width: 16px;
-    height: 12px;
-  }
-
-  :global(.map-legend .legend-note) {
-    font-size: 10px;
-    color: #9ca3af;
-    margin-bottom: 6px;
-    font-style: italic;
-    line-height: 1.3;
-  }
-
-  :global(.map-legend .legend-dot) {
-    margin-right: 8px;
-    font-size: 14px;
-    line-height: 1;
-  }
 
   /* Risk Filter Control Styles */
   :global(.risk-filter-control) {
@@ -513,7 +428,7 @@
     font-size: 12px;
     line-height: 1.4;
     min-width: 160px;
-    margin-bottom: 10px;
+    margin-top: 10px;
   }
 
   :global(.risk-filter-control .risk-filter-content h4) {
