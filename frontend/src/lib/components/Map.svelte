@@ -27,6 +27,7 @@
   let scheduledMonumentsLayer = null;
   /** @type {import('leaflet').GeoJSON | null} */
   let greenBeltLayer = null;
+  let aonbLayer = null;
   /** @type {any} */
   let layerControl = null;
   /** @type {any} */
@@ -100,6 +101,16 @@
   }
 
   /**
+   * Determine risk level for AONB based on its properties
+   * @param {any} aonb
+   */
+  function getAONBRiskLevel(aonb) {
+    if (aonb.on_site) return 'medium_high_risk';
+    if (aonb.within_1km) return 'low_risk';
+    return 'low_risk';
+  }
+
+  /**
    * Check if a feature should be visible based on current risk filters
    * @param {string} riskLevel
    */
@@ -159,6 +170,13 @@
       setLayerData(greenBeltLayer, landscapeData.green_belt, (r) => ({
         name: r.name || 'Green Belt',
         riskLevel: getGreenBeltRiskLevel(r)
+      }), true);
+    }
+
+    if (landscapeData?.aonb) {
+      setLayerData(aonbLayer, landscapeData.aonb, (r) => ({
+        name: r.name || 'AONB',
+        riskLevel: getAONBRiskLevel(r)
       }), true);
     }
   }
@@ -253,6 +271,15 @@
       }
     });
 
+    // Overlay: AONB
+    aonbLayer = L.geoJSON(null, {
+      style: { color: '#3b82f6', weight: 3, fillOpacity: 0.2 },
+      onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
+        const name = f?.properties?.name || 'AONB';
+        layer.bindPopup(`${name}<br><strong>Area of Outstanding Natural Beauty</strong>`);
+      }
+    });
+
     // Layer control with symbols
     layerControl = L.control.layers(
       { 'OSM': base },
@@ -262,7 +289,8 @@
         '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #ea580c; border-radius: 50%; margin-right: 8px;"></span>Grade II* Listed</span>': listedBuildingsGradeIIStarLayer,
         '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 50%; margin-right: 8px;"></span>Grade II Listed</span>': listedBuildingsGradeIILayer,
         '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid #f59e0b; margin-right: 8px; margin-left: 3px;"></span>Scheduled Monuments</span>': scheduledMonumentsLayer,
-        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 16px; height: 12px; background: rgba(34, 197, 94, 0.2); border: 3px solid #22c55e; margin-right: 8px; border-radius: 3px;"></span>Green Belt</span>': greenBeltLayer
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 16px; height: 12px; background: rgba(34, 197, 94, 0.2); border: 3px solid #22c55e; margin-right: 8px; border-radius: 3px;"></span>Green Belt</span>': greenBeltLayer,
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 16px; height: 12px; background: rgba(59, 130, 246, 0.2); border: 3px solid #3b82f6; margin-right: 8px; border-radius: 3px;"></span>AONB</span>': aonbLayer
       },
       { collapsed: false }
     ).addTo(map);
@@ -468,6 +496,17 @@
       name: r.name || 'Green Belt',
       riskLevel: getGreenBeltRiskLevel(r)
     }), false); // false = don't apply risk filter which requires geometry
+  }
+
+  $: if (landscapeData?.aonb) {
+    console.log('🔵 AONB data received:', landscapeData.aonb);
+    console.log('🔵 AONB count:', landscapeData.aonb.length);
+    console.log('🔍 First AONB feature structure:', landscapeData.aonb[0]);
+    // AONB data now has geometry, so we can apply the geometry filter
+    setLayerData(aonbLayer, landscapeData.aonb, (r) => ({
+      name: r.name || 'AONB',
+      riskLevel: getAONBRiskLevel(r)
+    }), true); // true = apply risk filter using geometry
   }
 </script>
 

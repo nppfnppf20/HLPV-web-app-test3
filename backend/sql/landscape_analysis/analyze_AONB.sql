@@ -2,6 +2,9 @@
 -- Analyzes Areas of Outstanding Natural Beauty relative to a drawn polygon
 -- Returns features that are on-site or within up to 5km, with distance buckets
 
+-- Drop existing function to allow signature change
+DROP FUNCTION IF EXISTS analyze_aonb(TEXT);
+
 CREATE OR REPLACE FUNCTION analyze_aonb(polygon_geojson TEXT)
 RETURNS TABLE (
   id INTEGER,
@@ -15,7 +18,8 @@ RETURNS TABLE (
   within_1km BOOLEAN,
   within_3km BOOLEAN,
   within_5km BOOLEAN,
-  direction TEXT
+  direction TEXT,
+  geometry JSON
 ) AS $$
 WITH
 -- Convert input GeoJSON polygon to geometry
@@ -50,6 +54,7 @@ with_measures AS (
   SELECT
     p.id,
     p.name,
+    p.geom,
     ROUND(ST_Distance(sr.geom, p.geom))::INTEGER               AS dist_m,
     ST_Intersects(sr.geom, p.geom)                             AS on_site,
     ST_DWithin(sr.geom, p.geom, 50.0)                          AS within_50m,
@@ -87,7 +92,8 @@ SELECT
     WHEN m.az_deg >= 247.5 AND m.az_deg < 292.5 THEN 'W'
     WHEN m.az_deg >= 292.5 AND m.az_deg < 337.5 THEN 'NW'
     ELSE NULL
-  END AS direction
+  END AS direction,
+  ST_AsGeoJSON(ST_Transform(m.geom, 4326))::JSON AS geometry
 FROM with_measures m
 WHERE
   m.on_site OR m.within_5km
