@@ -24,6 +24,8 @@
   /** @type {import('leaflet').GeoJSON | null} */
   let listedBuildingsGradeIILayer = null;
   /** @type {import('leaflet').GeoJSON | null} */
+  let scheduledMonumentsLayer = null;
+  /** @type {import('leaflet').GeoJSON | null} */
   let greenBeltLayer = null;
   /** @type {any} */
   let layerControl = null;
@@ -77,6 +79,17 @@
   }
 
   /**
+   * Determine risk level for scheduled monuments based on its properties
+   * @param {any} monument
+   */
+  function getScheduledMonumentRiskLevel(monument) {
+    if (monument.on_site) return 'high_risk';
+    if (monument.within_250m) return 'medium_high_risk';
+    if (monument.within_500m) return 'medium_risk';
+    return 'low_risk';
+  }
+
+  /**
    * Determine risk level for Green Belt based on its properties
    * @param {any} greenBelt
    */
@@ -99,7 +112,7 @@
    * Update layer visibility based on current risk filter settings
    */
   function updateLayerVisibility() {
-    if (!conservationAreasLayer || !listedBuildingsGradeILayer || !listedBuildingsGradeIIStarLayer || !listedBuildingsGradeIILayer) return;
+    if (!conservationAreasLayer || !listedBuildingsGradeILayer || !listedBuildingsGradeIIStarLayer || !listedBuildingsGradeIILayer || !scheduledMonumentsLayer) return;
     console.log('🔄 Updating layer visibility...');
 
     // Refresh layers with current filter settings
@@ -132,6 +145,13 @@
         name: r.name,
         grade: r.grade,
         riskLevel: getBuildingRiskLevel(r)
+      }), true);
+    }
+
+    if (heritageData?.scheduled_monuments) {
+      setLayerData(scheduledMonumentsLayer, heritageData.scheduled_monuments, (r) => ({
+        name: r.name,
+        riskLevel: getScheduledMonumentRiskLevel(r)
       }), true);
     }
 
@@ -202,6 +222,28 @@
       }
     });
 
+    // Overlay: Scheduled Monuments
+    scheduledMonumentsLayer = L.geoJSON(null, {
+      pointToLayer: (/** @type {any} */ feat, /** @type {any} */ latlng) => {
+        const size = 12;
+        const points = [
+          [latlng.lng, latlng.lat + size/111000],
+          [latlng.lng - size/111000, latlng.lat - size/111000],
+          [latlng.lng + size/111000, latlng.lat - size/111000]
+        ];
+        return L.polygon(points.map(p => [p[1], p[0]]), {
+          color: '#f59e0b',
+          fillColor: '#f59e0b',
+          fillOpacity: 0.8,
+          weight: 2
+        });
+      },
+      onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
+        const name = f?.properties?.name || 'Scheduled Monument';
+        layer.bindPopup(`${name}<br><strong>Scheduled Monument</strong>`);
+      }
+    });
+
     // Overlay: Green Belt
     greenBeltLayer = L.geoJSON(null, {
       style: { color: '#22c55e', weight: 3, fillOpacity: 0.2 },
@@ -219,6 +261,7 @@
         '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #dc2626; border-radius: 50%; margin-right: 8px;"></span>Grade I Listed</span>': listedBuildingsGradeILayer,
         '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #ea580c; border-radius: 50%; margin-right: 8px;"></span>Grade II* Listed</span>': listedBuildingsGradeIIStarLayer,
         '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 50%; margin-right: 8px;"></span>Grade II Listed</span>': listedBuildingsGradeIILayer,
+        '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid #f59e0b; margin-right: 8px; margin-left: 3px;"></span>Scheduled Monuments</span>': scheduledMonumentsLayer,
         '<span style="display: inline-flex; align-items: center;"><span style="display: inline-block; width: 16px; height: 12px; background: rgba(34, 197, 94, 0.2); border: 3px solid #22c55e; margin-right: 8px; border-radius: 3px;"></span>Green Belt</span>': greenBeltLayer
       },
       { collapsed: false }
@@ -392,6 +435,27 @@
       name: r.name,
       grade: r.grade,
       riskLevel: getBuildingRiskLevel(r)
+    }), true);
+  }
+
+  $: if (heritageData?.scheduled_monuments) {
+    console.log('🏛️ Scheduled monuments data received:', heritageData.scheduled_monuments);
+    console.log('🏛️ Scheduled monuments count:', heritageData.scheduled_monuments.length);
+    console.log('🔍 First scheduled monument structure:', heritageData.scheduled_monuments[0]);
+
+    // Convert lat/lng strings to geometry objects for map display
+    const monumentsWithGeometry = heritageData.scheduled_monuments.map(monument => ({
+      ...monument,
+      geometry: {
+        type: 'Point',
+        coordinates: [parseFloat(monument.lng), parseFloat(monument.lat)]
+      }
+    }));
+
+    console.log('🔧 Converted scheduled monuments with geometry:', monumentsWithGeometry[0]);
+    setLayerData(scheduledMonumentsLayer, monumentsWithGeometry, (r) => ({
+      name: r.name,
+      riskLevel: getScheduledMonumentRiskLevel(r)
     }), true);
   }
 

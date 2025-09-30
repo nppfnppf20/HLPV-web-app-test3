@@ -56,6 +56,20 @@ export async function analyzeConservationAreas(/** @type {any} */ polygonGeoJSON
   return res.json();
 }
 
+// Scheduled monuments analysis
+export async function analyzeScheduledMonuments(/** @type {any} */ polygonGeoJSON) {
+  const res = await fetch(`${BASE_URL}/analyze/scheduled-monuments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ polygon: polygonGeoJSON })
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Scheduled monuments analysis failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 // Landscape analysis (Green Belt, AONB, etc.)
 export async function analyzeLandscape(/** @type {any} */ polygonGeoJSON) {
   const res = await fetch(`${BASE_URL}/analyze/landscape`, {

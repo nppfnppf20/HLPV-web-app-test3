@@ -2,11 +2,12 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { pool } from './db.js';
-import { 
-  buildAnalysisQuery, 
-  buildHeritageAnalysisQuery, 
-  buildListedBuildingsQuery, 
+import {
+  buildAnalysisQuery,
+  buildHeritageAnalysisQuery,
+  buildListedBuildingsQuery,
   buildConservationAreasQuery,
+  buildScheduledMonumentsQuery,
   buildLandscapeAnalysisQuery,
   buildAgLandAnalysisQuery,
   buildRenewablesAnalysisQuery,
@@ -127,6 +128,22 @@ app.post('/analyze/conservation-areas', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Conservation areas analysis error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Scheduled monuments analysis endpoint
+app.post('/analyze/scheduled-monuments', async (req, res) => {
+  try {
+    const { polygon } = req.body;
+    if (!polygon) {
+      return res.status(400).json({ error: 'polygon is required (GeoJSON Polygon or MultiPolygon)' });
+    }
+    const { text, values } = buildScheduledMonumentsQuery(polygon);
+    const result = await pool.query(text, values);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Scheduled monuments analysis error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

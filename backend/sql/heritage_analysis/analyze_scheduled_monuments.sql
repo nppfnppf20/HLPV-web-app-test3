@@ -1,44 +1,80 @@
 -- Analysis function for Scheduled Monuments
+-- Drop existing function first to allow return type change
+DROP FUNCTION IF EXISTS analyze_scheduled_monuments(TEXT);
+
 CREATE OR REPLACE FUNCTION analyze_scheduled_monuments(polygon_geojson TEXT)
 RETURNS TABLE (
   id INTEGER,
   name TEXT,
   dist_m NUMERIC,
-  direction TEXT,
   on_site BOOLEAN,
-  within_50m BOOLEAN,
-  within_100m BOOLEAN,
-  within_250m BOOLEAN,
-  within_500m BOOLEAN,
-  within_1km BOOLEAN,
-  within_3km BOOLEAN,
-  within_5km BOOLEAN
+  direction TEXT,
+  geometry GEOMETRY
 ) AS $$
-DECLARE
-  site_geom GEOMETRY;
-BEGIN
-  -- Parse the input polygon
-  site_geom := ST_GeomFromGeoJSON(polygon_geojson);
+WITH
+-- Convert input GeoJSON polygon to geometry
+site AS (
+  SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON(polygon_geojson), 4326)) AS geom
+),
 
-  RETURN QUERY
+-- Transform to British National Grid (27700) for accurate distance calculations
+site_metric AS (
+  SELECT ST_Transform(geom, 27700) AS geom
+  FROM site
+),
+
+-- Reference point for azimuth calculation
+site_ref AS (
   SELECT
-    sm.ogc_fid as id,
-    COALESCE(sm.name, 'Unnamed Scheduled Monument') as name,
-    ROUND(ST_Distance(site_geom::geography, sm.wkb_geometry::geography)::numeric, 1) as dist_m,
-    CASE
-      WHEN ST_Intersects(site_geom, sm.wkb_geometry) THEN 'On Site'
-      ELSE get_direction(ST_Centroid(site_geom), ST_Centroid(sm.wkb_geometry))
-    END as direction,
-    ST_Intersects(site_geom, sm.wkb_geometry) as on_site,
-    ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 50) as within_50m,
-    ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 100) as within_100m,
-    ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 250) as within_250m,
-    ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 500) as within_500m,
-    ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 1000) as within_1km,
-    ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 3000) as within_3km,
-    ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 5000) as within_5km
+    sm.geom,
+    ST_PointOnSurface(sm.geom) AS ref_pt
+  FROM site_metric sm
+),
+
+-- Transform scheduled monuments to metric coordinate system
+sm_metric AS (
+  SELECT
+    sm.fid::INTEGER as id,
+    COALESCE(sm."Name", 'Unnamed Scheduled Monument')::TEXT as name,
+    ST_Transform(sm.geom, 27700) AS geom_metric,
+    sm.geom AS geom_wgs84
   FROM public."Scheduled monuments" sm
-  WHERE ST_DWithin(site_geom::geography, sm.wkb_geometry::geography, 5000)
-  ORDER BY ST_Distance(site_geom::geography, sm.wkb_geometry::geography);
-END;
-$$ LANGUAGE plpgsql STABLE;
+  WHERE sm.geom IS NOT NULL
+),
+
+-- Calculate distance, azimuth, and on-site flag
+with_bearing AS (
+  SELECT
+    p.id,
+    p.name,
+    p.geom_wgs84 as geom,
+    ROUND(ST_Distance(sr.geom, p.geom_metric)::numeric, 0) as dist_m,
+    ST_Intersects(sr.geom, p.geom_metric) as on_site,
+    degrees(ST_Azimuth(sr.ref_pt, ST_Centroid(p.geom_metric))) as az_deg
+  FROM sm_metric p
+  CROSS JOIN site_ref sr
+  WHERE ST_DWithin(sr.geom, p.geom_metric, 5000)
+)
+
+SELECT
+  wb.id,
+  wb.name,
+  wb.dist_m,
+  wb.on_site,
+  CASE
+    WHEN wb.on_site THEN 'N/A'
+    WHEN wb.az_deg >= 337.5 OR wb.az_deg < 22.5 THEN 'N'
+    WHEN wb.az_deg >= 22.5 AND wb.az_deg < 67.5 THEN 'NE'
+    WHEN wb.az_deg >= 67.5 AND wb.az_deg < 112.5 THEN 'E'
+    WHEN wb.az_deg >= 112.5 AND wb.az_deg < 157.5 THEN 'SE'
+    WHEN wb.az_deg >= 157.5 AND wb.az_deg < 202.5 THEN 'S'
+    WHEN wb.az_deg >= 202.5 AND wb.az_deg < 247.5 THEN 'SW'
+    WHEN wb.az_deg >= 247.5 AND wb.az_deg < 292.5 THEN 'W'
+    WHEN wb.az_deg >= 292.5 AND wb.az_deg < 337.5 THEN 'NW'
+    ELSE NULL
+  END as direction,
+  wb.geom as geometry
+FROM with_bearing wb
+ORDER BY wb.dist_m;
+
+$$ LANGUAGE sql STABLE;

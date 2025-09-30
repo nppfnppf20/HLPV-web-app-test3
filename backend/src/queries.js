@@ -21,6 +21,12 @@ export function buildConservationAreasQuery(geojsonPolygon) {
   return { text, values };
 }
 
+export function buildScheduledMonumentsQuery(geojsonPolygon) {
+  const text = `SELECT * FROM analyze_scheduled_monuments($1);`;
+  const values = [JSON.stringify(geojsonPolygon)];
+  return { text, values };
+}
+
 // Landscape analysis using PostgreSQL functions
 export function buildLandscapeAnalysisQuery(geojsonPolygon) {
   const text = `SELECT analyze_site_landscape($1) as analysis_result;`;
