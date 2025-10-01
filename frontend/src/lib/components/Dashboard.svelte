@@ -111,24 +111,39 @@
   }
 
   function openTRPReport() {
+    console.log('🎯 openTRPReport called, showing modal');
     showSaveSiteModal = true;
   }
 
   async function handleSaveSite(event) {
     const { siteName } = event.detail;
-    console.log('Saving site:', siteName);
+    console.log('🎯 handleSaveSite called with:', siteName);
+    console.log('🎯 Current polygon geometry:', currentPolygonGeometry);
+
+    if (!currentPolygonGeometry) {
+      console.error('❌ No polygon geometry available for saving');
+      return;
+    }
 
     try {
+      // Only save essential data for TRP report, not all raw analysis data
       const siteData = {
         siteName,
         polygonGeojson: currentPolygonGeometry,
-        heritageData: heritageResult,
-        landscapeData: landscapeResult,
-        renewablesData: renewablesResult,
-        ecologyData: ecologyResult,
-        agLandData: agLandResult
+        // Save only the rules and metadata, not all raw building/monument data
+        heritageRules: heritageResult?.rules || [],
+        heritageMetadata: heritageResult?.metadata || {},
+        landscapeRules: landscapeResult?.rules || [],
+        landscapeMetadata: landscapeResult?.metadata || {},
+        renewablesRules: renewablesResult?.rules || [],
+        renewablesMetadata: renewablesResult?.metadata || {},
+        ecologyRules: ecologyResult?.rules || [],
+        ecologyMetadata: ecologyResult?.metadata || {},
+        agLandRules: agLandResult?.rules || [],
+        agLandMetadata: agLandResult?.metadata || {}
       };
 
+      console.log('🚀 Calling saveSite API with data:', siteData);
       const result = await saveSite(siteData);
       console.log('✅ Site saved successfully:', result);
 
@@ -136,6 +151,7 @@
       showSaveSiteModal = false;
       trpReportVisible = true;
       activeTab = 'trp-report';
+      console.log('✅ Modal closed, TRP tab opened');
     } catch (error) {
       console.error('❌ Failed to save site:', error);
       // TODO: Show error to user (could enhance SaveSiteModal to handle errors)

@@ -22,7 +22,7 @@
     dispatch('close');
   }
 
-  async function saveSite() {
+  function saveSite() {
     if (!siteName.trim()) {
       errorMessage = 'Please enter a site name';
       return;
@@ -31,13 +31,7 @@
     saving = true;
     errorMessage = '';
 
-    try {
-      dispatch('save', { siteName: siteName.trim() });
-    } catch (error) {
-      errorMessage = 'Failed to save site. Please try again.';
-    } finally {
-      saving = false;
-    }
+    dispatch('save', { siteName: siteName.trim() });
   }
 
   function handleKeydown(event) {

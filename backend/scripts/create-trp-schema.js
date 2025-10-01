@@ -1,13 +1,4 @@
-import pg from 'pg';
-
-const connectionString = process.env.DATABASE_URL;
-const pool = new pg.Pool({
-  connectionString,
-  ssl: connectionString?.includes('supabase.com') ? { rejectUnauthorized: false, require: true } : false,
-  keepAlive: true,
-  idleTimeoutMillis: 30000,
-  max: 10
-});
+import { pool } from '../src/db.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -375,11 +375,16 @@ app.post('/save-site', async (req, res) => {
     const {
       siteName,
       polygonGeojson,
-      heritageData,
-      landscapeData,
-      renewablesData,
-      ecologyData,
-      agLandData
+      heritageRules,
+      heritageMetadata,
+      landscapeRules,
+      landscapeMetadata,
+      renewablesRules,
+      renewablesMetadata,
+      ecologyRules,
+      ecologyMetadata,
+      agLandRules,
+      agLandMetadata
     } = req.body;
 
     if (!siteName || !polygonGeojson) {
@@ -389,7 +394,7 @@ app.post('/save-site', async (req, res) => {
     // Generate unique ID for the site
     const uniqueId = crypto.randomUUID();
 
-    // Insert site analysis
+    // Insert site analysis with streamlined rule data
     const insertSiteQuery = `
       INSERT INTO site_analyses (
         unique_id, site_name, polygon_geojson,
@@ -399,15 +404,16 @@ app.post('/save-site', async (req, res) => {
       RETURNING id, unique_id;
     `;
 
+    // Store only rules and metadata, not raw building/monument data
     const siteResult = await pool.query(insertSiteQuery, [
       uniqueId,
       siteName,
       JSON.stringify(polygonGeojson),
-      JSON.stringify(heritageData),
-      JSON.stringify(landscapeData),
-      JSON.stringify(renewablesData),
-      JSON.stringify(ecologyData),
-      JSON.stringify(agLandData)
+      JSON.stringify({ rules: heritageRules, metadata: heritageMetadata }),
+      JSON.stringify({ rules: landscapeRules, metadata: landscapeMetadata }),
+      JSON.stringify({ rules: renewablesRules, metadata: renewablesMetadata }),
+      JSON.stringify({ rules: ecologyRules, metadata: ecologyMetadata }),
+      JSON.stringify({ rules: agLandRules, metadata: agLandMetadata })
     ]);
 
     const siteAnalysisId = siteResult.rows[0].id;
