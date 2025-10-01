@@ -56,17 +56,13 @@ export function createListedBuildingsLayer(L, grade) {
 export function createScheduledMonumentsLayer(L) {
   return L.geoJSON(null, {
     pointToLayer: (/** @type {any} */ feat, /** @type {any} */ latlng) => {
-      const size = 12;
-      const points = [
-        [latlng.lng, latlng.lat + size/111000],
-        [latlng.lng - size/111000, latlng.lat - size/111000],
-        [latlng.lng + size/111000, latlng.lat - size/111000]
-      ];
-      return L.polygon(points.map(p => [p[1], p[0]]), {
-        color: '#f59e0b',
-        fillColor: '#f59e0b',
+      const radius = 6; // Circle radius (same size as listed buildings)
+      return L.circleMarker(latlng, {
+        radius: radius,
+        color: '#000000',        // Black border
+        fillColor: '#ffed4e',    // Bright yellow fill
         fillOpacity: 0.8,
-        weight: 2
+        weight: 3
       });
     },
     onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
