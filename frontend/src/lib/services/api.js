@@ -140,4 +140,18 @@ export async function saveSite(/** @type {any} */ siteData) {
   return res.json();
 }
 
+// Save TRP report edits
+export async function saveTRPEdits(/** @type {any} */ trpData) {
+  const res = await fetch(`${BASE_URL}/save-trp-edits`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(trpData)
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Save TRP edits failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 

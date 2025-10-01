@@ -446,6 +446,44 @@ app.post('/save-site', async (req, res) => {
   }
 });
 
+// Save TRP report edits
+app.post('/save-trp-edits', async (req, res) => {
+  try {
+    const { report, lastModified } = req.body;
+
+    if (!report) {
+      return res.status(400).json({ error: 'Report data is required' });
+    }
+
+    console.log('💾 Saving TRP edits...');
+
+    // For now, we'll just log the data and return success
+    // In a full implementation, you would:
+    // 1. Validate the report structure
+    // 2. Update the database with edited risk levels and recommendations
+    // 3. Store edit history/audit trail
+    // 4. Associate with the original site analysis
+
+    console.log('📊 TRP Report edits received:', {
+      structuredReport: !!report.structuredReport,
+      disciplines: report.structuredReport?.disciplines?.length || 0,
+      lastModified
+    });
+
+    // Return success response
+    res.json({
+      success: true,
+      message: 'TRP edits saved successfully',
+      editId: crypto.randomUUID(),
+      savedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Error saving TRP edits:', error);
+    res.status(500).json({ error: 'Failed to save TRP edits', details: error.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`);
 });

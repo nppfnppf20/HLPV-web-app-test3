@@ -3,7 +3,7 @@
   import FindingsPanel from './FindingsPanel.svelte';
   import MapPanel from './MapPanel.svelte';
   import ReportGenerator from './ReportGenerator.svelte';
-  import TRPReportGenerator from './TRPReportGenerator.svelte';
+  import TRPReportEditor from './TRPReportEditor.svelte';
   import SaveSiteModal from './SaveSiteModal.svelte';
   import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables, analyzeEcology, saveSite } from '$lib/services/api.js';
 
@@ -217,7 +217,7 @@
           onOpenTRPReport={openTRPReport}
         />
       {:else if activeTab === 'trp-report'}
-        <TRPReportGenerator
+        <TRPReportEditor
           heritageData={heritageResult}
           landscapeData={landscapeResult}
           renewablesData={renewablesResult}
