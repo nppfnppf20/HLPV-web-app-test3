@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import crypto from 'crypto';
 import { pool } from './db.js';
 import {
   buildAnalysisQuery,
@@ -364,6 +365,77 @@ app.post('/analyze/ecology', async (req, res) => {
       position: error?.position,
       stack: error?.stack
     });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Save site analysis for TRP Report endpoint
+app.post('/save-site', async (req, res) => {
+  try {
+    const {
+      siteName,
+      polygonGeojson,
+      heritageData,
+      landscapeData,
+      renewablesData,
+      ecologyData,
+      agLandData
+    } = req.body;
+
+    if (!siteName || !polygonGeojson) {
+      return res.status(400).json({ error: 'siteName and polygonGeojson are required' });
+    }
+
+    // Generate unique ID for the site
+    const uniqueId = crypto.randomUUID();
+
+    // Insert site analysis
+    const insertSiteQuery = `
+      INSERT INTO site_analyses (
+        unique_id, site_name, polygon_geojson,
+        heritage_data, landscape_data, renewables_data, ecology_data, ag_land_data
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, unique_id;
+    `;
+
+    const siteResult = await pool.query(insertSiteQuery, [
+      uniqueId,
+      siteName,
+      JSON.stringify(polygonGeojson),
+      JSON.stringify(heritageData),
+      JSON.stringify(landscapeData),
+      JSON.stringify(renewablesData),
+      JSON.stringify(ecologyData),
+      JSON.stringify(agLandData)
+    ]);
+
+    const siteAnalysisId = siteResult.rows[0].id;
+
+    // Create initial TRP report record
+    const insertTrpQuery = `
+      INSERT INTO trp_reports (site_analysis_id, site_summary, overall_risk_estimation)
+      VALUES ($1, $2, $3)
+      RETURNING id;
+    `;
+
+    const trpResult = await pool.query(insertTrpQuery, [
+      siteAnalysisId,
+      '', // Empty initial site summary
+      '' // Empty initial overall risk estimation
+    ]);
+
+    console.log(`✅ Site saved: ${siteName} (${uniqueId})`);
+
+    res.json({
+      success: true,
+      siteId: uniqueId,
+      trpReportId: trpResult.rows[0].id,
+      message: 'Site analysis saved successfully'
+    });
+
+  } catch (error) {
+    console.error('Save site error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

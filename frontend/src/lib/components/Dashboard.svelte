@@ -4,7 +4,8 @@
   import MapPanel from './MapPanel.svelte';
   import ReportGenerator from './ReportGenerator.svelte';
   import TRPReportGenerator from './TRPReportGenerator.svelte';
-  import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables, analyzeEcology } from '$lib/services/api.js';
+  import SaveSiteModal from './SaveSiteModal.svelte';
+  import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables, analyzeEcology, saveSite } from '$lib/services/api.js';
 
   /** @type {Record<string, any> | null} */
   let heritageResult = null;
@@ -24,10 +25,15 @@
   let activeTab = 'analysis';
   /** @type {boolean} */
   let trpReportVisible = false;
+  /** @type {boolean} */
+  let showSaveSiteModal = false;
+  /** @type {any | null} */
+  let currentPolygonGeometry = null;
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
     console.log('🎯 Polygon drawn, starting analysis...', geometry);
+    currentPolygonGeometry = geometry; // Store for TRP saving
     errorMsg = '';
     heritageResult = null;
     landscapeResult = null;
@@ -105,8 +111,39 @@
   }
 
   function openTRPReport() {
-    trpReportVisible = true;
-    activeTab = 'trp-report';
+    showSaveSiteModal = true;
+  }
+
+  async function handleSaveSite(event) {
+    const { siteName } = event.detail;
+    console.log('Saving site:', siteName);
+
+    try {
+      const siteData = {
+        siteName,
+        polygonGeojson: currentPolygonGeometry,
+        heritageData: heritageResult,
+        landscapeData: landscapeResult,
+        renewablesData: renewablesResult,
+        ecologyData: ecologyResult,
+        agLandData: agLandResult
+      };
+
+      const result = await saveSite(siteData);
+      console.log('✅ Site saved successfully:', result);
+
+      // Close modal and open TRP tab
+      showSaveSiteModal = false;
+      trpReportVisible = true;
+      activeTab = 'trp-report';
+    } catch (error) {
+      console.error('❌ Failed to save site:', error);
+      // TODO: Show error to user (could enhance SaveSiteModal to handle errors)
+    }
+  }
+
+  function handleModalClose() {
+    showSaveSiteModal = false;
   }
 
   // Check if we have any results for the Generate Report button
@@ -183,3 +220,9 @@
     renewablesData={renewablesResult}
   />
 </div>
+
+<SaveSiteModal
+  show={showSaveSiteModal}
+  on:save={handleSaveSite}
+  on:close={handleModalClose}
+/>

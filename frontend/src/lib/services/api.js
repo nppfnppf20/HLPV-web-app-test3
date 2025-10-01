@@ -126,4 +126,18 @@ export async function analyzeEcology(/** @type {any} */ polygonGeoJSON) {
   return res.json();
 }
 
+// Save site analysis for TRP Report
+export async function saveSite(/** @type {any} */ siteData) {
+  const res = await fetch(`${BASE_URL}/save-site`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(siteData)
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Save site failed: ${res.status} ${text}`);
+  }
+  return res.json();
+}
+
 
