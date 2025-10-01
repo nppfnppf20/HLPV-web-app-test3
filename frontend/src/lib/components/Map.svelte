@@ -1,5 +1,14 @@
 <script>
   import { onMount } from 'svelte';
+  import { RISK_LEVELS } from '../utils/riskLevels.js';
+  import {
+    getBuildingRiskLevel,
+    getConservationAreaRiskLevel,
+    getScheduledMonumentRiskLevel,
+    getGreenBeltRiskLevel,
+    getAONBRiskLevel,
+    isRiskLevelVisible
+  } from '../utils/mapRiskAssessment.js';
 
   /** @type {HTMLDivElement | null} */
   let mapContainer = null;
@@ -38,85 +47,15 @@
   // Risk level filter state
   /** @type {Record<string, boolean>} */
   let riskFilters = {
-    'showstopper': true,
-    'extremely_high_risk': true,
-    'high_risk': true,
-    'medium_high_risk': true,
-    'medium_risk': true,
-    'medium_low_risk': true,
-    'low_risk': true
+    [RISK_LEVELS.SHOWSTOPPER]: true,
+    [RISK_LEVELS.EXTREMELY_HIGH_RISK]: true,
+    [RISK_LEVELS.HIGH_RISK]: true,
+    [RISK_LEVELS.MEDIUM_HIGH_RISK]: true,
+    [RISK_LEVELS.MEDIUM_RISK]: true,
+    [RISK_LEVELS.MEDIUM_LOW_RISK]: true,
+    [RISK_LEVELS.LOW_RISK]: true
   };
 
-  /**
-   * Determine risk level for a listed building based on its properties
-   * @param {any} building
-   */
-  function getBuildingRiskLevel(building) {
-    if (building.on_site) {
-      if (building.grade === 'I') return 'showstopper';
-      if (building.grade === 'II*' || building.grade === 'II') return 'high_risk';
-    }
-
-    if (!building.on_site && building.dist_m <= 100) {
-      if (building.grade === 'I') return 'high_risk';
-      return 'medium_high_risk';
-    }
-
-    if (!building.on_site && building.dist_m <= 500 && building.grade === 'I') {
-      return 'high_risk';
-    }
-
-    return 'low_risk';
-  }
-
-  /**
-   * Determine risk level for a conservation area based on its properties
-   * @param {any} area
-   */
-  function getConservationAreaRiskLevel(area) {
-    if (area.on_site) return 'high_risk';
-    if (area.within_250m) return 'medium_risk';
-    return 'low_risk';
-  }
-
-  /**
-   * Determine risk level for scheduled monuments based on its properties
-   * @param {any} monument
-   */
-  function getScheduledMonumentRiskLevel(monument) {
-    if (monument.on_site) return 'high_risk';
-    if (monument.within_250m) return 'medium_high_risk';
-    if (monument.within_500m) return 'medium_risk';
-    return 'low_risk';
-  }
-
-  /**
-   * Determine risk level for Green Belt based on its properties
-   * @param {any} greenBelt
-   */
-  function getGreenBeltRiskLevel(greenBelt) {
-    if (greenBelt.on_site) return 'medium_high_risk';
-    if (greenBelt.within_1km) return 'low_risk';
-    return 'low_risk';
-  }
-
-  /**
-   * Determine risk level for AONB based on its properties
-   * @param {any} aonb
-   */
-  function getAONBRiskLevel(aonb) {
-    if (aonb.on_site) return 'medium_high_risk';
-    if (aonb.within_1km) return 'low_risk';
-    return 'low_risk';
-  }
-
-  /**
-   * Check if a feature should be visible based on current risk filters
-   * @param {string} riskLevel
-   */
-  function isRiskLevelVisible(riskLevel) {
-    return riskFilters[riskLevel] === true;
-  }
 
 
   /**
@@ -305,31 +244,31 @@
           <h4>Risk Level Filter</h4>
           <div class="risk-filter-options">
             <label class="risk-filter-item">
-              <input type="checkbox" id="risk-showstopper" checked>
+              <input type="checkbox" id="risk-${RISK_LEVELS.SHOWSTOPPER}" checked>
               <span class="risk-label showstopper">Showstopper</span>
             </label>
             <label class="risk-filter-item">
-              <input type="checkbox" id="risk-extremely_high_risk" checked>
+              <input type="checkbox" id="risk-${RISK_LEVELS.EXTREMELY_HIGH_RISK}" checked>
               <span class="risk-label extremely-high">Extremely High</span>
             </label>
             <label class="risk-filter-item">
-              <input type="checkbox" id="risk-high_risk" checked>
+              <input type="checkbox" id="risk-${RISK_LEVELS.HIGH_RISK}" checked>
               <span class="risk-label high">High Risk</span>
             </label>
             <label class="risk-filter-item">
-              <input type="checkbox" id="risk-medium_high_risk" checked>
+              <input type="checkbox" id="risk-${RISK_LEVELS.MEDIUM_HIGH_RISK}" checked>
               <span class="risk-label medium-high">Medium-High</span>
             </label>
             <label class="risk-filter-item">
-              <input type="checkbox" id="risk-medium_risk" checked>
+              <input type="checkbox" id="risk-${RISK_LEVELS.MEDIUM_RISK}" checked>
               <span class="risk-label medium">Medium Risk</span>
             </label>
             <label class="risk-filter-item">
-              <input type="checkbox" id="risk-medium_low_risk" checked>
+              <input type="checkbox" id="risk-${RISK_LEVELS.MEDIUM_LOW_RISK}" checked>
               <span class="risk-label medium-low">Medium-Low</span>
             </label>
             <label class="risk-filter-item">
-              <input type="checkbox" id="risk-low_risk" checked>
+              <input type="checkbox" id="risk-${RISK_LEVELS.LOW_RISK}" checked>
               <span class="risk-label low">Low Risk</span>
             </label>
           </div>
@@ -413,7 +352,7 @@
       const beforeRiskFilter = filteredRows.length;
       filteredRows = filteredRows.filter((r) => {
         const props = propsMapper(r);
-        const visible = props.riskLevel ? isRiskLevelVisible(props.riskLevel) : true;
+        const visible = props.riskLevel ? isRiskLevelVisible(props.riskLevel, riskFilters) : true;
         if (!visible) console.log('🚫 Filtering out', r.name || 'feature', 'with risk level:', props.riskLevel);
         return visible;
       });
