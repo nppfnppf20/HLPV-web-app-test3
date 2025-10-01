@@ -391,9 +391,9 @@
           <!-- 2a. Overall Risk for this discipline (Editable Dropdown) -->
           <div class="subsection">
             <h4>Overall {discipline.name} Risk</h4>
-            <div class="risk-editor">
+            <div class="risk-badge-dropdown" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
               <select
-                class="risk-dropdown"
+                class="hidden-dropdown"
                 bind:value={discipline.riskSummary.level}
                 on:change={(e) => handleRiskLevelChange(disciplineIndex, e.target.value)}
               >
@@ -401,10 +401,11 @@
                   <option value={riskLevel.value}>{riskLevel.label}</option>
                 {/each}
               </select>
-              <div class="risk-badge" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+              <div class="badge-content">
                 <span class="risk-level">{discipline.riskSummary?.label}</span>
                 <span class="risk-description">{discipline.riskSummary?.description}</span>
               </div>
+              <div class="dropdown-arrow">▼</div>
             </div>
           </div>
 
@@ -711,29 +712,8 @@
     transform: translateY(-1px);
   }
 
-  .risk-editor {
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .risk-dropdown {
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    background: white;
-    cursor: pointer;
-    min-width: 200px;
-  }
-
-  .risk-dropdown:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-
-  .risk-badge {
+  .risk-badge-dropdown {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -741,7 +721,33 @@
     border-radius: 8px;
     text-align: center;
     font-weight: 600;
-    flex: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+  }
+
+  .risk-badge-dropdown:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .hidden-dropdown {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .badge-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
   }
 
   .risk-level {
@@ -752,6 +758,21 @@
   .risk-description {
     font-size: 0.875rem;
     font-weight: 400;
+  }
+
+  .dropdown-arrow {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.875rem;
+    pointer-events: none;
+    opacity: 0.8;
+    transition: transform 0.2s ease;
+  }
+
+  .risk-badge-dropdown:hover .dropdown-arrow {
+    transform: scale(1.1);
+    opacity: 1;
   }
 
   .discipline-risk-list {
