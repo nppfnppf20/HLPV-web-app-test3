@@ -86,10 +86,13 @@
         </div>
       `;
 
-      // Add event listeners for checkboxes
+      // Add event listeners for checkboxes and sync initial state
       Object.keys(riskFilters).forEach(riskLevel => {
         const checkbox = div.querySelector(`#risk-${riskLevel}`);
         if (checkbox) {
+          // Sync checkbox state with riskFilters initial values
+          checkbox.checked = riskFilters[riskLevel];
+
           checkbox.addEventListener('change', () => {
             riskFilters[riskLevel] = checkbox.checked;
             onRiskFilterChange();

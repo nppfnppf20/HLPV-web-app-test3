@@ -140,6 +140,18 @@
         riskLevel: getAONBRiskLevel(r)
       }), true, riskFilters);
     }
+
+    // Update renewables layer when risk filters change
+    if (renewablesData?.renewables) {
+      const renewablesWithGeometry = processRenewablesData(renewablesData.renewables);
+      setLayerData(renewablesLayer, renewablesWithGeometry, (r) => ({
+        site_name: r.site_name,
+        technology_type: r.technology_type,
+        installed_capacity_mw: r.installed_capacity_mw,
+        development_status_short: r.development_status_short,
+        riskLevel: getRenewablesRiskLevel(r)
+      }), true, riskFilters);
+    }
   }
 
   onMount(async () => {
