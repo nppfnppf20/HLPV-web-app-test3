@@ -1,6 +1,6 @@
 <script lang="ts">
   import { buildCombinedReport } from '../services/reportGenerator.js';
-  
+
   /** @type {any} */
   export let heritageData = null;
 
@@ -16,9 +16,6 @@
   /** @type {any} */
   export let agLandData = null;
 
-  /** @type {() => void} */
-  export let onOpenTRPReport = () => {};
-  
   // Generate combined report when data changes
   $: report = (() => {
     try {
@@ -35,7 +32,7 @@
       return null;
     }
   })();
-  
+
   // Use the new structured data
   $: structuredReport = report?.structuredReport;
   $: summaryData = structuredReport?.summary;
@@ -47,7 +44,7 @@
     console.log('📋 Disciplines array:', disciplines);
     console.log('📋 Structured report:', structuredReport);
   }
-  
+
   // Keep legacy data for fallback compatibility
   $: designationSummary = report?.combined?.designationSummary || [];
   $: riskAssessment = report?.combined || report?.heritage?.riskAssessment || report?.landscape?.riskAssessment;
@@ -62,9 +59,9 @@
   function getAggregatedRecommendations(discipline) {
     console.log('🔍 getAggregatedRecommendations called for:', discipline?.name);
     console.log('🔍 triggeredRules:', discipline?.triggeredRules);
-    
+
     const allRecommendations = [];
-    
+
     // Add default recommendations based on whether rules are triggered or not
     if (!discipline?.triggeredRules || discipline.triggeredRules.length === 0) {
       console.log('❌ No triggered rules found - using default no-rules recommendations');
@@ -78,7 +75,7 @@
       if (discipline?.defaultTriggeredRecommendations && Array.isArray(discipline.defaultTriggeredRecommendations)) {
         allRecommendations.push(...discipline.defaultTriggeredRecommendations);
       }
-      
+
       // Collect all recommendations from triggered rules
       discipline.triggeredRules.forEach((rule: any, index: number) => {
         console.log(`🔍 Rule ${index}:`, rule);
@@ -88,13 +85,13 @@
         }
       });
     }
-    
+
     console.log('🔍 All recommendations collected:', allRecommendations);
-    
+
     // Deduplicate recommendations (case-insensitive)
     const uniqueRecommendations: string[] = [];
     const seen = new Set();
-    
+
     allRecommendations.forEach(rec => {
       const normalizedRec = rec.toLowerCase().trim();
       if (!seen.has(normalizedRec)) {
@@ -102,14 +99,14 @@
         uniqueRecommendations.push(rec);
       }
     });
-    
+
     console.log('🔍 Unique recommendations:', uniqueRecommendations);
     return uniqueRecommendations;
   }
 
   function groupRulesByType(rules: any[]) {
     const groups: Record<string, any[]> = {};
-    
+
     rules.forEach((rule: any) => {
       // Extract base type by removing distance/location suffixes
       let baseType = rule.rule
@@ -118,13 +115,13 @@
         .replace(/ Within \d+km$/, '')
         .replace(/ Within \d+-\d+km$/, '')
         .replace(/ \(.*\)$/, ''); // Remove anything in parentheses
-      
+
       if (!groups[baseType]) {
         groups[baseType] = [];
       }
       groups[baseType].push(rule);
     });
-    
+
     return groups;
   }
 
@@ -132,18 +129,18 @@
     // Sort rules by risk level (highest first)
     const riskOrder: Record<string, number> = { 'showstopper': 7, 'extremely_high_risk': 6, 'high_risk': 5, 'medium_high_risk': 4, 'medium_risk': 3, 'medium_low_risk': 2, 'low_risk': 1 };
     const sortedRules = rules.sort((a: any, b: any) => (riskOrder[b.level] || 0) - (riskOrder[a.level] || 0));
-    
+
     const findings = sortedRules.map((rule: any) => {
       const riskLabel = rule.level?.replace('_', '-').toUpperCase() || 'UNKNOWN';
-      
+
       // Extract count and location from findings with better pattern matching
       let simplifiedFindings = rule.findings;
-      
+
       // Pattern for "X within Ykm" or "X within Ym"
       const withinMatch = rule.findings.match(/(\d+).*?within (\d+)([km]+)/i);
       if (withinMatch) {
         simplifiedFindings = `${withinMatch[1]} within ${withinMatch[2]}${withinMatch[3]} - ${riskLabel}`;
-      } 
+      }
       // Pattern for "X on site" or "on-site"
       else if (rule.rule.includes('On-Site') || rule.findings.toLowerCase().includes('on site')) {
         const onSiteMatch = rule.findings.match(/(\d+)/);
@@ -158,10 +155,10 @@
           simplifiedFindings = `${betweenMatch[1]} between ${betweenMatch[2]}${betweenMatch[3]} - ${riskLabel}`;
         }
       }
-      
+
       return simplifiedFindings;
     }).join('\n');
-    
+
     return {
       title: baseType,
       findings: findings,
@@ -175,19 +172,19 @@
   <div class="report-header">
     <h2 id="report-title">Planning Constraints Assessment Report</h2>
   </div>
-  
+
   <div class="report-content">
       {#if structuredReport}
         <!-- 1. SUMMARY SECTION -->
         <div class="report-section">
           <h3>Summary</h3>
-          
+
           <!-- 1a. Site Summary -->
           <div class="subsection">
             <h4>Site Summary</h4>
             <p class="placeholder">{summaryData?.site}</p>
           </div>
-          
+
           <!-- 1b. Risk by Discipline -->
           {#if summaryData?.riskByDiscipline && summaryData.riskByDiscipline.length > 0}
             <div class="subsection">
@@ -204,7 +201,7 @@
               </div>
             </div>
           {/if}
-          
+
           <!-- 1c. Overall Risk -->
           <div class="subsection">
             <h4>Overall Risk Estimation</h4>
@@ -216,7 +213,7 @@
         {#each disciplines as discipline}
           <div class="report-section discipline-section">
             <h3>{discipline.name}</h3>
-            
+
             <!-- 2a. Overall Risk for this discipline -->
             <div class="subsection">
               <h4>Overall {discipline.name} Risk</h4>
@@ -225,7 +222,7 @@
                 <span class="risk-description">{discipline.riskSummary?.description}</span>
               </div>
             </div>
-            
+
             <!-- 2b. Triggered Rules -->
             {#if discipline.triggeredRules && discipline.triggeredRules.length > 0}
               <div class="subsection">
@@ -241,7 +238,7 @@
                             {rule.level?.replace('_', '-').toUpperCase()}
                           </span>
                         </div>
-                        
+
                         <div class="rule-content">
                           <p class="rule-findings"><strong>Findings:</strong> {rule.findings}</p>
                         </div>
@@ -258,7 +255,7 @@
                             {groupedRule.highestRisk?.replace('_', '-').toUpperCase()}
                           </span>
                         </div>
-                        
+
                         <div class="rule-content">
                           <div class="rule-findings">
                             <strong>Findings:</strong>
@@ -278,7 +275,7 @@
                 <p class="no-rules">No {discipline.name.toLowerCase()} risk rules were triggered. Standard development considerations apply.</p>
               </div>
             {/if}
-            
+
             <!-- 2c. Recommendations -->
             <div class="subsection">
               <h4>{discipline.name} Recommendations</h4>
@@ -307,15 +304,6 @@
             </div>
           </div>
         {/if}
-
-        <!-- TRP Full Report Button -->
-        <div class="report-section">
-          <div class="trp-button-container">
-            <button class="btn-primary" on:click={onOpenTRPReport}>
-              TRP Full Report
-            </button>
-          </div>
-        </div>
       {:else}
         <div class="report-placeholder">
           <h3>⚠️ No Analysis Data</h3>
@@ -551,12 +539,6 @@
 
   .metadata p:last-child {
     margin-bottom: 0;
-  }
-
-  .trp-button-container {
-    display: flex;
-    justify-content: center;
-    padding: 1rem 0;
   }
 
   .report-footer {

@@ -3,6 +3,7 @@
   import FindingsPanel from './FindingsPanel.svelte';
   import MapPanel from './MapPanel.svelte';
   import ReportGenerator from './ReportGenerator.svelte';
+  import TRPReportGenerator from './TRPReportGenerator.svelte';
   import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables, analyzeEcology } from '$lib/services/api.js';
 
   /** @type {Record<string, any> | null} */
@@ -21,6 +22,8 @@
   let loading = false;
   /** @type {string} */
   let activeTab = 'analysis';
+  /** @type {boolean} */
+  let trpReportVisible = false;
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
@@ -101,6 +104,11 @@
     activeTab = tab;
   }
 
+  function openTRPReport() {
+    trpReportVisible = true;
+    activeTab = 'trp-report';
+  }
+
   // Check if we have any results for the Generate Report button
   $: hasResults = !!(heritageResult || landscapeResult || agLandResult || renewablesResult || ecologyResult);
 </script>
@@ -124,6 +132,14 @@
       >
         Report
       </button>
+      {#if trpReportVisible}
+        <button
+          class="tab-button {activeTab === 'trp-report' ? 'active' : ''}"
+          on:click={() => setActiveTab('trp-report')}
+        >
+          TRP Report
+        </button>
+      {/if}
     </div>
 
     <!-- Tab Content -->
@@ -140,6 +156,15 @@
         />
       {:else if activeTab === 'report'}
         <ReportGenerator
+          heritageData={heritageResult}
+          landscapeData={landscapeResult}
+          renewablesData={renewablesResult}
+          ecologyData={ecologyResult}
+          agLandData={agLandResult}
+          onOpenTRPReport={openTRPReport}
+        />
+      {:else if activeTab === 'trp-report'}
+        <TRPReportGenerator
           heritageData={heritageResult}
           landscapeData={landscapeResult}
           renewablesData={renewablesResult}
