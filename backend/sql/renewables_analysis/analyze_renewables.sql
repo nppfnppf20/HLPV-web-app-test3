@@ -1,6 +1,9 @@
 -- PostgreSQL function for Renewable Energy developments spatial analysis
 -- Analyzes renewables relative to a drawn polygon with multiple buffer flags
 
+-- Drop existing function first to allow return type change
+DROP FUNCTION IF EXISTS analyze_renewables(TEXT);
+
 CREATE OR REPLACE FUNCTION analyze_renewables(polygon_geojson TEXT)
 RETURNS TABLE (
   id INTEGER,
@@ -17,7 +20,9 @@ RETURNS TABLE (
   within_1km BOOLEAN,
   within_3km BOOLEAN,
   within_5km BOOLEAN,
-  direction TEXT
+  direction TEXT,
+  lat DOUBLE PRECISION,
+  lng DOUBLE PRECISION
 ) AS $$
 WITH
 -- Convert input GeoJSON polygon to geometry
@@ -81,7 +86,10 @@ with_metrics AS (
     ST_DWithin(sr.geom, p.geom, 1000.0) AS within_1km,
     ST_DWithin(sr.geom, p.geom, 3000.0) AS within_3km,
     ST_DWithin(sr.geom, p.geom, 5000.0) AS within_5km,
-    degrees(ST_Azimuth(sr.ref_pt, p.geom)) AS az_deg
+    degrees(ST_Azimuth(sr.ref_pt, p.geom)) AS az_deg,
+    -- Extract lat/lng coordinates for frontend mapping
+    ST_Y(ST_Transform(p.geom, 4326)) AS lat,
+    ST_X(ST_Transform(p.geom, 4326)) AS lng
   FROM ren_points p
   CROSS JOIN site_ref sr
 )
@@ -112,7 +120,9 @@ SELECT
     WHEN wm.az_deg >= 247.5 AND wm.az_deg < 292.5 THEN 'W'
     WHEN wm.az_deg >= 292.5 AND wm.az_deg < 337.5 THEN 'NW'
     ELSE NULL
-  END AS direction
+  END AS direction,
+  wm.lat,
+  wm.lng
 FROM with_metrics wm
 WHERE
   wm.on_site

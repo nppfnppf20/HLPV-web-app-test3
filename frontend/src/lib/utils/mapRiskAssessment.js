@@ -95,6 +95,36 @@ export function getAONBRiskLevel(aonb) {
 }
 
 /**
+ * Determine risk level for renewables based on development status and proximity
+ * Mirrors the logic from backend/src/rules/renewables/renewablesRulesRich.js
+ * @param {any} renewable
+ */
+export function getRenewablesRiskLevel(renewable) {
+  const {
+    development_status_short: status,
+    on_site, within_50m, within_100m, within_250m,
+    within_500m, within_1km, within_3km, within_5km
+  } = renewable;
+
+  // Mirror the exact logic from backend renewablesRulesRich.js lines 82-127
+  if (status === 'Appeal Refused' || status === 'Application Refused') {
+    if (within_5km) return RISK_LEVELS.LOW_RISK;
+  } else if (status === 'Application Submitted' || status === 'Awaiting Construction' || status === 'Revised') {
+    if (on_site || within_50m || within_100m || within_250m) return RISK_LEVELS.EXTREMELY_HIGH_RISK;
+    if (within_500m || within_1km) return RISK_LEVELS.HIGH_RISK;
+    if (within_3km) return RISK_LEVELS.MEDIUM_RISK;
+    if (within_5km) return RISK_LEVELS.MEDIUM_LOW_RISK;
+  } else if (status === 'Under Construction' || status === 'Operational') {
+    if (on_site || within_50m || within_100m || within_250m) return RISK_LEVELS.SHOWSTOPPER;
+    if (within_500m || within_1km) return RISK_LEVELS.EXTREMELY_HIGH_RISK;
+    if (within_3km) return RISK_LEVELS.MEDIUM_HIGH_RISK;
+    if (within_5km) return RISK_LEVELS.MEDIUM_LOW_RISK;
+  }
+
+  return RISK_LEVELS.LOW_RISK; // Default fallback
+}
+
+/**
  * Check if a feature should be visible based on current risk filters
  * @param {string} riskLevel
  * @param {Record<string, boolean>} riskFilters

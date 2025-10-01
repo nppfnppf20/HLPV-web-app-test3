@@ -105,3 +105,63 @@ export function createAONBLayer(L) {
     }
   });
 }
+
+/**
+ * Create renewables layer
+ * @param {import('leaflet')} L - Leaflet instance
+ * @returns {import('leaflet').GeoJSON}
+ */
+export function createRenewablesLayer(L) {
+  return L.geoJSON(null, {
+    pointToLayer: (/** @type {any} */ feat, /** @type {any} */ latlng) => {
+      const props = feat.properties;
+      const tech = props.technology_type;
+      const status = props.development_status_short;
+
+      // Color based on technology type
+      let color = '#10b981'; // Default green for renewables
+      if (tech && tech.toLowerCase().includes('solar')) {
+        color = '#f59e0b'; // Orange for solar
+      } else if (tech && tech.toLowerCase().includes('wind')) {
+        color = '#06b6d4'; // Cyan for wind
+      }
+
+      // Size based on capacity
+      const capacity = props.installed_capacity_mw || 0;
+      let radius = 6; // Default size
+      if (capacity > 100) radius = 12;
+      else if (capacity > 50) radius = 10;
+      else if (capacity > 10) radius = 8;
+
+      // Style based on status
+      let fillOpacity = 0.7;
+      if (status === 'Operational' || status === 'Under Construction') {
+        fillOpacity = 1.0; // Solid for committed developments
+      } else if (status === 'Appeal Refused' || status === 'Application Refused') {
+        fillOpacity = 0.3; // Faded for refused
+      }
+
+      return L.circleMarker(latlng, {
+        radius,
+        color,
+        fillColor: color,
+        fillOpacity,
+        weight: 2
+      });
+    },
+    onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
+      const props = f.properties;
+      const name = props.site_name || 'Renewable Development';
+      const tech = props.technology_type || 'Unknown';
+      const capacity = props.installed_capacity_mw || 'Unknown';
+      const status = props.development_status_short || 'Unknown';
+
+      layer.bindPopup(`
+        <strong>${name}</strong><br>
+        Technology: ${tech}<br>
+        Capacity: ${capacity}MW<br>
+        Status: ${status}
+      `);
+    }
+  });
+}

@@ -9,13 +9,48 @@ import { isRiskLevelVisible } from './mapRiskAssessment.js';
  * @returns {any[]} - Monuments with geometry objects
  */
 export function processScheduledMonuments(monuments) {
-  return monuments.map(monument => ({
-    ...monument,
-    geometry: {
-      type: 'Point',
-      coordinates: [parseFloat(monument.lng), parseFloat(monument.lat)]
-    }
-  }));
+  return monuments
+    .filter(monument => {
+      const lat = parseFloat(monument.lat);
+      const lng = parseFloat(monument.lng);
+      const isValid = !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng);
+      if (!isValid) {
+        console.log('⚠️ Filtering out monument with invalid coordinates:', monument.name, 'lat:', monument.lat, 'lng:', monument.lng);
+      }
+      return isValid;
+    })
+    .map(monument => ({
+      ...monument,
+      geometry: {
+        type: 'Point',
+        coordinates: [parseFloat(monument.lng), parseFloat(monument.lat)]
+      }
+    }));
+}
+
+/**
+ * Convert renewables data to include geometry for map display
+ * @param {any[]} renewables - Raw renewables developments data
+ * @returns {any[]} - Renewables with geometry objects
+ */
+export function processRenewablesData(renewables) {
+  return (renewables || [])
+    .filter(renewable => {
+      const lat = parseFloat(renewable.lat);
+      const lng = parseFloat(renewable.lng);
+      const isValid = !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng);
+      if (!isValid) {
+        console.log('⚠️ Filtering out renewable with invalid coordinates:', renewable.site_name, 'lat:', renewable.lat, 'lng:', renewable.lng);
+      }
+      return isValid;
+    })
+    .map(renewable => ({
+      ...renewable,
+      geometry: {
+        type: 'Point',
+        coordinates: [parseFloat(renewable.lng), parseFloat(renewable.lat)]
+      }
+    }));
 }
 
 /**

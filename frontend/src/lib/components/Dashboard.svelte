@@ -24,6 +24,7 @@
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
+    console.log('🎯 Polygon drawn, starting analysis...', geometry);
     errorMsg = '';
     heritageResult = null;
     landscapeResult = null;
@@ -33,14 +34,16 @@
     loading = true;
     
     try {
+      console.log('🚀 Starting analysis requests...');
       // Run heritage, landscape, agricultural land, renewables, and ecology analysis in parallel
       const [heritageData, landscapeData, agLandData, renewablesData, ecologyData] = await Promise.all([
-        analyzeHeritage(geometry),
-        analyzeLandscape(geometry),
-        analyzeAgLand(geometry),
-        analyzeRenewables(geometry),
-        analyzeEcology(geometry)
+        analyzeHeritage(geometry).then(data => { console.log('✅ Heritage analysis complete'); return data; }),
+        analyzeLandscape(geometry).then(data => { console.log('✅ Landscape analysis complete'); return data; }),
+        analyzeAgLand(geometry).then(data => { console.log('✅ AgLand analysis complete'); return data; }),
+        analyzeRenewables(geometry).then(data => { console.log('✅ Renewables analysis complete'); return data; }),
+        analyzeEcology(geometry).then(data => { console.log('✅ Ecology analysis complete'); return data; })
       ]);
+      console.log('🎉 All analyses complete!');
       
       console.log('🔍 API Results:', {
         heritage: heritageData,
@@ -49,6 +52,22 @@
         renewables: renewablesData,
         ecology: ecologyData
       });
+
+      console.log('🌱 Renewables structure details:', renewablesData);
+      if (renewablesData && renewablesData.renewables) {
+        console.log('🔍 First renewables item:', renewablesData.renewables[0]);
+        console.log('🔍 Renewables item keys:', Object.keys(renewablesData.renewables[0] || {}));
+      }
+
+      console.log('🏛️ Heritage structure details:', heritageData);
+      if (heritageData && heritageData.scheduled_monuments) {
+        console.log('🔍 First heritage monument:', heritageData.scheduled_monuments[0]);
+        console.log('🔍 Heritage monument keys:', Object.keys(heritageData.scheduled_monuments[0] || {}));
+      }
+      if (heritageData && heritageData.listed_buildings) {
+        console.log('🔍 First listed building:', heritageData.listed_buildings[0]);
+        console.log('🔍 Listed building keys:', Object.keys(heritageData.listed_buildings[0] || {}));
+      }
       
       heritageResult = heritageData;
       landscapeResult = landscapeData;
@@ -136,5 +155,6 @@
     {loading}
     heritageData={heritageResult}
     landscapeData={landscapeResult}
+    renewablesData={renewablesResult}
   />
 </div>

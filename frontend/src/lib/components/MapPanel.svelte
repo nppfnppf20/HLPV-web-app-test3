@@ -11,11 +11,13 @@
   export let heritageData = null;
   /** @type {Record<string, any> | null} */
   export let landscapeData = null;
+  /** @type {Record<string, any> | null} */
+  export let renewablesData = null;
 </script>
 
 <div class="map-panel">
   <div class="map-panel-content">
-    <Map {onPolygonDrawn} {heritageData} {landscapeData} />
+    <Map {onPolygonDrawn} {heritageData} {landscapeData} {renewablesData} />
     
     {#if loading}
       <div class="map-loading-overlay">

@@ -6,17 +6,20 @@
     getConservationAreaRiskLevel,
     getScheduledMonumentRiskLevel,
     getGreenBeltRiskLevel,
-    getAONBRiskLevel
+    getAONBRiskLevel,
+    getRenewablesRiskLevel
   } from '../utils/mapRiskAssessment.js';
   import {
     createConservationAreasLayer,
     createListedBuildingsLayer,
     createScheduledMonumentsLayer,
     createGreenBeltLayer,
-    createAONBLayer
+    createAONBLayer,
+    createRenewablesLayer
   } from '../utils/layerFactory.js';
   import {
     processScheduledMonuments,
+    processRenewablesData,
     filterBuildingsByGrade,
     setLayerData
   } from '../utils/dataProcessor.js';
@@ -33,8 +36,14 @@
   export let heritageData = null;
   /** @type {Record<string, any> | null} */
   export let landscapeData = null;
+  /** @type {Record<string, any> | null} */
+  export let renewablesData = null;
 
   $: console.log('🔍 Map received landscapeData:', landscapeData);
+  $: console.log('🔍 Map received renewablesData:', renewablesData);
+  $: console.log('📋 All Map props:', { heritageData: !!heritageData, landscapeData: !!landscapeData, renewablesData: !!renewablesData });
+
+  // Force browser refresh
 
   // Map layers
   /** @type {import('leaflet').GeoJSON | null} */
@@ -50,6 +59,8 @@
   /** @type {import('leaflet').GeoJSON | null} */
   let greenBeltLayer = null;
   let aonbLayer = null;
+  /** @type {import('leaflet').GeoJSON | null} */
+  let renewablesLayer = null;
 
   // Controls component reference
   let mapControls = null;
@@ -156,6 +167,7 @@
     scheduledMonumentsLayer = createScheduledMonumentsLayer(L);
     greenBeltLayer = createGreenBeltLayer(L);
     aonbLayer = createAONBLayer(L);
+    renewablesLayer = createRenewablesLayer(L);
 
     // Create controls using the MapControls component
     if (mapControls) {
@@ -238,6 +250,43 @@
       riskLevel: getAONBRiskLevel(r)
     }), true, riskFilters); // true = apply risk filter using geometry
   }
+
+  // Reactive data updates for renewables data
+  $: if (renewablesData) {
+    console.log('⚡ Full renewables data:', renewablesData);
+    console.log('⚡ renewablesData keys:', Object.keys(renewablesData));
+
+    // Check if it has renewables property
+    if (renewablesData.renewables) {
+      console.log('⚡ Renewables data found:', renewablesData.renewables);
+      console.log('⚡ Renewables count:', renewablesData.renewables.length);
+      console.log('🔍 First renewables item structure:', renewablesData.renewables[0]);
+    } else {
+      console.log('❌ No renewables property found in renewablesData');
+    }
+
+    const renewablesWithGeometry = processRenewablesData(renewablesData.renewables);
+
+    console.log('🔧 Converted renewables with geometry:', renewablesWithGeometry.length > 0 ? renewablesWithGeometry[0] : 'No renewables data');
+
+    // Debug: Check risk levels before filtering
+    if (renewablesWithGeometry.length > 0) {
+      console.log('🎯 Checking renewables risk levels:');
+      renewablesWithGeometry.forEach((r, i) => {
+        const riskLevel = getRenewablesRiskLevel(r);
+        console.log(`  [${i}] ${r.site_name}: status="${r.development_status_short}", on_site=${r.on_site}, riskLevel="${riskLevel}"`);
+      });
+      console.log('🎯 Current risk filters:', riskFilters);
+    }
+
+    setLayerData(renewablesLayer, renewablesWithGeometry, (r) => ({
+      site_name: r.site_name,
+      technology_type: r.technology_type,
+      installed_capacity_mw: r.installed_capacity_mw,
+      development_status_short: r.development_status_short,
+      riskLevel: getRenewablesRiskLevel(r)
+    }), true, riskFilters);
+  }
 </script>
 
 <div bind:this={mapContainer} class="map-container"></div>
@@ -254,6 +303,7 @@
   {scheduledMonumentsLayer}
   {greenBeltLayer}
   {aonbLayer}
+  {renewablesLayer}
 />
 
 <style>
