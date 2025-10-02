@@ -24,6 +24,7 @@
 		"flowbite-svelte": "^1.13.8",
 		"html2canvas": "^1.4.1",
 		"leaflet": "^1.9.4",
-		"leaflet-draw": "^1.0.4"
+		"leaflet-draw": "^1.0.4",
+		"leaflet-image": "^0.4.0"
 	}
 }

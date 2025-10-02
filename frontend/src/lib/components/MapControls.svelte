@@ -225,24 +225,54 @@
               `Map screenshot captured on ${new Date().toLocaleString()}`;
 
             console.log('📷 Capturing map screenshot for section:', section);
-            const screenshot = await captureMapScreenshot(map, {
-              section,
-              caption,
-              quality: 0.8,
-              format: 'image/png'
-            });
-            console.log('✅ Screenshot captured successfully:', screenshot.id);
 
-            // Hide panel and show success
+            // Hide panel BEFORE taking screenshot to avoid capturing it
             hidePanel();
-            const btn = toggleBtn;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '✅';
-            setTimeout(() => {
-              btn.innerHTML = originalText;
-            }, 1500);
+
+            // Also temporarily hide the entire screenshot control
+            const screenshotControl = div;
+            const originalDisplay = screenshotControl.style.display;
+            screenshotControl.style.display = 'none';
+
+            // Wait longer for elements to fully hide, then capture
+            setTimeout(async () => {
+              try {
+                const screenshot = await captureMapScreenshot(map, {
+                  section,
+                  caption,
+                  quality: 0.8,
+                  format: 'image/png'
+                });
+                console.log('✅ Screenshot captured successfully:', screenshot.id);
+
+                // Restore screenshot control visibility
+                screenshotControl.style.display = originalDisplay;
+
+                // Show success notification
+                const btn = toggleBtn;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅';
+                setTimeout(() => {
+                  btn.innerHTML = originalText;
+                }, 1500);
+              } catch (error) {
+                console.error('❌ Failed to capture screenshot:', error);
+
+                // Restore screenshot control visibility
+                screenshotControl.style.display = originalDisplay;
+
+                // Show error notification
+                const btn = toggleBtn;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '❌';
+                setTimeout(() => {
+                  btn.innerHTML = originalText;
+                }, 1500);
+              }
+            }, 500); // Wait 500ms for panel to fully hide
+
           } catch (error) {
-            console.error('❌ Failed to capture screenshot:', error);
+            console.error('❌ Failed to prepare screenshot:', error);
 
             // Show error notification
             const btn = toggleBtn;
