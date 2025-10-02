@@ -537,45 +537,45 @@
         <span class="save-status {saveStatus.includes('Error') ? 'error' : 'success'}">{saveStatus}</span>
       {/if}
       <button
-        class="btn-secondary"
+        class="btn-compact btn-secondary"
         on:click={discardChanges}
         disabled={!hasUnsavedChanges || saving}
       >
-        Discard Changes
+        Discard
       </button>
       <button
-        class="btn-primary"
+        class="btn-compact btn-primary"
         on:click={saveChanges}
         disabled={!hasUnsavedChanges || saving}
       >
         {#if saving}
           Saving...
         {:else}
-          Save Changes
+          Save
         {/if}
       </button>
       <button
-        class="btn-secondary"
+        class="btn-compact btn-secondary"
         on:click={exportToWord}
         disabled={exportingWord}
         title="Download report as Word document"
       >
         {#if exportingWord}
-          📄 Exporting...
+          Exporting...
         {:else}
-          📄 Download Word
+          Word
         {/if}
       </button>
       <button
-        class="btn-secondary"
+        class="btn-compact btn-secondary"
         on:click={exportToPDF}
         disabled={exportingPDF}
         title="Download report as PDF document"
       >
         {#if exportingPDF}
-          📋 Exporting...
+          Exporting...
         {:else}
-          📋 Download PDF
+          PDF
         {/if}
       </button>
     </div>
@@ -795,7 +795,9 @@
   .report-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-left: 2rem;
   }
 
   .unsaved-indicator {
@@ -1199,5 +1201,13 @@
     background: #9ca3af;
     border-color: #9ca3af;
     cursor: not-allowed;
+  }
+
+  /* Compact button styles */
+  .btn-compact {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    min-width: 45px;
+    text-align: center;
   }
 </style>
