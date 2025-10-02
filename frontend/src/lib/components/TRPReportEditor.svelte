@@ -1,6 +1,7 @@
 <script lang="ts">
   import { buildCombinedReport } from '../services/reportGenerator.js';
   import { saveTRPEdits } from '../services/api.js';
+  import ScreenshotGallery from './ScreenshotGallery.svelte';
 
   /** @type {any} */
   export let heritageData = null;
@@ -523,6 +524,12 @@
             use:autoResizeOnMount
           ></textarea>
         </div>
+
+        <!-- General Screenshots -->
+        <ScreenshotGallery
+          section="general"
+          title="General Site Screenshots"
+        />
       </div>
 
       <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
@@ -635,6 +642,12 @@
               </button>
             </div>
           </div>
+
+          <!-- Screenshot Gallery for this discipline -->
+          <ScreenshotGallery
+            section={discipline.name.toLowerCase().replace(' ', '_')}
+            title="{discipline.name} Screenshots"
+          />
         </div>
       {/each}
 

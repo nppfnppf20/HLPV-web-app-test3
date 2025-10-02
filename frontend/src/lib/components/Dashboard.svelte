@@ -6,6 +6,7 @@
   import TRPReportEditor from './TRPReportEditor.svelte';
   import SaveSiteModal from './SaveSiteModal.svelte';
   import { analyzeHeritage, analyzeLandscape, analyzeAgLand, analyzeRenewables, analyzeEcology, saveSite } from '$lib/services/api.js';
+  import { startNewScreenshotSession } from '$lib/services/screenshotManager.js';
 
   /** @type {Record<string, any> | null} */
   let heritageResult = null;
@@ -34,6 +35,10 @@
   async function handlePolygonDrawn(geometry) {
     console.log('🎯 Polygon drawn, starting analysis...', geometry);
     currentPolygonGeometry = geometry; // Store for TRP saving
+
+    // Start new screenshot session for this analysis
+    startNewScreenshotSession();
+
     errorMsg = '';
     heritageResult = null;
     landscapeResult = null;

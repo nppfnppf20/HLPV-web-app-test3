@@ -186,6 +186,7 @@
       mapControls.createLayerControl(L, base);
       mapControls.createRiskFilterControl(L);
       mapControls.createDrawControl(L, drawnItems, onPolygonDrawn);
+      mapControls.createScreenshotControl(L);
     }
 
     // Ensure tiles render fully if container size changed during mount

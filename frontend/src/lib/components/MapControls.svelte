@@ -1,5 +1,6 @@
 <script>
   import { RISK_LEVELS } from '../utils/riskLevels.js';
+  import { captureMapScreenshot } from '../services/screenshotManager.js';
 
   export let map = null;
   export let riskFilters = {};
@@ -15,6 +16,7 @@
 
   let layerControl = null;
   let riskFilterControl = null;
+  let screenshotControl = null;
 
   /**
    * Create and add layer control to map
@@ -144,6 +146,123 @@
       onPolygonDrawn(geojson);
     });
   }
+
+  /**
+   * Create and add screenshot control to map
+   * @param {import('leaflet')} L - Leaflet instance
+   */
+  export function createScreenshotControl(L) {
+    if (!map) return;
+
+    screenshotControl = L.control({ position: 'topleft' });
+    screenshotControl.onAdd = function() {
+      const div = L.DomUtil.create('div', 'screenshot-control');
+      div.innerHTML = `
+        <div class="screenshot-buttons">
+          <button class="screenshot-btn toggle-btn" id="toggle-screenshot-panel" title="Take Screenshot">
+            📷
+          </button>
+          <div class="screenshot-panel" id="screenshot-panel" style="display: none;">
+            <h4>Capture Screenshot</h4>
+            <div class="section-selector">
+              <label for="section-select">Save to section:</label>
+              <select id="section-select">
+                <option value="general">General</option>
+                <option value="heritage">Heritage</option>
+                <option value="landscape">Landscape</option>
+                <option value="agricultural_land">Agricultural Land</option>
+                <option value="renewables">Renewables</option>
+                <option value="ecology">Ecology</option>
+              </select>
+            </div>
+            <div class="caption-input">
+              <label for="caption-input">Caption (optional):</label>
+              <input type="text" id="caption-input" placeholder="Enter caption..." />
+            </div>
+            <div class="screenshot-actions">
+              <button class="capture-btn" id="capture-screenshot">Capture</button>
+              <button class="cancel-btn" id="cancel-screenshot">Cancel</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Toggle panel visibility
+      const toggleBtn = div.querySelector('#toggle-screenshot-panel');
+      const panel = div.querySelector('#screenshot-panel');
+      const cancelBtn = div.querySelector('#cancel-screenshot');
+
+      function showPanel() {
+        panel.style.display = 'block';
+        toggleBtn.classList.add('active');
+      }
+
+      function hidePanel() {
+        panel.style.display = 'none';
+        toggleBtn.classList.remove('active');
+        // Clear inputs
+        div.querySelector('#caption-input').value = '';
+        div.querySelector('#section-select').value = 'general';
+      }
+
+      toggleBtn.addEventListener('click', () => {
+        if (panel.style.display === 'none') {
+          showPanel();
+        } else {
+          hidePanel();
+        }
+      });
+
+      cancelBtn.addEventListener('click', hidePanel);
+
+      // Add event listener for screenshot capture button
+      const captureBtn = div.querySelector('#capture-screenshot');
+      if (captureBtn) {
+        captureBtn.addEventListener('click', async () => {
+          try {
+            const section = div.querySelector('#section-select').value;
+            const caption = div.querySelector('#caption-input').value ||
+              `Map screenshot captured on ${new Date().toLocaleString()}`;
+
+            console.log('📷 Capturing map screenshot for section:', section);
+            const screenshot = await captureMapScreenshot(map, {
+              section,
+              caption,
+              quality: 0.8,
+              format: 'image/png'
+            });
+            console.log('✅ Screenshot captured successfully:', screenshot.id);
+
+            // Hide panel and show success
+            hidePanel();
+            const btn = toggleBtn;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅';
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+            }, 1500);
+          } catch (error) {
+            console.error('❌ Failed to capture screenshot:', error);
+
+            // Show error notification
+            const btn = toggleBtn;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '❌';
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+            }, 1500);
+          }
+        });
+      }
+
+      // Prevent map interaction when clicking on control
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+
+      return div;
+    };
+    screenshotControl.addTo(map);
+  }
 </script>
 
 <style>
@@ -219,5 +338,140 @@
 
   :global(.risk-filter-control .risk-label.low) {
     color: #059669;
+  }
+
+  /* Screenshot Control Styles */
+  :global(.screenshot-control) {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  :global(.screenshot-control .screenshot-buttons) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :global(.screenshot-control .screenshot-btn) {
+    background: white;
+    border: none;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  :global(.screenshot-control .screenshot-btn:hover) {
+    background-color: #f5f5f5;
+  }
+
+  :global(.screenshot-control .screenshot-btn:active) {
+    background-color: #e5e5e5;
+  }
+
+  :global(.screenshot-control .screenshot-btn.active) {
+    background-color: #3b82f6;
+    color: white;
+  }
+
+  :global(.screenshot-control .screenshot-panel) {
+    position: absolute;
+    top: 0;
+    left: 44px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    min-width: 200px;
+    z-index: 1000;
+  }
+
+  :global(.screenshot-control .screenshot-panel h4) {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  :global(.screenshot-control .section-selector) {
+    margin-bottom: 12px;
+  }
+
+  :global(.screenshot-control .section-selector label) {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+
+  :global(.screenshot-control .section-selector select) {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  :global(.screenshot-control .caption-input) {
+    margin-bottom: 12px;
+  }
+
+  :global(.screenshot-control .caption-input label) {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+
+  :global(.screenshot-control .caption-input input) {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  :global(.screenshot-control .screenshot-actions) {
+    display: flex;
+    gap: 6px;
+  }
+
+  :global(.screenshot-control .capture-btn) {
+    flex: 1;
+    padding: 6px 12px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  :global(.screenshot-control .capture-btn:hover) {
+    background: #2563eb;
+  }
+
+  :global(.screenshot-control .cancel-btn) {
+    flex: 1;
+    padding: 6px 12px;
+    background: #f3f4f6;
+    color: #374151;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  :global(.screenshot-control .cancel-btn:hover) {
+    background: #e5e7eb;
   }
 </style>
