@@ -1,10 +1,28 @@
 <script>
+  import { onMount } from 'svelte';
+  import { saveScreenshot, getScreenshotsBySection, deleteScreenshot, updateScreenshot } from '../services/screenshotManager.js';
+
   /** @type {string} */
   export let sectionName = '';
   /** @type {Array<{id: string, src: string, caption: string}>} */
   let images = [];
   /** @type {string | null} */
   let dragOverId = null;
+
+  // Load existing screenshots on mount
+  onMount(() => {
+    loadExistingScreenshots();
+  });
+
+  function loadExistingScreenshots() {
+    const screenshots = getScreenshotsBySection(sectionName);
+    images = screenshots.map(screenshot => ({
+      id: screenshot.id,
+      src: screenshot.dataUrl,
+      caption: screenshot.caption || ''
+    }));
+    console.log(`📷 Loaded ${images.length} existing screenshots for ${sectionName}`);
+  }
 
   function generateImageId() {
     return 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -55,22 +73,42 @@
   function addImageFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const newImage = {
-        id: generateImageId(),
-        src: e.target?.result,
-        caption: ''
+      // Save to localStorage via screenshot manager
+      const screenshotData = {
+        section: sectionName,
+        dataUrl: e.target?.result,
+        caption: '',
+        filename: file.name || 'pasted-image.png'
       };
-      images = [...images, newImage];
-      console.log(`📷 Added image to ${sectionName} section`);
+
+      const savedScreenshot = saveScreenshot(screenshotData);
+      if (savedScreenshot) {
+        const newImage = {
+          id: savedScreenshot.id,
+          src: e.target?.result,
+          caption: ''
+        };
+        images = [...images, newImage];
+        console.log(`📷 Added and saved image to ${sectionName} section`);
+      }
     };
     reader.readAsDataURL(file);
   }
 
   function removeImage(imageId) {
+    // Remove from localStorage
+    deleteScreenshot(imageId);
+
+    // Remove from local images array
     images = images.filter(img => img.id !== imageId);
+    console.log(`🗑️ Removed image from ${sectionName} section`);
   }
 
   function updateCaption(imageId, newCaption) {
+    // Update in localStorage
+    updateScreenshot(imageId, { caption: newCaption });
+
+    // Update local images array
     images = images.map(img =>
       img.id === imageId ? { ...img, caption: newCaption } : img
     );

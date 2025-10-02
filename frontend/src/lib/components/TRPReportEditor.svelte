@@ -1,6 +1,7 @@
 <script lang="ts">
   import { buildCombinedReport } from '../services/reportGenerator.js';
   import { saveTRPEdits } from '../services/api.js';
+  import { generateWordReport } from '../services/wordExport.js';
   import ImageUploadArea from './ImageUploadArea.svelte';
 
   /** @type {any} */
@@ -42,6 +43,9 @@
 
   /** @type {string} */
   let saveStatus = '';
+
+  /** @type {boolean} */
+  let exportingWord = false;
 
   // Generate initial report from data
   $: report = (() => {
@@ -376,6 +380,29 @@
     }
   }
 
+  async function exportToWord() {
+    if (!editableReport) {
+      console.error('❌ No report data available for export');
+      return;
+    }
+
+    exportingWord = true;
+    try {
+      // Generate a site name from the report or use default
+      const siteName = editableReport.metadata?.siteName ||
+                      editableReport.structuredReport?.summary?.siteName ||
+                      'TRP_Report';
+
+      await generateWordReport(editableReport, siteName);
+      console.log('✅ Word export completed successfully');
+    } catch (error) {
+      console.error('❌ Failed to export to Word:', error);
+      // You could add user-facing error handling here
+    } finally {
+      exportingWord = false;
+    }
+  }
+
   function getAggregatedRecommendations(discipline) {
     // Use the editable recommendations if available
     if (discipline.recommendations && Array.isArray(discipline.recommendations)) {
@@ -498,6 +525,18 @@
           Saving...
         {:else}
           Save Changes
+        {/if}
+      </button>
+      <button
+        class="btn-secondary"
+        on:click={exportToWord}
+        disabled={exportingWord}
+        title="Download report as Word document"
+      >
+        {#if exportingWord}
+          📄 Exporting...
+        {:else}
+          📄 Download Word
         {/if}
       </button>
     </div>
