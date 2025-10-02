@@ -2,6 +2,7 @@
   import { buildCombinedReport } from '../services/reportGenerator.js';
   import { saveTRPEdits } from '../services/api.js';
   import { generateWordReport } from '../services/wordExport.js';
+  import { generatePDFReport } from '../services/pdfExport.js';
   import ImageUploadArea from './ImageUploadArea.svelte';
 
   /** @type {any} */
@@ -46,6 +47,9 @@
 
   /** @type {boolean} */
   let exportingWord = false;
+
+  /** @type {boolean} */
+  let exportingPDF = false;
 
   // Generate initial report from data
   $: report = (() => {
@@ -403,6 +407,29 @@
     }
   }
 
+  async function exportToPDF() {
+    if (!editableReport) {
+      console.error('❌ No report data available for export');
+      return;
+    }
+
+    exportingPDF = true;
+    try {
+      // Generate a site name from the report or use default
+      const siteName = editableReport.metadata?.siteName ||
+                      editableReport.structuredReport?.summary?.siteName ||
+                      'TRP_Report';
+
+      await generatePDFReport(editableReport, siteName);
+      console.log('✅ PDF export completed successfully');
+    } catch (error) {
+      console.error('❌ Failed to export to PDF:', error);
+      // You could add user-facing error handling here
+    } finally {
+      exportingPDF = false;
+    }
+  }
+
   function getAggregatedRecommendations(discipline) {
     // Use the editable recommendations if available
     if (discipline.recommendations && Array.isArray(discipline.recommendations)) {
@@ -537,6 +564,18 @@
           📄 Exporting...
         {:else}
           📄 Download Word
+        {/if}
+      </button>
+      <button
+        class="btn-secondary"
+        on:click={exportToPDF}
+        disabled={exportingPDF}
+        title="Download report as PDF document"
+      >
+        {#if exportingPDF}
+          📋 Exporting...
+        {:else}
+          📋 Download PDF
         {/if}
       </button>
     </div>
