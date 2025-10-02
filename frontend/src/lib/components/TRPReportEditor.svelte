@@ -61,6 +61,40 @@
   // Initialize editable report when original report changes
   $: if (report && !editableReport) {
     editableReport = JSON.parse(JSON.stringify(report)); // Deep copy
+
+    // Fix any inconsistent risk level data during initialization
+    if (editableReport.structuredReport?.disciplines) {
+      editableReport.structuredReport.disciplines.forEach((discipline, index) => {
+        if (discipline.riskSummary && discipline.riskSummary.level) {
+          const correctRiskData = getRiskLevelData(discipline.riskSummary.level);
+          discipline.riskSummary = {
+            level: discipline.riskSummary.level,
+            label: correctRiskData.label,
+            description: correctRiskData.description,
+            bgColor: correctRiskData.bgColor,
+            color: correctRiskData.color
+          };
+          console.log(`🔧 Fixed risk data for ${discipline.name}:`, discipline.riskSummary);
+        }
+      });
+
+      // Also fix summary data
+      if (editableReport.structuredReport.summary?.riskByDiscipline) {
+        editableReport.structuredReport.summary.riskByDiscipline.forEach((summaryDiscipline) => {
+          if (summaryDiscipline.riskSummary && summaryDiscipline.riskSummary.level) {
+            const correctRiskData = getRiskLevelData(summaryDiscipline.riskSummary.level);
+            summaryDiscipline.riskSummary = {
+              level: summaryDiscipline.riskSummary.level,
+              label: correctRiskData.label,
+              description: correctRiskData.description,
+              bgColor: correctRiskData.bgColor,
+              color: correctRiskData.color
+            };
+          }
+        });
+      }
+    }
+
     console.log('🔄 Initialized editable TRP report:', editableReport);
   }
 
@@ -74,7 +108,39 @@
   }
 
   function handleRiskLevelChange(disciplineIndex, newRiskValue) {
+    // Capture CSS BEFORE change
+    const badgeElement = document.querySelector(`[data-discipline-index="${disciplineIndex}"] .risk-badge-dropdown`);
+    let beforeStyles = {};
+    if (badgeElement) {
+      const computedStyles = getComputedStyle(badgeElement);
+      beforeStyles = {
+        backgroundColor: computedStyles.backgroundColor,
+        color: computedStyles.color,
+        display: computedStyles.display,
+        flexDirection: computedStyles.flexDirection,
+        alignItems: computedStyles.alignItems,
+        padding: computedStyles.padding,
+        borderRadius: computedStyles.borderRadius,
+        textAlign: computedStyles.textAlign,
+        fontWeight: computedStyles.fontWeight,
+        fontSize: computedStyles.fontSize,
+        lineHeight: computedStyles.lineHeight,
+        width: computedStyles.width,
+        height: computedStyles.height
+      };
+      console.log('🔍 CSS BEFORE change:', beforeStyles);
+    }
+
+    const oldRiskSummary = editableReport.structuredReport.disciplines[disciplineIndex].riskSummary;
+
     const newRiskData = getRiskLevelData(newRiskValue);
+    console.log('🔍 NEW risk data from lookup:', {
+      level: newRiskValue,
+      label: newRiskData.label,
+      description: newRiskData.description,
+      bgColor: newRiskData.bgColor,
+      color: newRiskData.color
+    });
 
     // Update the discipline risk
     editableReport.structuredReport.disciplines[disciplineIndex].riskSummary = {
@@ -99,8 +165,84 @@
       };
     }
 
+    // Force reactive update by reassigning
+    editableReport = editableReport;
+
+    // Reset any lingering hover effects on the badge element
+    setTimeout(() => {
+      const badgeElement = document.querySelector(`[data-discipline-index="${disciplineIndex}"] .risk-badge-dropdown`);
+      if (badgeElement) {
+        badgeElement.style.border = '2px solid transparent';
+        badgeElement.style.transform = 'none';
+        badgeElement.style.boxShadow = 'none';
+      }
+    }, 50);
+
     hasUnsavedChanges = true;
     console.log('🔄 Risk level changed for', editableReport.structuredReport.disciplines[disciplineIndex].name, 'to', newRiskValue);
+
+    console.log('🔍 AFTER change - Updated risk summary:', {
+      level: editableReport.structuredReport.disciplines[disciplineIndex].riskSummary?.level,
+      label: editableReport.structuredReport.disciplines[disciplineIndex].riskSummary?.label,
+      description: editableReport.structuredReport.disciplines[disciplineIndex].riskSummary?.description,
+      bgColor: editableReport.structuredReport.disciplines[disciplineIndex].riskSummary?.bgColor,
+      color: editableReport.structuredReport.disciplines[disciplineIndex].riskSummary?.color
+    });
+
+    // Check DOM styling after a brief delay to let Svelte update
+    setTimeout(() => {
+      const badgeElement = document.querySelector(`[data-discipline-index="${disciplineIndex}"] .risk-badge-dropdown`);
+      if (badgeElement) {
+        const computedStyles = getComputedStyle(badgeElement);
+        const afterStyles = {
+          backgroundColor: computedStyles.backgroundColor,
+          color: computedStyles.color,
+          display: computedStyles.display,
+          flexDirection: computedStyles.flexDirection,
+          alignItems: computedStyles.alignItems,
+          padding: computedStyles.padding,
+          borderRadius: computedStyles.borderRadius,
+          textAlign: computedStyles.textAlign,
+          fontWeight: computedStyles.fontWeight,
+          fontSize: computedStyles.fontSize,
+          lineHeight: computedStyles.lineHeight,
+          width: computedStyles.width,
+          height: computedStyles.height
+        };
+        console.log('🔍 CSS AFTER change:', afterStyles);
+
+        // Compare and show differences
+        console.log('🔍 CSS DIFFERENCES:');
+        let hasDifferences = false;
+        Object.keys(beforeStyles).forEach(key => {
+          if (beforeStyles[key] !== afterStyles[key]) {
+            console.log(`  ❌ ${key}: ${beforeStyles[key]} → ${afterStyles[key]}`);
+            hasDifferences = true;
+          }
+        });
+
+        if (!hasDifferences) {
+          console.log('  ✅ No CSS differences detected');
+        }
+
+        // Also check computed style properties that might be affecting layout
+        const moreStyles = {
+          margin: computedStyles.margin,
+          border: computedStyles.border,
+          boxSizing: computedStyles.boxSizing,
+          position: computedStyles.position,
+          zIndex: computedStyles.zIndex,
+          transform: computedStyles.transform,
+          opacity: computedStyles.opacity,
+          overflow: computedStyles.overflow,
+          minWidth: computedStyles.minWidth,
+          minHeight: computedStyles.minHeight,
+          maxWidth: computedStyles.maxWidth,
+          maxHeight: computedStyles.maxHeight
+        };
+        console.log('🔍 Additional computed styles:', moreStyles);
+      }
+    }, 100);
   }
 
   function handleRecommendationChange(disciplineIndex, recommendationIndex, newValue) {
@@ -385,13 +527,18 @@
 
       <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
       {#each disciplines as discipline, disciplineIndex}
-        <div class="report-section discipline-section">
+        <div class="report-section discipline-section" data-discipline-index={disciplineIndex}>
           <h3>{discipline.name}</h3>
 
           <!-- 2a. Overall Risk for this discipline (Editable Dropdown) -->
           <div class="subsection">
             <h4>Overall {discipline.name} Risk</h4>
-            <div class="risk-badge-dropdown" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+            <div
+              class="risk-badge risk-badge-dropdown"
+              style="background-color: {discipline.riskSummary?.bgColor || '#059669'}; color: {discipline.riskSummary?.color || 'white'};"
+              data-bg-color={discipline.riskSummary?.bgColor}
+              data-text-color={discipline.riskSummary?.color}
+            >
               <select
                 class="hidden-dropdown"
                 bind:value={discipline.riskSummary.level}
@@ -401,10 +548,8 @@
                   <option value={riskLevel.value}>{riskLevel.label}</option>
                 {/each}
               </select>
-              <div class="badge-content">
-                <span class="risk-level">{discipline.riskSummary?.label}</span>
-                <span class="risk-description">{discipline.riskSummary?.description}</span>
-              </div>
+              <span class="risk-level">{discipline.riskSummary?.label}</span>
+              <span class="risk-description">{discipline.riskSummary?.description}</span>
               <div class="dropdown-arrow">▼</div>
             </div>
           </div>
@@ -712,8 +857,7 @@
     transform: translateY(-1px);
   }
 
-  .risk-badge-dropdown {
-    position: relative;
+  .risk-badge {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -721,15 +865,56 @@
     border-radius: 8px;
     text-align: center;
     font-weight: 600;
+  }
+
+  .risk-level {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .risk-description {
+    font-size: 0.875rem;
+    font-weight: 400;
+  }
+
+  /* Additional styles for dropdown functionality - extends .risk-badge */
+  .risk-badge-dropdown {
+    position: relative;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 2px solid transparent;
+    /* Force exact same styling as regular badges */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    font-weight: 600 !important;
   }
 
-  .risk-badge-dropdown:hover {
+  .risk-badge-dropdown:hover:not(:focus-within) {
     border-color: rgba(255, 255, 255, 0.3);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Reset hover effects after dropdown interaction */
+  .risk-badge-dropdown:focus-within {
+    border-color: transparent !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure spans inside dropdown badges match exactly */
+  .risk-badge-dropdown .risk-level {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .risk-badge-dropdown .risk-description {
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
   }
 
   .hidden-dropdown {
@@ -741,23 +926,6 @@
     opacity: 0;
     cursor: pointer;
     z-index: 10;
-  }
-
-  .badge-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    pointer-events: none;
-  }
-
-  .risk-level {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .risk-description {
-    font-size: 0.875rem;
-    font-weight: 400;
   }
 
   .dropdown-arrow {

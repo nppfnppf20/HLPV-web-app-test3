@@ -126,24 +126,25 @@
     }
 
     try {
-      // Only save essential data for TRP report, not all raw analysis data
+      // Save only essential TRP data - minimal for report generation
       const siteData = {
         siteName,
         polygonGeojson: currentPolygonGeometry,
-        // Save only the rules and metadata, not all raw building/monument data
-        heritageRules: heritageResult?.rules || [],
-        heritageMetadata: heritageResult?.metadata || {},
-        landscapeRules: landscapeResult?.rules || [],
-        landscapeMetadata: landscapeResult?.metadata || {},
-        renewablesRules: renewablesResult?.rules || [],
-        renewablesMetadata: renewablesResult?.metadata || {},
-        ecologyRules: ecologyResult?.rules || [],
-        ecologyMetadata: ecologyResult?.metadata || {},
-        agLandRules: agLandResult?.rules || [],
-        agLandMetadata: agLandResult?.metadata || {}
+        // Save only risk levels and basic rule info, no detailed findings
+        heritageRisk: heritageResult?.overallRisk || 'no_risk',
+        heritageRuleCount: heritageResult?.rules?.length || 0,
+        landscapeRisk: landscapeResult?.overallRisk || 'no_risk',
+        landscapeRuleCount: landscapeResult?.rules?.length || 0,
+        renewablesRisk: renewablesResult?.overallRisk || 'no_risk',
+        renewablesRuleCount: renewablesResult?.rules?.length || 0,
+        ecologyRisk: ecologyResult?.overallRisk || 'no_risk',
+        ecologyRuleCount: ecologyResult?.rules?.length || 0,
+        agLandRisk: agLandResult?.overallRisk || 'no_risk',
+        agLandRuleCount: agLandResult?.rules?.length || 0
       };
 
-      console.log('🚀 Calling saveSite API with data:', siteData);
+      console.log('🚀 Calling saveSite API with minimal data:', siteData);
+      console.log('📦 Total payload size:', JSON.stringify(siteData).length, 'characters');
       const result = await saveSite(siteData);
       console.log('✅ Site saved successfully:', result);
 

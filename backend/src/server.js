@@ -375,16 +375,16 @@ app.post('/save-site', async (req, res) => {
     const {
       siteName,
       polygonGeojson,
-      heritageRules,
-      heritageMetadata,
-      landscapeRules,
-      landscapeMetadata,
-      renewablesRules,
-      renewablesMetadata,
-      ecologyRules,
-      ecologyMetadata,
-      agLandRules,
-      agLandMetadata
+      heritageRisk,
+      heritageRuleCount,
+      landscapeRisk,
+      landscapeRuleCount,
+      renewablesRisk,
+      renewablesRuleCount,
+      ecologyRisk,
+      ecologyRuleCount,
+      agLandRisk,
+      agLandRuleCount
     } = req.body;
 
     if (!siteName || !polygonGeojson) {
@@ -404,16 +404,16 @@ app.post('/save-site', async (req, res) => {
       RETURNING id, unique_id;
     `;
 
-    // Store only rules and metadata, not raw building/monument data
+    // Store only risk levels and rule counts - minimal data for TRP reports
     const siteResult = await pool.query(insertSiteQuery, [
       uniqueId,
       siteName,
       JSON.stringify(polygonGeojson),
-      JSON.stringify({ rules: heritageRules, metadata: heritageMetadata }),
-      JSON.stringify({ rules: landscapeRules, metadata: landscapeMetadata }),
-      JSON.stringify({ rules: renewablesRules, metadata: renewablesMetadata }),
-      JSON.stringify({ rules: ecologyRules, metadata: ecologyMetadata }),
-      JSON.stringify({ rules: agLandRules, metadata: agLandMetadata })
+      JSON.stringify({ riskLevel: heritageRisk, ruleCount: heritageRuleCount }),
+      JSON.stringify({ riskLevel: landscapeRisk, ruleCount: landscapeRuleCount }),
+      JSON.stringify({ riskLevel: renewablesRisk, ruleCount: renewablesRuleCount }),
+      JSON.stringify({ riskLevel: ecologyRisk, ruleCount: ecologyRuleCount }),
+      JSON.stringify({ riskLevel: agLandRisk, ruleCount: agLandRuleCount })
     ]);
 
     const siteAnalysisId = siteResult.rows[0].id;
