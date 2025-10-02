@@ -1,7 +1,7 @@
 <script lang="ts">
   import { buildCombinedReport } from '../services/reportGenerator.js';
   import { saveTRPEdits } from '../services/api.js';
-  import ScreenshotGallery from './ScreenshotGallery.svelte';
+  import ImageUploadArea from './ImageUploadArea.svelte';
 
   /** @type {any} */
   export let heritageData = null;
@@ -525,11 +525,8 @@
           ></textarea>
         </div>
 
-        <!-- General Screenshots -->
-        <ScreenshotGallery
-          section="general"
-          title="General Site Screenshots"
-        />
+        <!-- General Images -->
+        <ImageUploadArea sectionName="General Site" />
       </div>
 
       <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
@@ -643,11 +640,8 @@
             </div>
           </div>
 
-          <!-- Screenshot Gallery for this discipline -->
-          <ScreenshotGallery
-            section={discipline.name.toLowerCase().replace(' ', '_')}
-            title="{discipline.name} Screenshots"
-          />
+          <!-- Image Upload Area for this discipline -->
+          <ImageUploadArea sectionName={discipline.name} />
         </div>
       {/each}
 

@@ -190,34 +190,24 @@ export async function captureMapScreenshot(map, options = {}) {
     let base64;
     let canvas;
 
-    // Use html2canvas to capture the entire map container including controls
-    console.log('📷 Capturing entire map container with html2canvas...');
-    const html2canvas = await import('html2canvas');
-    const mapContainer = map.getContainer();
+    // Use leaflet-image to capture just the map and layers
+    console.log('📷 Capturing map with leaflet-image...');
+    const leafletImage = await import('leaflet-image');
 
-    canvas = await html2canvas.default(mapContainer, {
-      useCORS: true,
-      allowTaint: true, // Allow cross-origin content
-      scale: 1,
-      logging: false,
-      width: mapContainer.offsetWidth,
-      height: mapContainer.offsetHeight,
-      backgroundColor: '#ffffff',
-      // Capture everything including controls - screenshot control is already hidden
-      canvas: null,
-      proxy: null,
-      imageTimeout: 10000,
-      onclone: (clonedDoc) => {
-        // Ensure screenshot controls are hidden in the clone too
-        const screenshotControls = clonedDoc.querySelectorAll('.screenshot-control');
-        screenshotControls.forEach(control => {
-          control.style.display = 'none';
-        });
-      }
+    canvas = await new Promise((resolve, reject) => {
+      leafletImage.default(map, (err, canvasResult) => {
+        if (err) {
+          console.error('❌ leaflet-image failed:', err);
+          reject(err);
+        } else {
+          console.log('✅ leaflet-image captured successfully');
+          resolve(canvasResult);
+        }
+      });
     });
 
     base64 = canvas.toDataURL(format, quality);
-    console.log('✅ Successfully captured with html2canvas');
+    console.log('✅ Successfully captured with leaflet-image');
 
     // Create screenshot data
     const screenshotData = {
