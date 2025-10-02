@@ -448,7 +448,7 @@
 
 <div class="report-container">
   <div class="report-header">
-    <h2 id="report-title">TRP Planning Constraints Assessment Report</h2>
+    <h2 id="report-title">TRP Planning Report</h2>
     <div class="report-actions">
       {#if hasUnsavedChanges}
         <span class="unsaved-indicator">Unsaved changes</span>
