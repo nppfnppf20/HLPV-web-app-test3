@@ -1,6 +1,7 @@
 <script lang="ts">
   import { buildCombinedReport } from '../services/reportGenerator.js';
   import { saveTRPEdits } from '../services/api.js';
+  import ImageUploadArea from './ImageUploadArea.svelte';
 
   /** @type {any} */
   export let heritageData = null;
@@ -548,6 +549,9 @@
             use:autoResizeOnMount
           ></textarea>
         </div>
+
+        <!-- General Images -->
+        <ImageUploadArea sectionName="General Site" />
       </div>
 
       <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
@@ -660,6 +664,9 @@
               </button>
             </div>
           </div>
+
+          <!-- Image Upload Area for this discipline -->
+          <ImageUploadArea sectionName={discipline.name} />
         </div>
       {/each}
 
