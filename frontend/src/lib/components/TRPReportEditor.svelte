@@ -278,10 +278,23 @@
   }
 
   function removeRecommendation(disciplineIndex, recommendationIndex) {
-    if (editableReport.structuredReport.disciplines[disciplineIndex].recommendations) {
-      editableReport.structuredReport.disciplines[disciplineIndex].recommendations.splice(recommendationIndex, 1);
+    const discipline = editableReport.structuredReport.disciplines[disciplineIndex];
+
+    // Get the current recommendations from getAggregatedRecommendations to work with
+    const currentAggregatedRecommendations = getAggregatedRecommendations(discipline);
+
+    // If discipline.recommendations doesn't exist, initialize it with the aggregated recommendations
+    if (!discipline.recommendations || discipline.recommendations.length === 0) {
+      discipline.recommendations = [...currentAggregatedRecommendations];
+    }
+
+    // Now remove the item at the specified index
+    if (discipline.recommendations && Array.isArray(discipline.recommendations)) {
+      discipline.recommendations = discipline.recommendations.filter((_, index) => index !== recommendationIndex);
+
+      // Trigger reactivity for the disciplines array
+      editableReport.structuredReport.disciplines = [...editableReport.structuredReport.disciplines];
       hasUnsavedChanges = true;
-      console.log('➖ Removed recommendation for', editableReport.structuredReport.disciplines[disciplineIndex].name, 'index', recommendationIndex);
     }
   }
 
