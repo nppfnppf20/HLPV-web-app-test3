@@ -256,13 +256,25 @@
   }
 
   function addRecommendation(disciplineIndex) {
-    if (!editableReport.structuredReport.disciplines[disciplineIndex].recommendations) {
-      editableReport.structuredReport.disciplines[disciplineIndex].recommendations = [];
+    const discipline = editableReport.structuredReport.disciplines[disciplineIndex];
+
+    // Get the current recommendations from getAggregatedRecommendations to preserve existing ones
+    const currentAggregatedRecommendations = getAggregatedRecommendations(discipline);
+
+    // If discipline.recommendations doesn't exist, initialize it with the aggregated recommendations
+    if (!discipline.recommendations || discipline.recommendations.length === 0) {
+      discipline.recommendations = [...currentAggregatedRecommendations];
     }
 
-    editableReport.structuredReport.disciplines[disciplineIndex].recommendations.push('');
+    // Add new empty recommendation
+    discipline.recommendations = [
+      ...discipline.recommendations,
+      ''
+    ];
+
+    // More targeted reactivity - update just the disciplines array instead of the entire editableReport
+    editableReport.structuredReport.disciplines = [...editableReport.structuredReport.disciplines];
     hasUnsavedChanges = true;
-    console.log('➕ Added recommendation for', editableReport.structuredReport.disciplines[disciplineIndex].name);
   }
 
   function removeRecommendation(disciplineIndex, recommendationIndex) {
