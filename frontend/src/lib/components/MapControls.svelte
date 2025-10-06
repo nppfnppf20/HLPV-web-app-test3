@@ -51,7 +51,11 @@
         energy: {
           title: 'Cumulative Development',
           layers: [
-            { layer: renewablesLayer, name: 'Renewables', style: '#10b981', shape: 'circle' }
+            { layer: renewablesLayer, name: 'Renewables', style: '#dc2626', shape: 'square', multiStyle: [
+              { style: '#dc2626', shape: 'square', label: 'Built/Approved' },
+              { style: '#f59e0b', shape: 'square', label: 'Pending' },
+              { style: '#f59e0b; border: 2px solid #f59e0b; background: transparent', shape: 'square', label: 'Refused' }
+            ] }
           ]
         }
       };
@@ -80,17 +84,38 @@
         group.layers.forEach((layerInfo, index) => {
           if (layerInfo.layer) {
             const layerId = `${groupKey}-${index}`;
-            const shapeStyle = layerInfo.shape === 'circle'
-              ? `width: 12px; height: 12px; background: ${layerInfo.style}; border-radius: 50%;`
-              : `width: 16px; height: 12px; background: ${layerInfo.style};`;
 
-            html += `
-              <label class="layer-item">
-                <input type="checkbox" id="${layerId}">
-                <span class="layer-icon" style="${shapeStyle}"></span>
-                <span class="layer-name">${layerInfo.name}</span>
-              </label>
-            `;
+            // Handle multiStyle for renewables with multiple square types
+            if (layerInfo.multiStyle && layerInfo.multiStyle.length > 0) {
+              let multiIconsHtml = '';
+              layerInfo.multiStyle.forEach((styleInfo, styleIndex) => {
+                const multiShapeStyle = styleInfo.shape === 'circle'
+                  ? `width: 12px; height: 12px; background: ${styleInfo.style}; border-radius: 50%;`
+                  : `width: 12px; height: 12px; background: ${styleInfo.style}; border-radius: 2px; margin-right: 4px;`;
+                multiIconsHtml += `<span class="layer-icon" style="${multiShapeStyle}"></span>`;
+              });
+
+              html += `
+                <label class="layer-item">
+                  <input type="checkbox" id="${layerId}">
+                  <div class="multi-layer-icons">${multiIconsHtml}</div>
+                  <span class="layer-name">${layerInfo.name}</span>
+                </label>
+              `;
+            } else {
+              // Standard single icon display
+              const shapeStyle = layerInfo.shape === 'circle'
+                ? `width: 12px; height: 12px; background: ${layerInfo.style}; border-radius: 50%;`
+                : `width: 16px; height: 12px; background: ${layerInfo.style};`;
+
+              html += `
+                <label class="layer-item">
+                  <input type="checkbox" id="${layerId}">
+                  <span class="layer-icon" style="${shapeStyle}"></span>
+                  <span class="layer-name">${layerInfo.name}</span>
+                </label>
+              `;
+            }
           }
         });
 
@@ -493,6 +518,16 @@
 
   :global(.grouped-layer-control .layer-name) {
     font-weight: 500;
+  }
+
+  :global(.grouped-layer-control .multi-layer-icons) {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  :global(.grouped-layer-control .multi-layer-icons .layer-icon:last-child) {
+    margin-right: 0 !important;
   }
 
 </style>

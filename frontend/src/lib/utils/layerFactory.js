@@ -114,36 +114,60 @@ export function createRenewablesLayer(L) {
       const tech = props.technology_type;
       const status = props.development_status_short;
 
-      // Color based on technology type
-      let color = '#10b981'; // Default green for renewables
-      if (tech && tech.toLowerCase().includes('solar')) {
-        color = '#f59e0b'; // Orange for solar
-      } else if (tech && tech.toLowerCase().includes('wind')) {
-        color = '#06b6d4'; // Cyan for wind
-      }
-
-      // Size based on capacity
+      // Size based on capacity (2/3 of original size)
       const capacity = props.installed_capacity_mw || 0;
-      let radius = 6; // Default size
-      if (capacity > 100) radius = 12;
-      else if (capacity > 50) radius = 10;
-      else if (capacity > 10) radius = 8;
+      let radius = 4; // Default size (2/3 of 6)
+      if (capacity > 100) radius = 8; // 2/3 of 12
+      else if (capacity > 50) radius = 7; // 2/3 of 10 (rounded)
+      else if (capacity > 10) radius = 5; // 2/3 of 8 (rounded)
 
-      // Style based on status
-      let fillOpacity = 0.7;
-      if (status === 'Operational' || status === 'Under Construction') {
-        fillOpacity = 1.0; // Solid for committed developments
+      // Color and fill based on status
+      let color, backgroundColor, fillOpacity;
+
+      if (status === 'Operational' || status === 'Under Construction' || status === 'Awaiting Construction') {
+        // Red for built/approved
+        color = '#dc2626'; // Red border
+        backgroundColor = '#dc2626'; // Red fill
+        fillOpacity = 1.0; // Solid
+      } else if (status === 'Application Submitted' || status === 'Revised') {
+        // Orange for pending decision/revised
+        color = '#f59e0b'; // Orange border
+        backgroundColor = '#f59e0b'; // Orange fill
+        fillOpacity = 1.0; // Solid
       } else if (status === 'Appeal Refused' || status === 'Application Refused') {
-        fillOpacity = 0.3; // Faded for refused
+        // Orange border, no fill for refused
+        color = '#f59e0b'; // Orange border
+        backgroundColor = 'transparent'; // No fill
+        fillOpacity = 0; // No fill
+      } else {
+        // Default fallback
+        color = '#10b981'; // Green
+        backgroundColor = '#10b981'; // Green fill
+        fillOpacity = 0.7;
       }
 
-      return L.circleMarker(latlng, {
-        radius,
-        color,
-        fillColor: color,
-        fillOpacity,
-        weight: 2
+      // Create a square marker using DivIcon
+      const squareIcon = L.divIcon({
+        className: 'renewables-square-marker',
+        html: '',
+        iconSize: [radius * 2, radius * 2],
+        iconAnchor: [radius, radius]
       });
+
+      const marker = L.marker(latlng, { icon: squareIcon });
+
+      // Add custom styling to the marker element after it's added to the map
+      marker.on('add', function() {
+        const element = this.getElement();
+        if (element) {
+          element.style.backgroundColor = backgroundColor;
+          element.style.border = `2px solid ${color}`;
+          element.style.opacity = fillOpacity === 0 ? 1 : fillOpacity; // Ensure border is visible for refused applications
+          element.style.borderRadius = '2px'; // Slightly rounded corners
+        }
+      });
+
+      return marker;
     },
     onEachFeature: (/** @type {any} */ f, /** @type {any} */ layer) => {
       const props = f.properties;

@@ -576,4 +576,17 @@ h1 {
 }
 
 
+/* Renewables square markers */
+.renewables-square-marker {
+  border-radius: 2px !important;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.renewables-square-marker:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
 /* end */
