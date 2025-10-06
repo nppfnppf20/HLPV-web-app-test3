@@ -1,5 +1,14 @@
 import jsPDF from 'jspdf';
 import { getScreenshotsBySection } from './screenshotManager.js';
+import {
+  DocumentConfig,
+  DocumentStructure,
+  DocumentLabels,
+  ContentFormatters,
+  getRiskLevelStyle,
+  processDocumentContent,
+  generateFilename
+} from './documentTemplate.js';
 
 /**
  * Generate and download a PDF document from TRP report data
@@ -9,10 +18,7 @@ import { getScreenshotsBySection } from './screenshotManager.js';
 export async function generatePDFReport(editableReport, siteName = 'TRP_Report') {
   try {
     const doc = await createPDFDocument(editableReport);
-
-    // Generate filename with current date
-    const date = new Date().toISOString().split('T')[0];
-    const filename = `${siteName.replace(/[^a-zA-Z0-9]/g, '_')}_TRP_Report_${date}.pdf`;
+    const filename = generateFilename(siteName, 'pdf');
 
     doc.save(filename);
     console.log('✅ PDF document generated successfully:', filename);
@@ -23,478 +29,395 @@ export async function generatePDFReport(editableReport, siteName = 'TRP_Report')
 }
 
 /**
- * Create a PDF document from TRP report data
+ * Create a PDF document from TRP report data using the universal template
  * @param {any} report - The TRP report data
  * @returns {jsPDF} PDF document
  */
 async function createPDFDocument(report) {
   const doc = new jsPDF();
-  let yPosition = 30; // Start lower to accommodate header
-  const margin = 25;
+
+  // Set default font to ensure consistency throughout
+  doc.setFont('helvetica', 'normal'); // Use helvetica as closest to Calibri
+
+  let yPosition = 25; // Start from top margin
+  const margin = DocumentConfig.layout.pageMargin;
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
   const maxWidth = pageWidth - (margin * 2);
   let pageNumber = 1;
 
-  // Professional color scheme
-  const colors = {
-    primary: '#1e40af',     // Blue
-    secondary: '#374151',   // Dark gray
-    accent: '#059669',      // Green
-    light: '#f3f4f6',      // Light gray
-    danger: '#dc2626'       // Red
+  // Process content using universal template
+  const content = processDocumentContent(report);
+
+  // Document state helpers
+  const state = {
+    yPosition,
+    pageNumber,
+    colors: DocumentConfig.colors,
+    fonts: DocumentConfig.fonts,
+    spacing: DocumentConfig.spacing
   };
 
-  // Add header to page
-  function addHeader() {
-    const currentY = yPosition;
+  // Helper functions
+  const helpers = createPDFHelpers(doc, state, margin, maxWidth, pageWidth, pageHeight);
 
-    // Header background
-    doc.setFillColor(colors.primary);
-    doc.rect(0, 0, pageWidth, 20, 'F');
+  // Skip header - using clean universal template
 
-    // Header text
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text('Technical Risk Profile Report', margin, 12);
+  // Generate document title
+  await addTitleSection(doc, state, helpers);
 
-    // Date in header
-    const date = new Date().toLocaleDateString();
-    const dateWidth = doc.getTextWidth(date);
-    doc.text(date, pageWidth - margin - dateWidth, 12);
-
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
-
-    yPosition = currentY;
+  // Add metadata section
+  if (content.metadata) {
+    await addMetadataSection(doc, state, helpers, content.metadata);
   }
 
-  // Add footer to page
-  function addFooter() {
-    const footerY = pageHeight - 15;
-
-    // Footer line
-    doc.setDrawColor(colors.secondary);
-    doc.setLineWidth(0.5);
-    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
-
-    // Page number
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(colors.secondary);
-    const pageText = `Page ${pageNumber}`;
-    const pageTextWidth = doc.getTextWidth(pageText);
-    doc.text(pageText, pageWidth - margin - pageTextWidth, footerY);
-
-    // Company/document info
-    doc.text('Heritage, Landscape & Planning Verification', margin, footerY);
-
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
+  // Add executive summary
+  if (content.executiveSummary) {
+    await addExecutiveSummarySection(doc, state, helpers, content.executiveSummary);
   }
 
-  // Helper function to check if we need a new page
-  function checkPageBreak(requiredSpace = 20) {
-    if (yPosition + requiredSpace > pageHeight - 40) { // Account for footer space
-      addFooter();
-      doc.addPage();
-      pageNumber++;
-      addHeader();
-      yPosition = 35; // Start below header
-      return true;
-    }
-    return false;
+  // Add discipline sections
+  for (const discipline of content.disciplines) {
+    await addDisciplineSection(doc, state, helpers, discipline);
   }
 
-  // Add initial header
-  addHeader();
+  // Add general site screenshots
+  state.yPosition = await addScreenshotsForSection(
+    doc, 'General Site', state.yPosition, margin, maxWidth, pageHeight, helpers.checkPageBreak, state.colors
+  );
 
-  // Helper function to add text with automatic page breaks
-  function addText(text, fontSize = 12, isBold = false, addSpacing = true, color = null, indent = 0) {
-    doc.setFontSize(fontSize);
-    if (isBold) {
-      doc.setFont(undefined, 'bold');
-    } else {
-      doc.setFont(undefined, 'normal');
-    }
-
-    if (color) {
-      doc.setTextColor(color);
-    } else {
-      doc.setTextColor(0, 0, 0);
-    }
-
-    const lines = doc.splitTextToSize(text, maxWidth - indent);
-    const lineHeight = fontSize * 0.7; // Better line spacing
-    const totalHeight = lines.length * lineHeight;
-
-    // Check if we need a new page
-    checkPageBreak(totalHeight + (addSpacing ? fontSize * 0.5 : 0));
-
-    lines.forEach(line => {
-      doc.text(line, margin + indent, yPosition);
-      yPosition += lineHeight;
-    });
-
-    if (addSpacing) {
-      yPosition += fontSize * 0.5;
-    }
-
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
-
-    return yPosition;
-  }
-
-  // Helper function to add a professional heading
-  function addHeading(text, level = 1) {
-    const fontSize = level === 1 ? 20 : level === 2 ? 16 : 14;
-    const color = level === 1 ? colors.primary : colors.secondary;
-
-    // Check if we need a new page for the heading
-    checkPageBreak(fontSize * 1.5 + 20);
-
-    yPosition += level === 1 ? 15 : 12; // Extra spacing before headings
-
-    // Add heading with color
-    doc.setFontSize(fontSize);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(color);
-    doc.text(text, margin, yPosition);
-    yPosition += fontSize * 0.8;
-
-    // Add underline for level 1 headings
-    if (level === 1) {
-      doc.setDrawColor(color);
-      doc.setLineWidth(1);
-      doc.line(margin, yPosition, margin + doc.getTextWidth(text), yPosition);
-      yPosition += 3;
-    }
-
-    yPosition += level === 1 ? 12 : 8; // Extra spacing after headings
-
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
-
-    return yPosition;
-  }
-
-  // Helper function to add a bullet point
-  function addBulletPoint(text, fontSize = 12, indent = 15) {
-    addText(`• ${text}`, fontSize, false, true, null, indent);
-  }
-
-  // Helper function to add a section divider
-  function addSectionDivider() {
-    yPosition += 8;
-    doc.setDrawColor(colors.light);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 12;
-  }
-
-  // Helper function to get risk level colors
-  function getRiskColor(riskLevel) {
-    const level = (riskLevel || '').toLowerCase();
-    if (level.includes('showstopper')) return '#991b1b';
-    if (level.includes('extremely high') || level.includes('extreme')) return '#dc2626';
-    if (level.includes('high')) return '#ea580c';
-    if (level.includes('medium-high') || level.includes('medium high')) return '#d97706';
-    if (level.includes('medium')) return '#ca8a04';
-    if (level.includes('medium-low') || level.includes('medium low')) return '#65a30d';
-    if (level.includes('low')) return '#16a34a';
-    return colors.secondary;
-  }
-
-  // Professional Title Section
-  yPosition += 10;
-
-  // Main title
-  doc.setFontSize(28);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(colors.primary);
-  const title = "Technical Risk Profile";
-  const titleWidth = doc.getTextWidth(title);
-  doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
-  yPosition += 20;
-
-  // Subtitle
-  doc.setFontSize(18);
-  doc.setFont(undefined, 'normal');
-  doc.setTextColor(colors.secondary);
-  const subtitle = "Development Risk Assessment Report";
-  const subtitleWidth = doc.getTextWidth(subtitle);
-  doc.text(subtitle, (pageWidth - subtitleWidth) / 2, yPosition);
-  yPosition += 25;
-
-  // Reset text color
-  doc.setTextColor(0, 0, 0);
-
-  // Add decorative line
-  doc.setDrawColor(colors.primary);
-  doc.setLineWidth(2);
-  const lineWidth = Math.min(100, maxWidth * 0.4);
-  doc.line((pageWidth - lineWidth) / 2, yPosition, (pageWidth + lineWidth) / 2, yPosition);
-  yPosition += 25;
-
-  // Report metadata
-  if (report.metadata) {
-    addHeading("Report Information");
-
-    addText(`Generated: ${report.metadata.generatedAt || new Date().toLocaleString()}`, 11, true);
-
-    if (report.metadata.analyst) {
-      addText(`Analyst: ${report.metadata.analyst}`, 11, true);
-    }
-
-    if (report.metadata.version) {
-      addText(`Version: ${report.metadata.version}`, 11, true);
-    }
-
-    addSectionDivider();
-  }
-
-  // Executive Summary
-  if (report.structuredReport?.summary) {
-    addHeading("Executive Summary");
-
-    // Overall Risk
-    if (report.structuredReport.summary.overallRisk) {
-      addText(`Overall Risk Assessment: ${report.structuredReport.summary.overallRisk}`, 13, true, true, colors.danger);
-    }
-
-    // Risk by discipline summary
-    if (report.structuredReport.summary.riskByDiscipline) {
-      addHeading("Risk Summary by Discipline", 2);
-
-      report.structuredReport.summary.riskByDiscipline.forEach(discipline => {
-        const riskText = `${discipline.name}: ${discipline.riskSummary?.label || 'Not assessed'}`;
-        const descText = discipline.riskSummary?.description ? ` - ${discipline.riskSummary.description}` : '';
-        addBulletPoint(riskText + descText, 11);
-      });
-
-      addSectionDivider();
-    }
-  }
-
-  // Discipline sections
-  if (report.structuredReport?.disciplines) {
-    for (const discipline of report.structuredReport.disciplines) {
-      addHeading(discipline.name);
-
-      // Risk level with color coding
-      if (discipline.riskSummary) {
-        const riskColor = getRiskColor(discipline.riskSummary.label);
-        addText(`Risk Level: ${discipline.riskSummary.label}`, 13, true, true, riskColor);
-        if (discipline.riskSummary.description) {
-          addText(discipline.riskSummary.description, 11, false, true, null, 10);
-        }
-      }
-
-      // Assessment Rules
-      addHeading("Assessment Rules", 2);
-
-      if (discipline.triggeredRules && discipline.triggeredRules.length > 0) {
-        discipline.triggeredRules.forEach((rule, index) => {
-          // Rule title/name with numbering
-          addText(`${index + 1}. ${rule.rule || rule.title || rule.name}`, 12, true, false, colors.secondary, 5);
-
-          // Rule findings
-          if (rule.findings) {
-            addText(rule.findings, 11, false, true, null, 15);
-          }
-
-          // Risk level for this specific rule
-          if (rule.level) {
-            const ruleRiskColor = getRiskColor(rule.level);
-            addText(`Risk Level: ${rule.level.replace(/_/g, ' ').toUpperCase()}`, 10, true, false, ruleRiskColor, 15);
-          }
-
-          // Rule-specific recommendations
-          if (rule.recommendations && rule.recommendations.length > 0) {
-            addText(`Recommendations:`, 11, true, false, colors.accent, 15);
-            rule.recommendations.forEach(rec => {
-              addBulletPoint(rec, 10, 25);
-            });
-          }
-
-          yPosition += 8;
-        });
-      } else {
-        addText(`No ${discipline.name.toLowerCase()} risk rules were triggered. Standard development considerations apply.`, 11, false, true, colors.accent, 10);
-      }
-
-      // Recommendations
-      const recommendations = getRecommendationsForDiscipline(discipline);
-      if (recommendations.length > 0) {
-        addHeading(`${discipline.name} Recommendations`, 2);
-
-        recommendations.forEach(recommendation => {
-          if (recommendation.trim()) {
-            addBulletPoint(recommendation, 11);
-          }
-        });
-      }
-
-      // Add screenshots for this discipline
-      yPosition = await addScreenshotsForSection(doc, discipline.name, yPosition, margin, maxWidth, pageHeight, checkPageBreak, colors);
-
-      addSectionDivider();
-    }
-
-    // Add general site screenshots
-    yPosition = await addScreenshotsForSection(doc, 'General Site', yPosition, margin, maxWidth, pageHeight, checkPageBreak, colors);
-  }
-
-  // Add final footer to last page
-  addFooter();
+  // Skip footer - using clean universal template
 
   return doc;
 }
 
 /**
- * Get recommendations for a discipline, handling both editable and default recommendations
- * @param {any} discipline - The discipline object
- * @returns {string[]} Array of recommendations
+ * Create PDF helper functions
  */
-function getRecommendationsForDiscipline(discipline) {
-  // Use editable recommendations if available
-  if (discipline.recommendations && Array.isArray(discipline.recommendations)) {
-    return discipline.recommendations.filter(rec => rec.trim());
+function createPDFHelpers(doc, state, margin, maxWidth, pageWidth, pageHeight) {
+  return {
+
+    checkPageBreak(requiredSpace = 20) {
+      if (state.yPosition + requiredSpace > pageHeight - 40) {
+        doc.addPage();
+        state.pageNumber++;
+        state.yPosition = 25; // Start from top margin
+        return true;
+      }
+      return false;
+    },
+
+    addText(text, fontConfig = state.fonts.body, addSpacing = true, color = null, indent = 0) {
+      doc.setFontSize(fontConfig.size);
+      doc.setFont('helvetica', fontConfig.bold ? 'bold' : 'normal');
+
+      if (color) {
+        doc.setTextColor(color);
+      } else {
+        doc.setTextColor(state.colors.secondary); // Black for body text
+      }
+
+      const lines = doc.splitTextToSize(text, maxWidth - indent);
+      const lineHeight = fontConfig.size * 0.5; // Tighter line spacing
+      const totalHeight = lines.length * lineHeight;
+
+      this.checkPageBreak(totalHeight + (addSpacing ? fontConfig.size * 0.5 : 0));
+
+      lines.forEach(line => {
+        doc.text(line, margin + indent, state.yPosition);
+        state.yPosition += lineHeight;
+      });
+
+      if (addSpacing) {
+        state.yPosition += fontConfig.size * 0.3; // Smaller spacing after paragraphs
+      }
+
+      doc.setTextColor(state.colors.secondary); // Reset to black
+      return state.yPosition;
+    },
+
+    addHeading(text, level = 1) {
+      const fontConfig = level === 1 ? state.fonts.heading1 :
+                        level === 2 ? state.fonts.heading2 : state.fonts.heading3;
+
+      this.checkPageBreak(fontConfig.size * 1.5 + 10);
+
+      state.yPosition += level === 1 ? 8 : 6;
+
+      doc.setFontSize(fontConfig.size);
+      doc.setFont('helvetica', 'normal'); // Consistent font, no bold for clean look
+      doc.setTextColor(state.colors.primary); // All headings dark blue
+      doc.text(text, margin, state.yPosition);
+      state.yPosition += fontConfig.size * 0.6; // Smaller spacing after heading text
+
+      // Add underline for level 1 headings
+      if (level === 1) {
+        doc.setDrawColor(state.colors.primary);
+        doc.setLineWidth(1);
+        doc.line(margin, state.yPosition, margin + doc.getTextWidth(text), state.yPosition);
+        state.yPosition += 3;
+      }
+
+      state.yPosition += level === 1 ? 6 : 4; // Smaller spacing after headings
+
+      doc.setTextColor(state.colors.secondary); // Reset to black
+      return state.yPosition;
+    },
+
+    addBulletPoint(text, fontConfig = state.fonts.body, indent = 0) {
+      this.addText(ContentFormatters.formatBulletPoint(text), fontConfig, true, null, indent);
+    },
+
+    addSectionDivider() {
+      state.yPosition += 4;
+      doc.setDrawColor(state.colors.light);
+      doc.setLineWidth(0.5);
+      doc.line(margin, state.yPosition, pageWidth - margin, state.yPosition);
+      state.yPosition += 6;
+    }
+  };
+}
+
+/**
+ * Add title section
+ */
+async function addTitleSection(doc, state, helpers) {
+  state.yPosition += 10;
+
+  // Main title
+  doc.setFontSize(state.fonts.title.size);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(state.colors.primary);
+  const title = DocumentLabels.title;
+  doc.text(title, 25, state.yPosition); // Left-aligned with margin
+  state.yPosition += 12;
+
+  // Subtitle
+  doc.setFontSize(state.fonts.subtitle.size);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(state.colors.secondary);
+  const subtitle = DocumentLabels.subtitle;
+  doc.text(subtitle, 25, state.yPosition); // Left-aligned with margin
+  state.yPosition += 15;
+
+  // Reset text color
+  doc.setTextColor(state.colors.secondary);
+
+  // Small spacing after title section
+  state.yPosition += 10;
+}
+
+/**
+ * Add metadata section
+ */
+async function addMetadataSection(doc, state, helpers, metadata) {
+  helpers.addHeading(DocumentLabels.reportInfo);
+
+  helpers.addText(`${DocumentLabels.generated}: ${metadata.generatedAt}`, state.fonts.bodyBold);
+
+  if (metadata.analyst) {
+    helpers.addText(`${DocumentLabels.analyst}: ${metadata.analyst}`, state.fonts.bodyBold);
   }
 
-  // Fallback to original logic
-  const allRecommendations = [];
+  if (metadata.version) {
+    helpers.addText(`${DocumentLabels.version}: ${metadata.version}`, state.fonts.bodyBold);
+  }
 
-  if (!discipline?.triggeredRules || discipline.triggeredRules.length === 0) {
-    if (discipline?.defaultNoRulesRecommendations && Array.isArray(discipline.defaultNoRulesRecommendations)) {
-      allRecommendations.push(...discipline.defaultNoRulesRecommendations);
+  helpers.addSectionDivider();
+}
+
+/**
+ * Add executive summary section
+ */
+async function addExecutiveSummarySection(doc, state, helpers, summary) {
+  helpers.addHeading(DocumentLabels.executiveSummary);
+
+  // Overall Risk
+  if (summary.overallRisk) {
+    helpers.addText(
+      `${DocumentLabels.overallRisk}: ${summary.overallRisk}`,
+      state.fonts.bodyBold,
+      true,
+      state.colors.danger
+    );
+  }
+
+  // Risk by discipline summary
+  if (summary.riskByDiscipline && summary.riskByDiscipline.length > 0) {
+    helpers.addHeading(DocumentLabels.riskByDiscipline, 2);
+
+    summary.riskByDiscipline.forEach(discipline => {
+      const riskText = `${discipline.name}: ${discipline.riskSummary?.label || 'Not assessed'}`;
+      const descText = discipline.riskSummary?.description ? ` - ${discipline.riskSummary.description}` : '';
+      helpers.addBulletPoint(riskText + descText, state.fonts.body);
+    });
+
+    helpers.addSectionDivider();
+  }
+}
+
+/**
+ * Add discipline section
+ */
+async function addDisciplineSection(doc, state, helpers, discipline) {
+  helpers.addHeading(discipline.name);
+
+  // Risk level with description on same line
+  if (discipline.riskSummary) {
+    const riskStyle = getRiskLevelStyle(discipline.riskSummary.label);
+    let riskText = `Risk level: ${riskStyle.label}`;
+    if (discipline.riskSummary.description) {
+      riskText += ` - ${discipline.riskSummary.description}`;
     }
+    helpers.addText(riskText, state.fonts.body, true, riskStyle.color, 0);
+  }
+
+  // Assessment Rules
+  helpers.addHeading(DocumentLabels.assessmentRules, 2);
+
+  if (discipline.triggeredRules && discipline.triggeredRules.length > 0) {
+    discipline.triggeredRules.forEach((rule, index) => {
+      // Rule title with numbering
+      helpers.addText(
+        ContentFormatters.formatRuleTitle(rule, index),
+        state.fonts.bodyBold,
+        false,
+        state.colors.secondary,
+        0
+      );
+
+      // Combine findings and risk level on one line
+      let combinedText = '';
+      if (rule.findings) {
+        combinedText = rule.findings;
+      }
+      if (rule.level) {
+        const riskStyle = getRiskLevelStyle(rule.level);
+        if (combinedText) {
+          combinedText += `. Risk level: ${riskStyle.label}`;
+        } else {
+          combinedText = `Risk level: ${riskStyle.label}`;
+        }
+      }
+
+      if (combinedText) {
+        helpers.addText(combinedText, state.fonts.body, true, null, 0);
+      }
+
+
+      state.yPosition += 4;
+    });
   } else {
-    if (discipline?.defaultTriggeredRecommendations && Array.isArray(discipline.defaultTriggeredRecommendations)) {
-      allRecommendations.push(...discipline.defaultTriggeredRecommendations);
-    }
+    helpers.addText(
+      `No ${discipline.name.toLowerCase()} ${DocumentLabels.noRulesTriggered}`,
+      state.fonts.body,
+      true,
+      state.colors.accent,
+      0
+    );
+  }
 
-    discipline.triggeredRules.forEach(rule => {
-      if (rule.recommendations && Array.isArray(rule.recommendations)) {
-        allRecommendations.push(...rule.recommendations);
+  // Recommendations
+  if (discipline.recommendations.length > 0) {
+    helpers.addHeading(ContentFormatters.formatSectionTitle(discipline.name, 'recommendations'), 2);
+
+    discipline.recommendations.forEach(recommendation => {
+      if (recommendation.trim()) {
+        helpers.addBulletPoint(recommendation, state.fonts.body);
       }
     });
   }
 
-  // Deduplicate recommendations
-  const uniqueRecommendations = [];
-  const seen = new Set();
+  // Add screenshots for this discipline
+  state.yPosition = await addScreenshotsForSection(
+    doc, discipline.name, state.yPosition, DocumentConfig.layout.pageMargin,
+    doc.internal.pageSize.width - (DocumentConfig.layout.pageMargin * 2),
+    doc.internal.pageSize.height, helpers.checkPageBreak, state.colors
+  );
 
-  allRecommendations.forEach(rec => {
-    const normalizedRec = rec.toLowerCase().trim();
-    if (!seen.has(normalizedRec)) {
-      seen.add(normalizedRec);
-      uniqueRecommendations.push(rec);
-    }
-  });
-
-  return uniqueRecommendations;
+  helpers.addSectionDivider();
 }
 
 /**
- * Add screenshots to PDF for a specific section
- * @param {jsPDF} doc - PDF document
- * @param {string} sectionName - Name of the section
- * @param {number} currentY - Current Y position
- * @param {number} margin - Page margin
- * @param {number} maxWidth - Maximum content width
- * @param {number} pageHeight - Page height
- * @param {Function} checkPageBreak - Function to check for page breaks
- * @param {Object} colors - Color scheme object
- * @returns {number} Updated Y position
+ * Add screenshots to PDF for a specific section (unchanged from original)
  */
 async function addScreenshotsForSection(doc, sectionName, currentY, margin, maxWidth, pageHeight, checkPageBreak, colors) {
   const screenshots = getScreenshotsBySection(sectionName);
   let yPosition = currentY;
 
   if (screenshots.length > 0) {
-    // Check if we need a new page for the heading
     if (yPosition + 40 > pageHeight - margin) {
       doc.addPage();
-      yPosition = margin;
+      yPosition = 25; // Use consistent margin
     }
 
-    // Add screenshots heading with professional styling
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(colors.secondary);
-    doc.text(`${sectionName} Images`, margin, yPosition);
+    // Add screenshots heading
+    doc.setFontSize(DocumentConfig.fonts.heading2.size);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(colors.primary); // Blue for headings
+    doc.text(ContentFormatters.formatSectionTitle(sectionName, 'images'), margin, yPosition);
     yPosition += 20;
 
-    // Add subtle underline
+    // Add underline
     doc.setDrawColor(colors.secondary);
     doc.setLineWidth(0.5);
-    const headerWidth = doc.getTextWidth(`${sectionName} Images`);
+    const headerWidth = doc.getTextWidth(ContentFormatters.formatSectionTitle(sectionName, 'images'));
     doc.line(margin, yPosition, margin + headerWidth, yPosition);
     yPosition += 10;
 
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(colors.secondary);
 
     // Add each screenshot
     for (const screenshot of screenshots) {
       try {
         if (screenshot.dataUrl) {
-          const imgWidth = Math.min(maxWidth * 0.8, 120); // Smaller images
-          const imgHeight = 80; // Fixed aspect ratio for consistency
-          const captionHeight = screenshot.caption ? 25 : 5; // Space for caption
-          const totalImageSpace = imgHeight + captionHeight + 15; // Total space needed
+          const imgWidth = Math.min(maxWidth * 0.8, DocumentConfig.layout.maxImageWidth);
+          const imgHeight = DocumentConfig.layout.maxImageHeight;
+          const captionHeight = screenshot.caption ? 25 : 5;
+          const totalImageSpace = imgHeight + captionHeight + 15;
 
-          // Check if we need a new page for the image
           if (yPosition + totalImageSpace > pageHeight - margin) {
             doc.addPage();
-            yPosition = margin;
+            yPosition = 25; // Use consistent margin
           }
 
           try {
-            // Add image to PDF (jsPDF can handle base64 data URLs directly)
             doc.addImage(screenshot.dataUrl, 'JPEG', margin, yPosition, imgWidth, imgHeight);
             yPosition += imgHeight + 5;
 
-            // Add professional caption if provided
             if (screenshot.caption && screenshot.caption.trim()) {
-              doc.setFontSize(10);
-              doc.setFont(undefined, 'italic');
-              doc.setTextColor(colors.secondary);
+              doc.setFontSize(DocumentConfig.fonts.caption.size);
+              doc.setFont('helvetica', 'italic');
+              doc.setTextColor(colors.secondary); // Black for body text
 
-              // Add "Figure:" prefix
-              const captionText = `Figure: ${screenshot.caption}`;
+              const captionText = ContentFormatters.formatImageCaption(screenshot.caption);
               const captionLines = doc.splitTextToSize(captionText, maxWidth);
 
               captionLines.forEach(line => {
                 doc.text(line, margin, yPosition);
-                yPosition += 12;
+                yPosition += 10; // Smaller line height for captions
               });
               yPosition += 5;
 
-              // Reset text color
-              doc.setTextColor(0, 0, 0);
+              doc.setTextColor(colors.secondary);
             }
 
-            yPosition += 10; // Extra spacing between images
-
+            yPosition += 10;
             console.log(`✅ Added image to PDF for ${sectionName}`);
           } catch (imageError) {
             console.error(`❌ Error processing image for ${sectionName}:`, imageError);
-            // Fallback to placeholder text
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'normal');
+            doc.setFontSize(DocumentConfig.fonts.body.size);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(colors.secondary); // Black for body text
             doc.text(`[Screenshot: ${screenshot.caption || 'Image could not be embedded'}]`, margin, yPosition);
             yPosition += 20;
           }
         }
       } catch (error) {
         console.error(`Error adding screenshot for ${sectionName}:`, error);
-        // Add error note instead of failing completely
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'italic');
+        doc.setFontSize(DocumentConfig.fonts.caption.size);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(colors.secondary); // Black for body text
         doc.text(`[Image could not be included: ${screenshot.caption || 'Screenshot'}]`, margin, yPosition);
         yPosition += 20;
       }
