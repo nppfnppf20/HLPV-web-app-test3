@@ -184,6 +184,7 @@ export function processDocumentContent(report) {
   // Process executive summary
   if (report.structuredReport?.summary) {
     content.executiveSummary = {
+      siteSummary: report.structuredReport.summary.site,
       overallRisk: report.structuredReport.summary.overallRisk,
       riskByDiscipline: report.structuredReport.summary.riskByDiscipline || []
     };
@@ -295,6 +296,7 @@ export const DocumentLabels = {
   subtitle: "", // Will be replaced with date
   reportInfo: "Report Information",
   executiveSummary: "Executive Summary",
+  siteSummary: "Site Summary",
   overallRisk: "Overall Risk Assessment",
   riskByDiscipline: "Risk Summary by Discipline",
   assessmentRules: "Assessment Rules Triggered",

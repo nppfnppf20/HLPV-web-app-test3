@@ -44,6 +44,9 @@ async function createWordDocument(report) {
   // Process content using universal template
   const content = processDocumentContent(report);
 
+  // Initialize figure counter for the document (use object for pass-by-reference)
+  const figureCounter = { value: 1 };
+
   // Document helpers
   const helpers = createWordHelpers();
 
@@ -59,12 +62,12 @@ async function createWordDocument(report) {
 
   // Discipline Sections
   for (const discipline of content.disciplines) {
-    const disciplineParagraphs = await addDisciplineSection(discipline, helpers);
+    const disciplineParagraphs = await addDisciplineSection(discipline, helpers, figureCounter);
     children.push(...disciplineParagraphs);
   }
 
   // General Site Screenshots
-  const generalScreenshots = await addScreenshotsForSection('General Site');
+  const generalScreenshots = await addScreenshotsForSection('General Site', figureCounter);
   if (generalScreenshots.length > 0) {
     children.push(...generalScreenshots);
   }
@@ -253,6 +256,12 @@ function addExecutiveSummarySection(summary, helpers) {
     helpers.createHeading(DocumentLabels.executiveSummary)
   ];
 
+  // Site Summary - only show if value exists and is not empty
+  if (summary.siteSummary && summary.siteSummary.trim()) {
+    paragraphs.push(helpers.createHeading(DocumentLabels.siteSummary, 2));
+    paragraphs.push(helpers.createText(summary.siteSummary));
+  }
+
   // Overall Risk
   if (summary.overallRisk) {
     paragraphs.push(
@@ -307,7 +316,7 @@ function addExecutiveSummarySection(summary, helpers) {
 /**
  * Add discipline section
  */
-async function addDisciplineSection(discipline, helpers) {
+async function addDisciplineSection(discipline, helpers, figureCounter) {
   const paragraphs = [
     helpers.createHeading(discipline.name)
   ];
@@ -417,7 +426,7 @@ async function addDisciplineSection(discipline, helpers) {
   }
 
   // Add screenshots for this discipline
-  const screenshotParagraphs = await addScreenshotsForSection(discipline.name);
+  const screenshotParagraphs = await addScreenshotsForSection(discipline.name, figureCounter);
   paragraphs.push(...screenshotParagraphs);
 
   paragraphs.push(helpers.createSectionDivider());
@@ -447,9 +456,11 @@ function base64ToBuffer(base64Data) {
 /**
  * Add screenshots to document for a specific section
  */
-async function addScreenshotsForSection(sectionName) {
+async function addScreenshotsForSection(sectionName, figureCounter) {
   let screenshots = getScreenshotsBySection(sectionName);
   const imageParagraphs = [];
+
+  // Use document-level figure counter
 
   if (screenshots.length > 0) {
     // Skip screenshots heading - images will appear without title
@@ -461,7 +472,15 @@ async function addScreenshotsForSection(sectionName) {
           try {
             const imageBuffer = base64ToBuffer(screenshot.dataUrl);
 
-            // Add image with template-defined dimensions
+            // Add spacing before image
+            imageParagraphs.push(
+              new Paragraph({
+                children: [],
+                spacing: { after: 200 }
+              })
+            );
+
+            // Add image with reasonable dimensions that maintain better proportions
             imageParagraphs.push(
               new Paragraph({
                 children: [
@@ -469,12 +488,12 @@ async function addScreenshotsForSection(sectionName) {
                     data: imageBuffer,
                     transformation: {
                       width: DocumentConfig.layout.maxImageWidth,
-                      height: DocumentConfig.layout.maxImageHeight,
+                      height: Math.round(DocumentConfig.layout.maxImageWidth * 0.75), // 4:3 aspect ratio
                     },
                   }),
                 ],
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 100 },
+                alignment: AlignmentType.LEFT,
+                spacing: { after: 50 },
               })
             );
             console.log(`✅ Added image to Word doc for ${sectionName}`);
@@ -498,24 +517,27 @@ async function addScreenshotsForSection(sectionName) {
             );
           }
 
-          // Add caption if provided
-          if (screenshot.caption && screenshot.caption.trim()) {
-            imageParagraphs.push(
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: ContentFormatters.formatImageCaption(screenshot.caption),
-                    italics: true,
-                    size: DocumentConfig.fonts.caption.size * 2,
-                    color: DocumentConfig.colors.secondary.replace('#', ''), // Black for body text
-                    font: DocumentConfig.fonts.family,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 200 },
-              })
-            );
-          }
+          // Add figure number and caption
+          const figureNumber = figureCounter.value++;
+          const captionText = screenshot.caption && screenshot.caption.trim()
+            ? `Figure ${figureNumber}: ${screenshot.caption}`
+            : `Figure ${figureNumber}`;
+
+          imageParagraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: captionText,
+                  italics: true,
+                  size: DocumentConfig.fonts.caption.size * 2,
+                  color: DocumentConfig.colors.secondary.replace('#', ''),
+                  font: DocumentConfig.fonts.family,
+                }),
+              ],
+              alignment: AlignmentType.LEFT,
+              spacing: { after: 200 },
+            })
+          );
         }
       } catch (error) {
         console.error(`Error adding screenshot for ${sectionName}:`, error);

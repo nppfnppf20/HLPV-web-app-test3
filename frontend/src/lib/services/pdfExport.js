@@ -218,6 +218,12 @@ async function addMetadataSection(doc, state, helpers, metadata) {
 async function addExecutiveSummarySection(doc, state, helpers, summary) {
   helpers.addHeading(DocumentLabels.executiveSummary);
 
+  // Site Summary - only show if value exists and is not empty
+  if (summary.siteSummary && summary.siteSummary.trim()) {
+    helpers.addHeading(DocumentLabels.siteSummary, 2);
+    helpers.addText(summary.siteSummary, state.fonts.body, true, state.colors.secondary);
+  }
+
   // Overall Risk - only show if value exists and is not empty
   if (summary.overallRisk && summary.overallRisk.trim()) {
     // Format the overall risk level and remove redundant "risk"
@@ -273,6 +279,8 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
 
   // Risk level without description
   if (discipline.riskSummary) {
+    // Reduce spacing before risk level text
+    state.yPosition -= 6;
     const riskStyle = getRiskLevelStyle(discipline.riskSummary.label);
     // Convert to proper sentence case and remove redundant "risk"
     const cleanLabel = cleanRiskLabel(riskStyle.label);
