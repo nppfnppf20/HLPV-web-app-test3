@@ -104,7 +104,7 @@ function createWordHelpers() {
           }),
         ],
         heading: headingLevel,
-        spacing: { before: 400, after: 200 },
+        spacing: { before: level === 1 ? 200 : 100, after: 200 }, // Reduced spacing before all headings
       });
     },
 
@@ -274,8 +274,11 @@ function addExecutiveSummarySection(summary, helpers) {
     paragraphs.push(helpers.createHeading(DocumentLabels.riskByDiscipline, 2));
 
     summary.riskByDiscipline.forEach(discipline => {
-      const riskText = `${discipline.name}: ${discipline.riskSummary?.label || 'Not assessed'}`;
-      const descText = discipline.riskSummary?.description ? ` - ${discipline.riskSummary.description}` : '';
+      // Convert risk level to sentence case for executive summary
+      const riskLabel = discipline.riskSummary?.label || 'Not assessed';
+      const sentenceCaseRisk = riskLabel === 'Not assessed' ? riskLabel :
+        riskLabel.toLowerCase().charAt(0).toUpperCase() + riskLabel.toLowerCase().slice(1);
+      // Remove description - just show risk level
 
       paragraphs.push(
         new Paragraph({
@@ -287,13 +290,7 @@ function addExecutiveSummarySection(summary, helpers) {
               font: DocumentConfig.fonts.family,
             }),
             new TextRun({
-              text: discipline.riskSummary?.label || 'Not assessed',
-              size: DocumentConfig.fonts.body.size * 2,
-              font: DocumentConfig.fonts.family,
-            }),
-            new TextRun({
-              text: descText,
-              italics: true,
+              text: sentenceCaseRisk,
               size: DocumentConfig.fonts.body.size * 2,
               font: DocumentConfig.fonts.family,
             }),
@@ -317,13 +314,13 @@ async function addDisciplineSection(discipline, helpers) {
     helpers.createHeading(discipline.name)
   ];
 
-  // Risk level with description on same line
+  // Risk level without description
   if (discipline.riskSummary) {
     const riskStyle = getRiskLevelStyle(discipline.riskSummary.label);
-    let riskText = `Risk level: ${riskStyle.label}`;
-    if (discipline.riskSummary.description) {
-      riskText += ` - ${discipline.riskSummary.description}`;
-    }
+    // Convert to proper sentence case (e.g., "Medium-high risk", "Extremely high risk")
+    const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
+    let riskText = `Risk level: ${sentenceCaseRisk}`;
+    // Remove description - just show risk level
 
     paragraphs.push(
       new Paragraph({
@@ -331,7 +328,7 @@ async function addDisciplineSection(discipline, helpers) {
           new TextRun({
             text: riskText,
             size: DocumentConfig.fonts.body.size * 2,
-            color: riskStyle.color.replace('#', ''),
+            color: DocumentConfig.colors.secondary.replace('#', ''), // Use standard black text
             font: DocumentConfig.fonts.family,
           }),
         ],
@@ -368,10 +365,12 @@ async function addDisciplineSection(discipline, helpers) {
       }
       if (rule.level) {
         const riskStyle = getRiskLevelStyle(rule.level);
+        // Convert to proper sentence case for individual rule risk levels
+        const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
         if (combinedText) {
-          combinedText += `. Risk level: ${riskStyle.label}`;
+          combinedText += `. Risk level: ${sentenceCaseRisk}`;
         } else {
-          combinedText = `Risk level: ${riskStyle.label}`;
+          combinedText = `Risk level: ${sentenceCaseRisk}`;
         }
       }
 
@@ -453,22 +452,7 @@ async function addScreenshotsForSection(sectionName) {
   const imageParagraphs = [];
 
   if (screenshots.length > 0) {
-    // Add screenshots heading
-    imageParagraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: ContentFormatters.formatSectionTitle(sectionName, 'images'),
-            bold: false, // Calibri Light
-            size: DocumentConfig.fonts.heading2.size * 2,
-            color: DocumentConfig.colors.primary.replace('#', ''), // Blue for headings
-            font: DocumentConfig.fonts.family,
-          }),
-        ],
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 300, after: 200 },
-      })
-    );
+    // Skip screenshots heading - images will appear without title
 
     // Add each screenshot
     for (const screenshot of screenshots) {

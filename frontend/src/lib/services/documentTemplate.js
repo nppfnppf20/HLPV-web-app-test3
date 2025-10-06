@@ -260,7 +260,7 @@ export const DocumentLabels = {
   executiveSummary: "Executive Summary",
   overallRisk: "Overall Risk Assessment",
   riskByDiscipline: "Risk Summary by Discipline",
-  assessmentRules: "Assessment Rules",
+  assessmentRules: "Assessment Rules Triggered",
   recommendations: "Recommendations",
   riskLevel: "Risk Level",
   images: "Images",
@@ -284,10 +284,10 @@ export const ContentFormatters = {
   },
 
   /**
-   * Format rule title with numbering
+   * Format rule title without numbering
    */
   formatRuleTitle: (rule, index) => {
-    return `${index + 1}. ${rule.title || rule.rule || rule.name}`;
+    return `- ${rule.title || rule.rule || rule.name}`;
   },
 
   /**

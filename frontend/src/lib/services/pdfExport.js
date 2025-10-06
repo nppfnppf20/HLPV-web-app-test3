@@ -142,21 +142,13 @@ function createPDFHelpers(doc, state, margin, maxWidth, pageWidth, pageHeight) {
 
       this.checkPageBreak(fontConfig.size * 1.5 + 10);
 
-      state.yPosition += level === 1 ? 8 : 6;
+      state.yPosition += level === 1 ? 4 : 2; // Reduced spacing before all headings
 
       doc.setFontSize(fontConfig.size);
       doc.setFont('helvetica', 'normal'); // Consistent font, no bold for clean look
       doc.setTextColor(state.colors.primary); // All headings dark blue
       doc.text(text, margin, state.yPosition);
       state.yPosition += fontConfig.size * 0.6; // Smaller spacing after heading text
-
-      // Add underline for level 1 headings
-      if (level === 1) {
-        doc.setDrawColor(state.colors.primary);
-        doc.setLineWidth(1);
-        doc.line(margin, state.yPosition, margin + doc.getTextWidth(text), state.yPosition);
-        state.yPosition += 3;
-      }
 
       state.yPosition += level === 1 ? 6 : 4; // Smaller spacing after headings
 
@@ -169,11 +161,7 @@ function createPDFHelpers(doc, state, margin, maxWidth, pageWidth, pageHeight) {
     },
 
     addSectionDivider() {
-      state.yPosition += 4;
-      doc.setDrawColor(state.colors.light);
-      doc.setLineWidth(0.5);
-      doc.line(margin, state.yPosition, pageWidth - margin, state.yPosition);
-      state.yPosition += 6;
+      state.yPosition += 8; // Just add spacing without drawing a line
     }
   };
 }
@@ -198,13 +186,13 @@ async function addTitleSection(doc, state, helpers) {
   doc.setTextColor(state.colors.secondary);
   const subtitle = DocumentLabels.subtitle;
   doc.text(subtitle, 25, state.yPosition); // Left-aligned with margin
-  state.yPosition += 15;
+  state.yPosition += 8; // Reduced spacing after subtitle
 
   // Reset text color
   doc.setTextColor(state.colors.secondary);
 
   // Small spacing after title section
-  state.yPosition += 10;
+  state.yPosition += 6; // Reduced spacing before Report Information
 }
 
 /**
@@ -247,9 +235,13 @@ async function addExecutiveSummarySection(doc, state, helpers, summary) {
     helpers.addHeading(DocumentLabels.riskByDiscipline, 2);
 
     summary.riskByDiscipline.forEach(discipline => {
-      const riskText = `${discipline.name}: ${discipline.riskSummary?.label || 'Not assessed'}`;
-      const descText = discipline.riskSummary?.description ? ` - ${discipline.riskSummary.description}` : '';
-      helpers.addBulletPoint(riskText + descText, state.fonts.body);
+      // Convert risk level to sentence case for executive summary
+      const riskLabel = discipline.riskSummary?.label || 'Not assessed';
+      const sentenceCaseRisk = riskLabel === 'Not assessed' ? riskLabel :
+        riskLabel.toLowerCase().charAt(0).toUpperCase() + riskLabel.toLowerCase().slice(1);
+      const riskText = `${discipline.name}: ${sentenceCaseRisk}`;
+      // Remove description - just show risk level
+      helpers.addBulletPoint(riskText, state.fonts.body);
     });
 
     helpers.addSectionDivider();
@@ -262,14 +254,14 @@ async function addExecutiveSummarySection(doc, state, helpers, summary) {
 async function addDisciplineSection(doc, state, helpers, discipline) {
   helpers.addHeading(discipline.name);
 
-  // Risk level with description on same line
+  // Risk level without description
   if (discipline.riskSummary) {
     const riskStyle = getRiskLevelStyle(discipline.riskSummary.label);
-    let riskText = `Risk level: ${riskStyle.label}`;
-    if (discipline.riskSummary.description) {
-      riskText += ` - ${discipline.riskSummary.description}`;
-    }
-    helpers.addText(riskText, state.fonts.body, true, riskStyle.color, 0);
+    // Convert to proper sentence case (e.g., "Medium-high risk", "Extremely high risk")
+    const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
+    let riskText = `Risk level: ${sentenceCaseRisk}`;
+    // Remove description - just show risk level
+    helpers.addText(riskText, state.fonts.body, true, state.colors.secondary, 0); // Use standard black text
   }
 
   // Assessment Rules
@@ -282,7 +274,7 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
         ContentFormatters.formatRuleTitle(rule, index),
         state.fonts.bodyBold,
         false,
-        state.colors.secondary,
+        state.colors.primary,
         0
       );
 
@@ -293,10 +285,12 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
       }
       if (rule.level) {
         const riskStyle = getRiskLevelStyle(rule.level);
+        // Convert to proper sentence case for individual rule risk levels
+        const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
         if (combinedText) {
-          combinedText += `. Risk level: ${riskStyle.label}`;
+          combinedText += `. Risk level: ${sentenceCaseRisk}`;
         } else {
-          combinedText = `Risk level: ${riskStyle.label}`;
+          combinedText = `Risk level: ${sentenceCaseRisk}`;
         }
       }
 
@@ -351,20 +345,7 @@ async function addScreenshotsForSection(doc, sectionName, currentY, margin, maxW
       yPosition = 25; // Use consistent margin
     }
 
-    // Add screenshots heading
-    doc.setFontSize(DocumentConfig.fonts.heading2.size);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(colors.primary); // Blue for headings
-    doc.text(ContentFormatters.formatSectionTitle(sectionName, 'images'), margin, yPosition);
-    yPosition += 20;
-
-    // Add underline
-    doc.setDrawColor(colors.secondary);
-    doc.setLineWidth(0.5);
-    const headerWidth = doc.getTextWidth(ContentFormatters.formatSectionTitle(sectionName, 'images'));
-    doc.line(margin, yPosition, margin + headerWidth, yPosition);
-    yPosition += 10;
-
+    // Skip images heading - images will appear without title
     doc.setTextColor(colors.secondary);
 
     // Add each screenshot
