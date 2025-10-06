@@ -141,7 +141,7 @@ function createWordHelpers() {
     createBulletPoint(text, options = {}) {
       const defaultOptions = {
         size: DocumentConfig.fonts.body.size * 2,
-        spacing: { after: 100 }
+        spacing: { after: 50 } // Reduced spacing after bullet points
       };
 
       const mergedOptions = { ...defaultOptions, ...options };
@@ -253,7 +253,7 @@ function addMetadataSection(metadata, helpers) {
  */
 function addExecutiveSummarySection(summary, helpers) {
   const paragraphs = [
-    helpers.createHeading(DocumentLabels.executiveSummary)
+    // Removed Executive Summary heading - content starts directly with Site Summary
   ];
 
   // Site Summary - only show if value exists and is not empty
@@ -362,7 +362,7 @@ async function addDisciplineSection(discipline, helpers, figureCounter) {
               font: DocumentConfig.fonts.family,
             }),
           ],
-          spacing: { after: 50 },
+          spacing: { before: 0, after: 50 }, // No spacing before rule title
         })
       );
 
@@ -398,8 +398,7 @@ async function addDisciplineSection(discipline, helpers, figureCounter) {
         );
       }
 
-
-      paragraphs.push(new Paragraph({ text: "", spacing: { after: 150 } }));
+      // Removed empty paragraph - no extra spacing between assessment rules
     });
   } else {
     paragraphs.push(
@@ -416,6 +415,8 @@ async function addDisciplineSection(discipline, helpers, figureCounter) {
 
   // Recommendations
   if (discipline.recommendations.length > 0) {
+    // Add line break before recommendations section
+    paragraphs.push(new Paragraph({ text: "", spacing: { after: 100 } }));
     paragraphs.push(helpers.createHeading(ContentFormatters.formatSectionTitle(discipline.name, 'recommendations'), 2));
 
     discipline.recommendations.forEach(recommendation => {

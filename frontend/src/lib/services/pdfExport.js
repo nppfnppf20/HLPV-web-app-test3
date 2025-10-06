@@ -47,6 +47,9 @@ async function createPDFDocument(report) {
   const maxWidth = pageWidth - (margin * 2);
   let pageNumber = 1;
 
+  // Initialize figure counter for PDF
+  const figureCounter = { value: 1 };
+
   // Process content using universal template
   const content = processDocumentContent(report);
 
@@ -76,12 +79,12 @@ async function createPDFDocument(report) {
 
   // Add discipline sections
   for (const discipline of content.disciplines) {
-    await addDisciplineSection(doc, state, helpers, discipline);
+    await addDisciplineSection(doc, state, helpers, discipline, figureCounter);
   }
 
   // Add general site screenshots
   state.yPosition = await addScreenshotsForSection(
-    doc, 'General Site', state.yPosition, margin, maxWidth, pageHeight, helpers.checkPageBreak, state.colors
+    doc, 'General Site', state.yPosition, margin, maxWidth, pageHeight, helpers.checkPageBreak, state.colors, figureCounter
   );
 
   // Skip footer - using clean universal template
@@ -155,7 +158,9 @@ function createPDFHelpers(doc, state, margin, maxWidth, pageWidth, pageHeight) {
     },
 
     addBulletPoint(text, fontConfig = state.fonts.body, indent = 0) {
-      this.addText(ContentFormatters.formatBulletPoint(text), fontConfig, true, null, indent);
+      this.addText(ContentFormatters.formatBulletPoint(text), fontConfig, false, null, indent);
+      // Add smaller spacing after bullet points
+      state.yPosition += fontConfig.size * 0.15; // Half the normal spacing
     },
 
     addSectionDivider() {
@@ -216,7 +221,7 @@ async function addMetadataSection(doc, state, helpers, metadata) {
  * Add executive summary section
  */
 async function addExecutiveSummarySection(doc, state, helpers, summary) {
-  helpers.addHeading(DocumentLabels.executiveSummary);
+  // Removed Executive Summary heading - content starts directly with Site Summary
 
   // Site Summary - only show if value exists and is not empty
   if (summary.siteSummary && summary.siteSummary.trim()) {
@@ -274,7 +279,7 @@ async function addExecutiveSummarySection(doc, state, helpers, summary) {
 /**
  * Add discipline section
  */
-async function addDisciplineSection(doc, state, helpers, discipline) {
+async function addDisciplineSection(doc, state, helpers, discipline, figureCounter) {
   helpers.addHeading(discipline.name);
 
   // Risk level without description
@@ -325,8 +330,7 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
         helpers.addText(combinedText, state.fonts.body, true, null, 0);
       }
 
-
-      state.yPosition += 4;
+      // No extra spacing between assessment rules - matches Word formatting
     });
   } else {
     helpers.addText(
@@ -353,7 +357,7 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
   state.yPosition = await addScreenshotsForSection(
     doc, discipline.name, state.yPosition, DocumentConfig.layout.pageMargin,
     doc.internal.pageSize.width - (DocumentConfig.layout.pageMargin * 2),
-    doc.internal.pageSize.height, helpers.checkPageBreak, state.colors
+    doc.internal.pageSize.height, helpers.checkPageBreak, state.colors, figureCounter
   );
 
   helpers.addSectionDivider();
@@ -362,7 +366,7 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
 /**
  * Add screenshots to PDF for a specific section (unchanged from original)
  */
-async function addScreenshotsForSection(doc, sectionName, currentY, margin, maxWidth, pageHeight, checkPageBreak, colors) {
+async function addScreenshotsForSection(doc, sectionName, currentY, margin, maxWidth, pageHeight, checkPageBreak, colors, figureCounter) {
   const screenshots = getScreenshotsBySection(sectionName);
   let yPosition = currentY;
 
@@ -379,10 +383,14 @@ async function addScreenshotsForSection(doc, sectionName, currentY, margin, maxW
     for (const screenshot of screenshots) {
       try {
         if (screenshot.dataUrl) {
-          const imgWidth = Math.min(maxWidth * 0.8, DocumentConfig.layout.maxImageWidth);
-          const imgHeight = DocumentConfig.layout.maxImageHeight;
-          const captionHeight = screenshot.caption ? 25 : 5;
-          const totalImageSpace = imgHeight + captionHeight + 15;
+          // Add spacing before image (1 normal line break + 1 extra)
+          yPosition += (DocumentConfig.fonts.body.size * 0.5) * 2; // 2 line breaks worth of spacing
+
+          // Smaller, more reasonable image size to match Word document
+          const imgWidth = Math.min(maxWidth * 0.6, 300); // Smaller than before
+          const imgHeight = Math.round(imgWidth * 0.75); // 4:3 aspect ratio like Word
+          const captionHeight = 15; // Space for figure caption
+          const totalImageSpace = imgHeight + captionHeight + 20;
 
           if (yPosition + totalImageSpace > pageHeight - margin) {
             doc.addPage();
@@ -390,27 +398,27 @@ async function addScreenshotsForSection(doc, sectionName, currentY, margin, maxW
           }
 
           try {
+            // Add image left-aligned (at margin, not centered)
             doc.addImage(screenshot.dataUrl, 'JPEG', margin, yPosition, imgWidth, imgHeight);
             yPosition += imgHeight + 5;
 
-            if (screenshot.caption && screenshot.caption.trim()) {
-              doc.setFontSize(DocumentConfig.fonts.caption.size);
-              doc.setFont('helvetica', 'italic');
-              doc.setTextColor(colors.secondary); // Black for body text
+            // Add figure number and caption (matching Word format)
+            const figureNumber = figureCounter.value++;
+            const captionText = screenshot.caption && screenshot.caption.trim()
+              ? `Figure ${figureNumber}: ${screenshot.caption}`
+              : `Figure ${figureNumber}`;
 
-              const captionText = ContentFormatters.formatImageCaption(screenshot.caption);
-              const captionLines = doc.splitTextToSize(captionText, maxWidth);
+            doc.setFontSize(DocumentConfig.fonts.caption.size);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(colors.secondary);
 
-              captionLines.forEach(line => {
-                doc.text(line, margin, yPosition);
-                yPosition += 10; // Smaller line height for captions
-              });
-              yPosition += 5;
+            const captionLines = doc.splitTextToSize(captionText, maxWidth);
+            captionLines.forEach(line => {
+              doc.text(line, margin, yPosition); // Left-aligned caption
+              yPosition += 10;
+            });
 
-              doc.setTextColor(colors.secondary);
-            }
-
-            yPosition += 10;
+            yPosition += 10; // Space after caption
             console.log(`✅ Added image to PDF for ${sectionName}`);
           } catch (imageError) {
             console.error(`❌ Error processing image for ${sectionName}:`, imageError);
