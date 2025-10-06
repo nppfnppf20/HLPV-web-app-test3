@@ -7,6 +7,7 @@ import {
   DocumentLabels,
   ContentFormatters,
   getRiskLevelStyle,
+  cleanRiskLabel,
   processDocumentContent,
   generateFilename
 } from './documentTemplate.js';
@@ -47,12 +48,9 @@ async function createWordDocument(report) {
   const helpers = createWordHelpers();
 
   // Title Section
-  children.push(...addTitleSection());
+  children.push(...addTitleSection(content));
 
-  // Metadata Section
-  if (content.metadata) {
-    children.push(...addMetadataSection(content.metadata, helpers));
-  }
+  // Skip metadata section - date is now in subtitle
 
   // Executive Summary
   if (content.executiveSummary) {
@@ -194,7 +192,7 @@ function createWordHelpers() {
 /**
  * Add title section
  */
-function addTitleSection() {
+function addTitleSection(content) {
   return [
     new Paragraph({
       children: [
@@ -213,7 +211,7 @@ function addTitleSection() {
     new Paragraph({
       children: [
         new TextRun({
-          text: DocumentLabels.subtitle,
+          text: content.generatedDate,
           size: DocumentConfig.fonts.subtitle.size * 2,
           color: DocumentConfig.colors.secondary.replace('#', ''),
           font: DocumentConfig.fonts.family,
@@ -231,7 +229,7 @@ function addTitleSection() {
 function addMetadataSection(metadata, helpers) {
   const paragraphs = [
     helpers.createHeading(DocumentLabels.reportInfo),
-    helpers.createFieldPair(DocumentLabels.generated, metadata.generatedAt)
+    helpers.createText(metadata.generatedAt, { bold: true })
   ];
 
   if (metadata.analyst) {
@@ -274,11 +272,11 @@ function addExecutiveSummarySection(summary, helpers) {
     paragraphs.push(helpers.createHeading(DocumentLabels.riskByDiscipline, 2));
 
     summary.riskByDiscipline.forEach(discipline => {
-      // Convert risk level to sentence case for executive summary
+      // Convert risk level to sentence case and remove redundant "risk"
       const riskLabel = discipline.riskSummary?.label || 'Not assessed';
-      const sentenceCaseRisk = riskLabel === 'Not assessed' ? riskLabel :
-        riskLabel.toLowerCase().charAt(0).toUpperCase() + riskLabel.toLowerCase().slice(1);
-      // Remove description - just show risk level
+      const cleanLabel = riskLabel === 'Not assessed' ? riskLabel : cleanRiskLabel(riskLabel);
+      const sentenceCaseRisk = cleanLabel === 'Not assessed' ? cleanLabel :
+        cleanLabel.toLowerCase().charAt(0).toUpperCase() + cleanLabel.toLowerCase().slice(1);
 
       paragraphs.push(
         new Paragraph({
@@ -317,8 +315,9 @@ async function addDisciplineSection(discipline, helpers) {
   // Risk level without description
   if (discipline.riskSummary) {
     const riskStyle = getRiskLevelStyle(discipline.riskSummary.label);
-    // Convert to proper sentence case (e.g., "Medium-high risk", "Extremely high risk")
-    const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
+    // Convert to proper sentence case and remove redundant "risk"
+    const cleanLabel = cleanRiskLabel(riskStyle.label);
+    const sentenceCaseRisk = cleanLabel.toLowerCase().charAt(0).toUpperCase() + cleanLabel.toLowerCase().slice(1);
     let riskText = `Risk level: ${sentenceCaseRisk}`;
     // Remove description - just show risk level
 
@@ -365,8 +364,9 @@ async function addDisciplineSection(discipline, helpers) {
       }
       if (rule.level) {
         const riskStyle = getRiskLevelStyle(rule.level);
-        // Convert to proper sentence case for individual rule risk levels
-        const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
+        // Convert to proper sentence case and remove redundant "risk"
+        const cleanLabel = cleanRiskLabel(riskStyle.label);
+        const sentenceCaseRisk = cleanLabel.toLowerCase().charAt(0).toUpperCase() + cleanLabel.toLowerCase().slice(1);
         if (combinedText) {
           combinedText += `. Risk level: ${sentenceCaseRisk}`;
         } else {

@@ -144,22 +144,37 @@ export function getRiskLevelStyle(riskLevel) {
 }
 
 /**
+ * Remove redundant "risk" suffix from risk level labels
+ * @param {string} riskLabel - Risk level label
+ * @returns {string} Clean risk level without redundant "risk"
+ */
+export function cleanRiskLabel(riskLabel) {
+  if (!riskLabel) return riskLabel;
+
+  // Remove " RISK" suffix (case insensitive)
+  return riskLabel.replace(/\s+risk$/i, '');
+}
+
+/**
  * Process document content into standardized structure
  * @param {Object} report - Raw report data
  * @returns {Object} Processed document content
  */
 export function processDocumentContent(report) {
   const content = {
+  generatedDate: null,
     metadata: null,
     executiveSummary: null,
     disciplines: [],
     appendices: null
   };
 
-  // Process metadata
+  // Process metadata - store date for subtitle
+  content.generatedDate = formatDocumentDate(report.metadata?.generatedAt);
+
+  // Keep other metadata for potential future use
   if (report.metadata) {
     content.metadata = {
-      generatedAt: report.metadata.generatedAt || new Date().toLocaleString(),
       analyst: report.metadata.analyst,
       version: report.metadata.version,
       siteName: report.metadata.siteName
@@ -239,6 +254,28 @@ export function getRecommendationsForDiscipline(discipline) {
 }
 
 /**
+ * Format date for display in documents
+ * @param {string|Date} dateInput - Date string or Date object
+ * @returns {string} Formatted date like "25th December 2025"
+ */
+export function formatDocumentDate(dateInput) {
+  const date = dateInput ? new Date(dateInput) : new Date();
+
+  const day = date.getDate();
+  const month = date.toLocaleString('en-US', { month: 'long' });
+  const year = date.getFullYear();
+
+  // Add ordinal suffix to day
+  const getOrdinalSuffix = (n) => {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+
+  return `${getOrdinalSuffix(day)} ${month} ${year}`;
+}
+
+/**
  * Generate filename for document export
  * @param {string} siteName - Site name
  * @param {string} extension - File extension (pdf, docx)
@@ -254,8 +291,8 @@ export function generateFilename(siteName = 'TRP_Report', extension = 'pdf') {
  * Standard text content and labels
  */
 export const DocumentLabels = {
-  title: "Technical Risk Profile",
-  subtitle: "Development Risk Assessment Report",
+  title: "High-Level Planning View",
+  subtitle: "", // Will be replaced with date
   reportInfo: "Report Information",
   executiveSummary: "Executive Summary",
   overallRisk: "Overall Risk Assessment",
@@ -264,7 +301,7 @@ export const DocumentLabels = {
   recommendations: "Recommendations",
   riskLevel: "Risk Level",
   images: "Images",
-  generated: "Generated",
+  generated: "",
   analyst: "Analyst",
   version: "Version",
   noRulesTriggered: "risk rules were triggered. Standard development considerations apply.",
@@ -326,7 +363,9 @@ export default {
   DocumentLabels,
   ContentFormatters,
   getRiskLevelStyle,
+  cleanRiskLabel,
   processDocumentContent,
   getRecommendationsForDiscipline,
-  generateFilename
+  generateFilename,
+  formatDocumentDate
 };

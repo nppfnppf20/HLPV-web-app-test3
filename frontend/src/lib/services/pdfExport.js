@@ -6,6 +6,7 @@ import {
   DocumentLabels,
   ContentFormatters,
   getRiskLevelStyle,
+  cleanRiskLabel,
   processDocumentContent,
   generateFilename
 } from './documentTemplate.js';
@@ -64,12 +65,9 @@ async function createPDFDocument(report) {
   // Skip header - using clean universal template
 
   // Generate document title
-  await addTitleSection(doc, state, helpers);
+  await addTitleSection(doc, state, helpers, content);
 
-  // Add metadata section
-  if (content.metadata) {
-    await addMetadataSection(doc, state, helpers, content.metadata);
-  }
+  // Skip metadata section - date is now in subtitle
 
   // Add executive summary
   if (content.executiveSummary) {
@@ -169,7 +167,7 @@ function createPDFHelpers(doc, state, margin, maxWidth, pageWidth, pageHeight) {
 /**
  * Add title section
  */
-async function addTitleSection(doc, state, helpers) {
+async function addTitleSection(doc, state, helpers, content) {
   state.yPosition += 10;
 
   // Main title
@@ -180,11 +178,11 @@ async function addTitleSection(doc, state, helpers) {
   doc.text(title, 25, state.yPosition); // Left-aligned with margin
   state.yPosition += 12;
 
-  // Subtitle
+  // Subtitle (date)
   doc.setFontSize(state.fonts.subtitle.size);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(state.colors.secondary);
-  const subtitle = DocumentLabels.subtitle;
+  const subtitle = content.generatedDate;
   doc.text(subtitle, 25, state.yPosition); // Left-aligned with margin
   state.yPosition += 8; // Reduced spacing after subtitle
 
@@ -201,7 +199,7 @@ async function addTitleSection(doc, state, helpers) {
 async function addMetadataSection(doc, state, helpers, metadata) {
   helpers.addHeading(DocumentLabels.reportInfo);
 
-  helpers.addText(`${DocumentLabels.generated}: ${metadata.generatedAt}`, state.fonts.bodyBold);
+  helpers.addText(metadata.generatedAt, state.fonts.bodyBold);
 
   if (metadata.analyst) {
     helpers.addText(`${DocumentLabels.analyst}: ${metadata.analyst}`, state.fonts.bodyBold);
@@ -220,14 +218,33 @@ async function addMetadataSection(doc, state, helpers, metadata) {
 async function addExecutiveSummarySection(doc, state, helpers, summary) {
   helpers.addHeading(DocumentLabels.executiveSummary);
 
-  // Overall Risk
-  if (summary.overallRisk) {
-    helpers.addText(
-      `${DocumentLabels.overallRisk}: ${summary.overallRisk}`,
-      state.fonts.bodyBold,
-      true,
-      state.colors.danger
-    );
+  // Overall Risk - only show if value exists and is not empty
+  if (summary.overallRisk && summary.overallRisk.trim()) {
+    // Format the overall risk level and remove redundant "risk"
+    const cleanLabel = cleanRiskLabel(summary.overallRisk);
+    const formattedRisk = cleanLabel.toLowerCase().charAt(0).toUpperCase() + cleanLabel.toLowerCase().slice(1);
+
+    // Custom text with mixed formatting
+    const requiredSpace = state.fonts.body.size * 2;
+    helpers.checkPageBreak(requiredSpace);
+
+    // Bold label part
+    doc.setFontSize(state.fonts.bodyBold.size);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(state.colors.secondary);
+    const labelText = `${DocumentLabels.overallRisk}: `;
+    doc.text(labelText, DocumentConfig.layout.pageMargin, state.yPosition);
+
+    // Get width of label to position value text
+    const labelWidth = doc.getTextWidth(labelText);
+
+    // Normal text for value
+    doc.setFontSize(state.fonts.body.size);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formattedRisk, DocumentConfig.layout.pageMargin + labelWidth, state.yPosition);
+
+    state.yPosition += state.fonts.body.size * 0.5;
+    state.yPosition += state.fonts.body.size * 0.3; // Spacing after paragraph
   }
 
   // Risk by discipline summary
@@ -235,12 +252,12 @@ async function addExecutiveSummarySection(doc, state, helpers, summary) {
     helpers.addHeading(DocumentLabels.riskByDiscipline, 2);
 
     summary.riskByDiscipline.forEach(discipline => {
-      // Convert risk level to sentence case for executive summary
+      // Convert risk level to sentence case and remove redundant "risk"
       const riskLabel = discipline.riskSummary?.label || 'Not assessed';
-      const sentenceCaseRisk = riskLabel === 'Not assessed' ? riskLabel :
-        riskLabel.toLowerCase().charAt(0).toUpperCase() + riskLabel.toLowerCase().slice(1);
+      const cleanLabel = riskLabel === 'Not assessed' ? riskLabel : cleanRiskLabel(riskLabel);
+      const sentenceCaseRisk = cleanLabel === 'Not assessed' ? cleanLabel :
+        cleanLabel.toLowerCase().charAt(0).toUpperCase() + cleanLabel.toLowerCase().slice(1);
       const riskText = `${discipline.name}: ${sentenceCaseRisk}`;
-      // Remove description - just show risk level
       helpers.addBulletPoint(riskText, state.fonts.body);
     });
 
@@ -257,8 +274,9 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
   // Risk level without description
   if (discipline.riskSummary) {
     const riskStyle = getRiskLevelStyle(discipline.riskSummary.label);
-    // Convert to proper sentence case (e.g., "Medium-high risk", "Extremely high risk")
-    const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
+    // Convert to proper sentence case and remove redundant "risk"
+    const cleanLabel = cleanRiskLabel(riskStyle.label);
+    const sentenceCaseRisk = cleanLabel.toLowerCase().charAt(0).toUpperCase() + cleanLabel.toLowerCase().slice(1);
     let riskText = `Risk level: ${sentenceCaseRisk}`;
     // Remove description - just show risk level
     helpers.addText(riskText, state.fonts.body, true, state.colors.secondary, 0); // Use standard black text
@@ -285,8 +303,9 @@ async function addDisciplineSection(doc, state, helpers, discipline) {
       }
       if (rule.level) {
         const riskStyle = getRiskLevelStyle(rule.level);
-        // Convert to proper sentence case for individual rule risk levels
-        const sentenceCaseRisk = riskStyle.label.toLowerCase().charAt(0).toUpperCase() + riskStyle.label.toLowerCase().slice(1);
+        // Convert to proper sentence case and remove redundant "risk"
+        const cleanLabel = cleanRiskLabel(riskStyle.label);
+        const sentenceCaseRisk = cleanLabel.toLowerCase().charAt(0).toUpperCase() + cleanLabel.toLowerCase().slice(1);
         if (combinedText) {
           combinedText += `. Risk level: ${sentenceCaseRisk}`;
         } else {
