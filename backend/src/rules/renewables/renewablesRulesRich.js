@@ -136,22 +136,16 @@ export function processRenewablesRules(renewablesData) {
       let recommendations = [];
       if (status === 'Appeal Refused' || status === 'Application Refused') {
         recommendations = [
-          "Review the decision notice and reasons for refusal",
-          "Consider how reasons may indicate local policy stance",
+          "Refusal nearby - review of decision notice and reasons for refusal may indicate council's current policy position",
           "Monitor for any resubmissions or appeals"
         ];
       } else if (status === 'Application Submitted' || status === 'Awaiting Construction' || status === 'Revised') {
         recommendations = [
           "Monitor application progress and committee dates",
-          "Engage with the LPA regarding cumulative and visual impacts",
-          "Prepare representations if appropriate",
-          "Assess construction traffic and grid connection implications"
         ];
       } else if (status === 'Under Construction' || status === 'Operational') {
         recommendations = [
-          "Account for operational/committed development in cumulative effects",
-          "Mitigation options likely limited due to committed status",
-          "Consider landscape and infrastructure presence in assessments"
+          "Account for cumulative effects along with operational/committed development",
         ];
       }
 

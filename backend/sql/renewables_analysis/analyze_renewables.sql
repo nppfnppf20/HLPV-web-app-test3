@@ -11,6 +11,8 @@ RETURNS TABLE (
   development_status_short TEXT,
   technology_type TEXT,
   installed_capacity_mw TEXT,
+  planning_authority TEXT,
+  planning_application_reference TEXT,
   dist_m INTEGER,
   on_site BOOLEAN,
   within_50m BOOLEAN,
@@ -58,7 +60,9 @@ ren_points AS (
     r."Site Name" AS site_name,
     r."Development Status (short)" AS development_status_short,
     r."Technology Type" AS technology_type,
-    r."Installed Capacity (MWelec)" AS installed_capacity_mw
+    r."Installed Capacity (MWelec)" AS installed_capacity_mw,
+    r."Planning Authority" AS planning_authority,
+    r."Planning Application Reference" AS planning_application_reference
   FROM public."Renewable Energy developments Q1 2025" r
   WHERE r."Technology Type" = 'Solar Photovoltaics'
     AND r.geom IS NOT NULL
@@ -77,6 +81,8 @@ with_metrics AS (
     p.development_status_short,
     p.technology_type,
     p.installed_capacity_mw,
+    p.planning_authority,
+    p.planning_application_reference,
     ROUND(ST_Distance(sr.geom, p.geom))::INTEGER AS dist_m,
     ST_Intersects(sr.geom, p.geom) AS on_site,
     ST_DWithin(sr.geom, p.geom, 50.0)   AS within_50m,
@@ -100,6 +106,8 @@ SELECT
   wm.development_status_short,
   wm.technology_type,
   wm.installed_capacity_mw,
+  wm.planning_authority,
+  wm.planning_application_reference,
   wm.dist_m,
   wm.on_site,
   wm.within_50m,

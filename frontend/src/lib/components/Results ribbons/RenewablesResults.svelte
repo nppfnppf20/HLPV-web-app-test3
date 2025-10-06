@@ -6,6 +6,8 @@
    * @property {string} development_status_short - Development status (short)
    * @property {string} technology_type - Technology type
    * @property {string} installed_capacity_mw - Installed capacity in MW
+   * @property {string} planning_authority - Planning authority
+   * @property {string} planning_application_reference - Planning application reference
    * @property {number} dist_m - Distance in meters
    * @property {boolean} on_site - Whether on site
    * @property {boolean} within_50m - Within 50m buffer

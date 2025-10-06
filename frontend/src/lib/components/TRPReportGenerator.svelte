@@ -125,13 +125,54 @@
     return groups;
   }
 
+  function formatRiskLevel(riskLevel: string): string {
+    if (!riskLevel) return 'UNKNOWN';
+
+    // Convert specific compound risk levels to use hyphens
+    let formatted = riskLevel;
+    formatted = formatted.replace('medium_high', 'medium-high');
+    formatted = formatted.replace('medium_low', 'medium-low');
+
+    // Replace remaining underscores with spaces
+    formatted = formatted.replace(/_/g, ' ');
+
+    // Capitalize each word
+    return formatted
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  function formatRiskLevelForFindings(riskLevel: string): string {
+    if (!riskLevel) return 'unknown';
+
+    // Convert specific compound risk levels to use hyphens
+    let formatted = riskLevel;
+    formatted = formatted.replace('medium_high', 'medium-high');
+    formatted = formatted.replace('medium_low', 'medium-low');
+
+    // Replace remaining underscores with spaces
+    formatted = formatted.replace(/_/g, ' ');
+
+    // Capitalize first word only (sentence case)
+    return formatted
+      .split(' ')
+      .map((word, index) => {
+        if (index === 0) {
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }
+        return word.toLowerCase();
+      })
+      .join(' ');
+  }
+
   function createGroupedRuleDisplay(baseType: string, rules: any[]) {
     // Sort rules by risk level (highest first)
     const riskOrder: Record<string, number> = { 'showstopper': 7, 'extremely_high_risk': 6, 'high_risk': 5, 'medium_high_risk': 4, 'medium_risk': 3, 'medium_low_risk': 2, 'low_risk': 1 };
     const sortedRules = rules.sort((a: any, b: any) => (riskOrder[b.level] || 0) - (riskOrder[a.level] || 0));
 
     const findings = sortedRules.map((rule: any) => {
-      const riskLabel = rule.level?.replace('_', '-').toUpperCase() || 'UNKNOWN';
+      const riskLabel = formatRiskLevelForFindings(rule.level);
 
       // Extract count and location from findings with better pattern matching
       let simplifiedFindings = rule.findings;
@@ -205,7 +246,7 @@
           <!-- 1c. Overall Risk -->
           <div class="subsection">
             <h4>Overall Risk Estimation</h4>
-            <p class="placeholder">TBC - Overall risk estimation placeholder</p>
+            <p class="placeholder"></p>
           </div>
         </div>
 
@@ -235,7 +276,7 @@
                         <div class="rule-header">
                           <h4 class="rule-title">{rule.rule}</h4>
                           <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
-                            {rule.level?.replace('_', '-').toUpperCase()}
+                            {formatRiskLevel(rule.level)}
                           </span>
                         </div>
 
@@ -252,7 +293,7 @@
                         <div class="rule-header">
                           <h4 class="rule-title">{groupedRule.title}</h4>
                           <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
-                            {groupedRule.highestRisk?.replace('_', '-').toUpperCase()}
+                            {formatRiskLevel(groupedRule.highestRisk)}
                           </span>
                         </div>
 

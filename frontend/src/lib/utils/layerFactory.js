@@ -151,12 +151,16 @@ export function createRenewablesLayer(L) {
       const tech = props.technology_type || 'Unknown';
       const capacity = props.installed_capacity_mw || 'Unknown';
       const status = props.development_status_short || 'Unknown';
+      const planningAuth = props.planning_authority || 'Unknown';
+      const planningRef = props.planning_application_reference || 'Unknown';
 
       layer.bindPopup(`
         <strong>${name}</strong><br>
         Technology: ${tech}<br>
         Capacity: ${capacity}MW<br>
-        Status: ${status}
+        Status: ${status}<br>
+        Planning Authority: ${planningAuth}<br>
+        Planning Application Reference: ${planningRef}
       `);
     }
   });

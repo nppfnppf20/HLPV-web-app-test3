@@ -30,10 +30,19 @@ export function processHeritageRules(analysisData) {
 
   let rules = [...lb.rules, ...ca.rules, ...sm.rules].map(r => ({ ...r }));
 
-  // SHOWSTOPPER LOGIC: If any rule is a showstopper, only show showstopper rules
+  // Check if any showstopper rules exist (but don't filter rules - keep all for ribbon display)
   const showstopperRules = rules.filter(r => r.level === RISK_LEVELS.SHOWSTOPPER);
-  if (showstopperRules.length > 0) {
-    rules = showstopperRules;
+  const hasShowstoppers = showstopperRules.length > 0;
+
+  // SHOWSTOPPER RECOMMENDATION OVERRIDE: If showstoppers exist, clear recommendations from non-showstopper rules
+  if (hasShowstoppers) {
+    rules = rules.map(rule => {
+      if (rule.level !== RISK_LEVELS.SHOWSTOPPER) {
+        // Keep the rule for ribbon display but clear its recommendations
+        return { ...rule, recommendations: [] };
+      }
+      return rule;
+    });
   }
 
   // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
@@ -41,9 +50,6 @@ export function processHeritageRules(analysisData) {
 
   // Discipline-wide recommendations based on whether ANY heritage rules triggered
   const hasTriggeredRules = rules.length > 0;
-  
-  // SHOWSTOPPER OVERRIDE: If showstoppers are present, don't show default triggered recommendations
-  const isShowstopperOnly = showstopperRules.length > 0;
 
   return {
     rules,
@@ -51,7 +57,7 @@ export function processHeritageRules(analysisData) {
     buildings: lb.buildings,
     conservationAreas: ca.conservationAreas,
     scheduledMonuments: sm.scheduled_monuments,
-    defaultTriggeredRecommendations: (hasTriggeredRules && !isShowstopperOnly) ? DEFAULT_HERITAGE_TRIGGERED_RECOMMENDATIONS : [],
+    defaultTriggeredRecommendations: (hasTriggeredRules && !hasShowstoppers) ? DEFAULT_HERITAGE_TRIGGERED_RECOMMENDATIONS : [],
     defaultNoRulesRecommendations: hasTriggeredRules ? [] : DEFAULT_HERITAGE_NO_RULES_RECOMMENDATIONS
   };
 }

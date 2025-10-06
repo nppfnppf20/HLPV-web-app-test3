@@ -149,6 +149,8 @@
         technology_type: r.technology_type,
         installed_capacity_mw: r.installed_capacity_mw,
         development_status_short: r.development_status_short,
+        planning_authority: r.planning_authority,
+        planning_application_reference: r.planning_application_reference,
         riskLevel: getRenewablesRiskLevel(r)
       }), true, riskFilters);
     }
@@ -296,6 +298,8 @@
       technology_type: r.technology_type,
       installed_capacity_mw: r.installed_capacity_mw,
       development_status_short: r.development_status_short,
+      planning_authority: r.planning_authority,
+      planning_application_reference: r.planning_application_reference,
       riskLevel: getRenewablesRiskLevel(r)
     }), true, riskFilters);
   }

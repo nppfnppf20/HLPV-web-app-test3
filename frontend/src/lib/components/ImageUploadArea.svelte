@@ -93,7 +93,7 @@
 </script>
 
 <div class="image-upload-section">
-  <h4>📷 {sectionName} Images</h4>
+  <h4>{sectionName} Images</h4>
 
   <!-- Image Gallery - Show first if there are images -->
   {#if images.length > 0}

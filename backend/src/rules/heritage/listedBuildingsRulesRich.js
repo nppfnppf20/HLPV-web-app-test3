@@ -11,30 +11,13 @@ export function checkGradeIOnSite(buildings) {
     rule: 'Grade I On-Site',
     findings: `${gradeIOnSite.length} Grade I listed building(s) found on development site`,
     recommendations: [
-      'N/a - this consitutes a showstopping designation', 
+      'N/a - Grade 1 Listed Building on site consitutes a showstopping designation', 
       'Development on this site is not viable'
     ],
     buildings: gradeIOnSite
   };
 }
 
-/** @param {any[]} buildings */
-export function checkGradeIWithin100m(buildings) {
-  const gradeIClose = (buildings || []).filter(b => !b.on_site && b.grade === 'I' && b.dist_m <= 100);
-  if (gradeIClose.length === 0) return { triggered: false };
-  return {
-    id: 'grade_i_within_100m',
-    triggered: true,
-    level: RISK_LEVELS.HIGH_RISK,
-    rule: 'Grade I Within 100m',
-    findings: `${gradeIClose.length} Grade I listed building(s) within 100m of site`,
-    recommendations: [
-      'N/a - this consitutes a showstopping designation', 
-      'Development on this site is not viable'
-    ],
-    buildings: gradeIClose
-  };
-}
 
 /** @param {any[]} buildings */
 export function checkGradeIWithin500m(buildings) {
@@ -137,7 +120,6 @@ export function processListedBuildingsRules(analysisData) {
   // Order: most serious first
   const buildingRules = [
     checkGradeIOnSite,
-    checkGradeIWithin100m,
     checkGradeIWithin500m,
     checkGradeIIOnSite,
     checkGradeIIWithin500m,
