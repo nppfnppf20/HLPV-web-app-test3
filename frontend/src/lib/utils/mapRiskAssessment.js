@@ -30,10 +30,6 @@ export function getBuildingRiskLevel(building) {
     return RISK_LEVELS.HIGH_RISK;
   }
 
-  // Any grade within 100m = MEDIUM_HIGH_RISK
-  if (!building.on_site && building.dist_m <= 100) {
-    return RISK_LEVELS.MEDIUM_HIGH_RISK;
-  }
 
   // Grade II/II* within 500m = HIGH_RISK
   if (!building.on_site && (building.grade === 'II' || building.grade === 'II*') && building.dist_m <= 500) {

@@ -439,19 +439,29 @@ async function addDisciplineSection(discipline, helpers, figureCounter) {
  * Convert base64 image to buffer for Word document
  */
 function base64ToBuffer(base64Data) {
-  // Remove data URL prefix if present
-  const base64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
+  try {
+    // Remove data URL prefix if present
+    const base64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
 
-  // Convert base64 to binary string
-  const binaryString = atob(base64);
+    // Validate base64 string
+    if (!base64 || base64.length === 0) {
+      throw new Error('Empty base64 data');
+    }
 
-  // Convert binary string to Uint8Array
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+    // Convert base64 to binary string
+    const binaryString = atob(base64);
+
+    // Convert binary string to Uint8Array
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return bytes;
+  } catch (error) {
+    console.error('Error converting base64 to buffer:', error);
+    throw error;
   }
-
-  return bytes;
 }
 
 /**
@@ -491,6 +501,7 @@ async function addScreenshotsForSection(sectionName, figureCounter) {
                       width: DocumentConfig.layout.maxImageWidth,
                       height: Math.round(DocumentConfig.layout.maxImageWidth * 0.75), // 4:3 aspect ratio
                     },
+                    type: 'jpg', // Specify image type explicitly
                   }),
                 ],
                 alignment: AlignmentType.LEFT,

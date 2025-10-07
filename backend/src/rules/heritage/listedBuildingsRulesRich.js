@@ -85,29 +85,6 @@ export function checkGradeIIWithin500m(buildings) {
   };
 }
 
-/** @param {any[]} buildings */
-export function checkAnyGradeWithin100m(buildings) {
-  const buildingsClose = (buildings || []).filter(b => !b.on_site && b.dist_m <= 100);
-  if (buildingsClose.length === 0) return { triggered: false };
-  const gradeBreakdown = {
-    'I': buildingsClose.filter(b => b.grade === 'I').length,
-    'II*': buildingsClose.filter(b => b.grade === 'II*').length,
-    'II': buildingsClose.filter(b => b.grade === 'II').length
-  };
-  return {
-    id: 'any_grade_within_100m',
-    triggered: true,
-    level: RISK_LEVELS.MEDIUM_HIGH_RISK,
-    rule: 'Listed Buildings Within 100m',
-    findings: `${buildingsClose.length} listed building(s) within 100m of site`,
-    gradeBreakdown,
-    recommendations: [
-      'A Heritage Statement or Heritage Impact Assessment will be required.',
-      'Specialist heritage consultant input required at an early stage.',
-    ],
-    buildings: buildingsClose
-  };
-}
 
 /**
  * Process all listed buildings rules and return triggered ones
@@ -122,8 +99,7 @@ export function processListedBuildingsRules(analysisData) {
     checkGradeIOnSite,
     checkGradeIWithin500m,
     checkGradeIIOnSite,
-    checkGradeIIWithin500m,
-    checkAnyGradeWithin100m
+    checkGradeIIWithin500m
   ];
 
   for (const rule of buildingRules) {
