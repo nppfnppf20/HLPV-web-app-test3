@@ -243,8 +243,13 @@
       const div = L.DomUtil.create('div', 'risk-filter-control');
       div.innerHTML = `
         <div class="risk-filter-content">
-          <h4>Risk Level Filter</h4>
-          <div class="risk-filter-options">
+          <div class="risk-filter-header">
+            <button class="risk-filter-toggle">
+              <span class="toggle-icon">▶</span>
+              <span class="filter-title">Risk Level Filter</span>
+            </button>
+          </div>
+          <div class="risk-filter-options" style="display: none;">
             <label class="risk-filter-item">
               <input type="checkbox" id="risk-${RISK_LEVELS.SHOWSTOPPER}" checked>
               <span class="risk-label showstopper">Showstopper</span>
@@ -276,6 +281,22 @@
           </div>
         </div>
       `;
+
+      // Add toggle functionality
+      const toggleButton = div.querySelector('.risk-filter-toggle');
+      const optionsDiv = div.querySelector('.risk-filter-options');
+      const toggleIcon = div.querySelector('.toggle-icon');
+
+      toggleButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (optionsDiv.style.display === 'none') {
+          optionsDiv.style.display = 'block';
+          toggleIcon.textContent = '▼';
+        } else {
+          optionsDiv.style.display = 'none';
+          toggleIcon.textContent = '▶';
+        }
+      });
 
       // Add event listeners for checkboxes and sync initial state
       Object.keys(riskFilters).forEach(riskLevel => {
@@ -348,17 +369,45 @@
     font-family: Arial, sans-serif;
     font-size: 12px;
     line-height: 1.4;
-    min-width: 160px;
+    min-width: 200px;
+    max-width: 250px;
     margin-top: 10px;
   }
 
-  :global(.risk-filter-control .risk-filter-content h4) {
-    margin: 0 0 8px 0;
+  :global(.risk-filter-control .risk-filter-header) {
+    margin-bottom: 4px;
+  }
+
+  :global(.risk-filter-control .risk-filter-toggle) {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
     font-size: 14px;
     font-weight: 600;
     color: #374151;
+    width: 100%;
     border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 4px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  :global(.risk-filter-control .risk-filter-toggle:hover) {
+    color: #1f2937;
+  }
+
+  :global(.risk-filter-control .risk-filter-toggle .toggle-icon) {
+    font-size: 10px;
+    width: 12px;
+    text-align: center;
+  }
+
+  :global(.risk-filter-control .filter-title) {
+    font-size: 14px;
+    font-weight: 600;
   }
 
   :global(.risk-filter-control .risk-filter-options) {
