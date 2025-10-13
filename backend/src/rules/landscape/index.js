@@ -25,13 +25,25 @@ export function processLandscapeRules(analysisData) {
 
   let rules = [...gb.rules, ...ab.rules].map(r => ({ ...r }));
 
+  // Sort rules by risk level (highest to lowest)
+  const riskHierarchy = [
+    RISK_LEVELS.SHOWSTOPPER,
+    RISK_LEVELS.EXTREMELY_HIGH_RISK,
+    RISK_LEVELS.HIGH_RISK,
+    RISK_LEVELS.MEDIUM_HIGH_RISK,
+    RISK_LEVELS.MEDIUM_RISK,
+    RISK_LEVELS.MEDIUM_LOW_RISK,
+    RISK_LEVELS.LOW_RISK
+  ];
+  rules.sort((a, b) => riskHierarchy.indexOf(a.level) - riskHierarchy.indexOf(b.level));
+
   // SHOWSTOPPER LOGIC: If any rule is a showstopper, only show showstopper rules
   const showstopperRules = rules.filter(r => r.level === RISK_LEVELS.SHOWSTOPPER);
   if (showstopperRules.length > 0) {
     rules = showstopperRules;
   }
 
-  // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
+  // overallRisk picks highest severity (first rule after sorting by risk level)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
   // Discipline-wide recommendations based on whether ANY landscape rules triggered

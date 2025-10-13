@@ -189,9 +189,23 @@ export function processLandscapeRules(analysisData) {
   const gb = processGreenBeltRules(analysisData);
   const ab = processAONBRules(analysisData);
 
-  const rules = [...gb.rules, ...ab.rules].map(r => ({ ...r }));
+  let rules = [...gb.rules, ...ab.rules].map(r => ({ ...r }));
 
-  // Overall risk picks highest severity (rules ordered from highest to lowest per layer)
+  // CRITICAL: Sort rules by risk level (highest to lowest) to ensure overall risk calculation is correct
+  // When adding new layers, rules MUST be sorted by severity to prevent low-risk rules from
+  // appearing first and incorrectly determining overall risk
+  const riskHierarchy = [
+    RISK_LEVELS.SHOWSTOPPER,
+    RISK_LEVELS.EXTREMELY_HIGH_RISK,
+    RISK_LEVELS.HIGH_RISK,
+    RISK_LEVELS.MEDIUM_HIGH_RISK,
+    RISK_LEVELS.MEDIUM_RISK,
+    RISK_LEVELS.MEDIUM_LOW_RISK,
+    RISK_LEVELS.LOW_RISK
+  ];
+  rules.sort((a, b) => riskHierarchy.indexOf(a.level) - riskHierarchy.indexOf(b.level));
+
+  // Overall risk picks highest severity (first rule after sorting by risk level)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
   return {
@@ -433,6 +447,7 @@ WHERE table_name = 'OS priority ponds with survey data — OS_Priority_Ponds_wit
 
 ### 7. Domain Rules Integration
 - [ ] Update `/backend/src/rules/[domain]/index.js` to include new layer rules
+- [ ] **CRITICAL:** Ensure rules are sorted by risk level before determining overall risk (see Step 6 example)
 - [ ] Ensure overall risk calculation includes new layer
 - [ ] Combine default recommendations appropriately
 

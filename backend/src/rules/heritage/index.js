@@ -30,6 +30,18 @@ export function processHeritageRules(analysisData) {
 
   let rules = [...lb.rules, ...ca.rules, ...sm.rules].map(r => ({ ...r }));
 
+  // Sort rules by risk level (highest to lowest)
+  const riskHierarchy = [
+    RISK_LEVELS.SHOWSTOPPER,
+    RISK_LEVELS.EXTREMELY_HIGH_RISK,
+    RISK_LEVELS.HIGH_RISK,
+    RISK_LEVELS.MEDIUM_HIGH_RISK,
+    RISK_LEVELS.MEDIUM_RISK,
+    RISK_LEVELS.MEDIUM_LOW_RISK,
+    RISK_LEVELS.LOW_RISK
+  ];
+  rules.sort((a, b) => riskHierarchy.indexOf(a.level) - riskHierarchy.indexOf(b.level));
+
   // Check if any showstopper rules exist (but don't filter rules - keep all for ribbon display)
   const showstopperRules = rules.filter(r => r.level === RISK_LEVELS.SHOWSTOPPER);
   const hasShowstoppers = showstopperRules.length > 0;
@@ -45,7 +57,7 @@ export function processHeritageRules(analysisData) {
     });
   }
 
-  // overallRisk picks highest severity by order in arrays (rules are added from highest to lowest per layer)
+  // overallRisk picks highest severity (first rule after sorting by risk level)
   const overallRisk = rules.length > 0 ? rules[0].level : RISK_LEVELS.LOW_RISK;
 
   // Discipline-wide recommendations based on whether ANY heritage rules triggered
