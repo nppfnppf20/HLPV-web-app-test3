@@ -166,6 +166,20 @@
       .join(' ');
   }
 
+  function getRiskLevelColors(riskLevel: string): { bgColor: string; color: string } {
+    const colorMap = {
+      showstopper: { bgColor: '#fef2f2', color: '#dc2626' },
+      extremely_high_risk: { bgColor: '#fee2e2', color: '#b91c1c' },
+      high_risk: { bgColor: '#fff7ed', color: '#ea580c' },
+      medium_risk: { bgColor: '#fff7ed', color: '#f59e0b' },
+      medium_high_risk: { bgColor: '#fffbeb', color: '#d97706' },
+      medium_low_risk: { bgColor: '#ecfdf5', color: '#10b981' },
+      low_risk: { bgColor: '#ecfdf5', color: '#059669' }
+    };
+
+    return colorMap[riskLevel] || colorMap.low_risk;
+  }
+
   function createGroupedRuleDisplay(baseType: string, rules: any[]) {
     // Sort rules by risk level (highest first)
     const riskOrder: Record<string, number> = { 'showstopper': 7, 'extremely_high_risk': 6, 'high_risk': 5, 'medium_high_risk': 4, 'medium_risk': 3, 'medium_low_risk': 2, 'low_risk': 1 };
@@ -275,7 +289,7 @@
                       <div class="rule-card" style="border-left-color: {discipline.riskSummary?.color};">
                         <div class="rule-header">
                           <h4 class="rule-title">{rule.rule}</h4>
-                          <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+                          <span class="rule-level" style="background-color: {getRiskLevelColors(rule.level).bgColor}; color: {getRiskLevelColors(rule.level).color};">
                             {formatRiskLevel(rule.level)}
                           </span>
                         </div>
@@ -292,7 +306,7 @@
                       <div class="rule-card" style="border-left-color: {discipline.riskSummary?.color};">
                         <div class="rule-header">
                           <h4 class="rule-title">{groupedRule.title}</h4>
-                          <span class="rule-level" style="background-color: {discipline.riskSummary?.bgColor}; color: {discipline.riskSummary?.color};">
+                          <span class="rule-level" style="background-color: {getRiskLevelColors(groupedRule.highestRisk).bgColor}; color: {getRiskLevelColors(groupedRule.highestRisk).color};">
                             {formatRiskLevel(groupedRule.highestRisk)}
                           </span>
                         </div>
