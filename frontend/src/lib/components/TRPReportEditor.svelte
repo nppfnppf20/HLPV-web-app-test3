@@ -20,16 +20,16 @@
   /** @type {any} */
   export let agLandData = null;
 
-  // Risk level options for dropdowns
+  // Risk level options for dropdowns - using consistent colors with original report
   const riskLevels = [
-    { value: 'showstopper', label: 'SHOWSTOPPER', bgColor: '#991b1b', color: 'white', description: 'Development is prohibited' },
-    { value: 'extremely_high_risk', label: 'EXTREMELY HIGH RISK', bgColor: '#dc2626', color: 'white', description: 'Development is extremely unlikely' },
-    { value: 'high_risk', label: 'HIGH RISK', bgColor: '#ea580c', color: 'white', description: 'Development is very challenging' },
-    { value: 'medium_high_risk', label: 'MEDIUM-HIGH RISK', bgColor: '#d97706', color: 'white', description: 'Development has major challenges' },
-    { value: 'medium_risk', label: 'MEDIUM RISK', bgColor: '#ca8a04', color: 'white', description: 'Development has moderate challenges' },
-    { value: 'medium_low_risk', label: 'MEDIUM-LOW RISK', bgColor: '#65a30d', color: 'white', description: 'Development has minor challenges' },
-    { value: 'low_risk', label: 'LOW RISK', bgColor: '#16a34a', color: 'white', description: 'Development has minimal challenges' },
-    { value: 'no_risk', label: 'NO RISK', bgColor: '#059669', color: 'white', description: 'No development restrictions' }
+    { value: 'showstopper', label: 'SHOWSTOPPER', bgColor: '#fef2f2', color: '#dc2626', description: 'Development is prohibited' },
+    { value: 'extremely_high_risk', label: 'EXTREMELY HIGH RISK', bgColor: '#fee2e2', color: '#b91c1c', description: 'Development is extremely unlikely' },
+    { value: 'high_risk', label: 'HIGH RISK', bgColor: '#fff7ed', color: '#ea580c', description: 'Development is very challenging' },
+    { value: 'medium_high_risk', label: 'MEDIUM-HIGH RISK', bgColor: '#fffbeb', color: '#d97706', description: 'Development has major challenges' },
+    { value: 'medium_risk', label: 'MEDIUM RISK', bgColor: '#fff7ed', color: '#f59e0b', description: 'Development has moderate challenges' },
+    { value: 'medium_low_risk', label: 'MEDIUM-LOW RISK', bgColor: '#ecfdf5', color: '#10b981', description: 'Development has minor challenges' },
+    { value: 'low_risk', label: 'LOW RISK', bgColor: '#ecfdf5', color: '#059669', description: 'Development has minimal challenges' },
+    { value: 'no_risk', label: 'NO RISK', bgColor: '#ecfdf5', color: '#059669', description: 'No development restrictions' }
   ];
 
   // Editable state for the report
