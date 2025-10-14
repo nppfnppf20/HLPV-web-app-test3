@@ -253,17 +253,21 @@
           <!-- Explanatory text -->
           <div class="summary-disclaimer">
             <p>Below is an initial high-level appraisal.</p>
-            <p>This overview is based on nationally available data and is intended as a general guideline. It does not include local designations or detailed visual analyses such as Google Street View assessments or evaluations of potential impacts on residential receptors.</p>
+            <p>This overview is based on nationally available data and is intended as a general guideline. It does not include local designations or detailed visual analyses (e.g. Google Street View assessment, archeaological records or evaluations of potential impacts on residential receptors).</p>
             <p>If you would like a free comprehensive high-level planning appraisal, please request one using the button below and we will be in touch with the full report.</p>
           </div>
 
-          <!-- 1a. Site Summary -->
-          <div class="subsection">
-            <h4>Site Summary</h4>
-            <p class="placeholder">{summaryData?.site}</p>
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="btn-secondary" on:click={() => {}}>
+              Request Full Report (not yet functional)
+            </button>
+            <button class="btn-primary" on:click={onOpenTRPReport}>
+              TRP Full Report (admin only)
+            </button>
           </div>
-          
-          <!-- 1b. Risk by Discipline -->
+
+          <!-- Risk by Discipline -->
           {#if summaryData?.riskByDiscipline && summaryData.riskByDiscipline.length > 0}
             <div class="subsection">
               <h4>Risk by Discipline</h4>
@@ -279,12 +283,6 @@
               </div>
             </div>
           {/if}
-          
-          <!-- 1c. Overall Risk -->
-          <div class="subsection">
-            <h4>Overall Risk Estimation</h4>
-            <p class="placeholder">TBC - Overall risk estimation placeholder</p>
-          </div>
         </div>
 
         <!-- 2. DISCIPLINE SECTIONS (Heritage, Landscape, etc.) -->
@@ -383,14 +381,6 @@
           </div>
         {/if}
 
-        <!-- TRP Full Report Button -->
-        <div class="report-section">
-          <div class="trp-button-container">
-            <button class="btn-primary" on:click={onOpenTRPReport}>
-              TRP Full Report
-            </button>
-          </div>
-        </div>
       {:else}
         <div class="report-placeholder">
           <h3>⚠️ No Analysis Data</h3>
@@ -645,6 +635,13 @@
 
   .metadata p:last-child {
     margin-bottom: 0;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
   }
 
   .trp-button-container {

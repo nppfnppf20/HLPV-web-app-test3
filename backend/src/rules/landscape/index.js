@@ -10,8 +10,8 @@ const DEFAULT_LANDSCAPE_TRIGGERED_RECOMMENDATIONS = [
 ];
 
 const DEFAULT_LANDSCAPE_NO_RULES_RECOMMENDATIONS = [
-  'No significant landscape designations identified within assessment area',
-  'Standard landscape and visual impact assessment protocols recommended',
+  'No significant national landscape designations identified within assessment area following intial high-level review.',
+  'Further review required to understand localised landscape and visual impact',
   'Consider local landscape character and visual receptors in design development'
 ];
 
