@@ -14,7 +14,7 @@ export function checkConservationAreaOnSite(conservationAreas) {
       'A Heritage Statement or Heritage Impact Assessment will be required.',
       'Specialist heritage consultant input required at an early stage.',
       'Consideration should be given to design, layout and mitigation in order to minimise adverse impact on the Conservation Area',
-      'Development will be required to demonstrate that character and appearance of the Conservation Area will be preserved or enhanced'
+      'Development may be required to demonstrate that character and appearance of the Conservation Area will be preserved or enhanced'
     ],
     areas: onSiteAreas
   };
@@ -34,7 +34,7 @@ export function checkConservationAreaWithin250m(conservationAreas) {
       'A Heritage Statement or Heritage Impact Assessment will be required.',
       'Specialist heritage consultant input required at an early stage.',
       'Consideration should be given to design, layout and mitigation in order to minimise adverse impact on the Conservation Area',
-      'Development will be required to demonstrate that character and appearance of the Conservation Area will be preserved or enhanced'
+      'Development may be required to demonstrate that character and appearance of the Conservation Area will be preserved or enhanced'
     ],
     areas: within250mAreas
   };
