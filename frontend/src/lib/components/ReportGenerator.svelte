@@ -249,7 +249,14 @@
         <!-- 1. SUMMARY SECTION -->
         <div class="report-section">
           <h3>Summary</h3>
-          
+
+          <!-- Explanatory text -->
+          <div class="summary-disclaimer">
+            <p>Below is an initial high-level appraisal.</p>
+            <p>This overview is based on nationally available data and is intended as a general guideline. It does not include local designations or detailed visual analyses such as Google Street View assessments or evaluations of potential impacts on residential receptors.</p>
+            <p>If you would like a free comprehensive high-level planning appraisal, please request one using the button below and we will be in touch with the full report.</p>
+          </div>
+
           <!-- 1a. Site Summary -->
           <div class="subsection">
             <h4>Site Summary</h4>
@@ -481,6 +488,25 @@
     color: #4b5563;
     font-size: 1rem;
     font-weight: 600;
+  }
+
+  .summary-disclaimer {
+    background: #f3f4f6;
+    border-left: 4px solid #6b7280;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #374151;
+  }
+
+  .summary-disclaimer p {
+    margin: 0 0 0.75rem 0;
+  }
+
+  .summary-disclaimer p:last-child {
+    margin-bottom: 0;
   }
 
   .discipline-risk-list {
