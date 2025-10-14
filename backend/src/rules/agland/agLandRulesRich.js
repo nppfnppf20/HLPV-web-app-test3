@@ -2,11 +2,12 @@ import { RISK_LEVELS } from '../riskLevels.js';
 
 // Agricultural land discipline-wide default recommendations
 const DEFAULT_AGLAND_TRIGGERED_RECOMMENDATIONS = [
-
+'Natural England ALC mapping is only inidicative. An ALC survey will be required the confirm the actual land grade on-site',
   
 ];
 
 const DEFAULT_AGLAND_NO_RULES_RECOMMENDATIONS = [
+ 'Natural England ALC mapping is only inidicative. An ALC survey will be required the confirm the actual land grade on-site',
   'No significant agricultural land constraints identified',
   'Standard planning considerations apply',
   
