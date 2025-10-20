@@ -1,0 +1,186 @@
+<script>
+  import { onMount } from 'svelte';
+
+  /** @type {(geometry: any) => void} */
+  export let onPolygonDrawn;
+  /** @type {boolean} */
+  export let loading = false;
+
+  /** @type {HTMLDivElement | null} */
+  let mapContainer = null;
+  /** @type {import('leaflet').Map | null} */
+  let map = null;
+  /** @type {import('leaflet').FeatureGroup | null} */
+  let drawnItems = null;
+
+  onMount(async () => {
+    // Dynamic import to avoid SSR issues
+    const L = await import('leaflet');
+    await import('leaflet/dist/leaflet.css');
+    await import('leaflet-draw');
+    await import('leaflet-draw/dist/leaflet.draw.css');
+
+    // Initialize the map
+    map = L.map(mapContainer).setView([54.5, -2.0], 6);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Initialize drawn items group
+    drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    // Add drawing controls
+    const drawControl = new L.Control.Draw({
+      edit: {
+        featureGroup: drawnItems,
+        remove: true
+      },
+      draw: {
+        polygon: {
+          allowIntersection: false,
+          drawError: {
+            color: '#e1e100',
+            message: '<strong>Error:</strong> shape edges cannot cross!'
+          },
+          shapeOptions: {
+            color: '#2563eb',
+            fillColor: '#3b82f6',
+            fillOpacity: 0.2,
+            weight: 2
+          }
+        },
+        polyline: false,
+        rectangle: false,
+        circle: false,
+        marker: false,
+        circlemarker: false
+      }
+    });
+
+    map.addControl(drawControl);
+
+    // Handle polygon creation
+    map.on(L.Draw.Event.CREATED, function (e) {
+      const layer = e.layer;
+
+      // Clear existing polygons
+      drawnItems.clearLayers();
+
+      // Add new polygon
+      drawnItems.addLayer(layer);
+
+      // Get the GeoJSON
+      const geoJSON = layer.toGeoJSON();
+      console.log('🎯 Socioeconomics polygon drawn:', geoJSON);
+      console.log('🎯 Geometry being passed to callback:', geoJSON.geometry);
+      console.log('🎯 onPolygonDrawn function:', onPolygonDrawn);
+
+      // Call the callback
+      try {
+        onPolygonDrawn(geoJSON.geometry);
+        console.log('✅ onPolygonDrawn callback executed successfully');
+      } catch (error) {
+        console.error('❌ Error calling onPolygonDrawn callback:', error);
+      }
+    });
+
+    // Handle polygon deletion
+    map.on(L.Draw.Event.DELETED, function () {
+      console.log('🗑️ Polygon deleted');
+      // Could call a callback here if needed
+    });
+
+    return () => {
+      if (map) {
+        map.remove();
+      }
+    };
+  });
+</script>
+
+<div class="socioeconomics-map-panel">
+  <div class="map-container" bind:this={mapContainer}></div>
+
+  {#if loading}
+    <div class="map-loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Analyzing socioeconomics data...</p>
+      </div>
+    </div>
+  {/if}
+</div>
+
+<style>
+  .socioeconomics-map-panel {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .map-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+  }
+
+  .map-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid #16a34a;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .loading-spinner p {
+    margin: 0;
+    color: #374151;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Ensure Leaflet styles are properly loaded */
+  :global(.leaflet-container) {
+    height: 100%;
+    width: 100%;
+  }
+
+  :global(.leaflet-draw-toolbar) {
+    margin-top: 10px;
+  }
+
+  :global(.leaflet-draw-draw-polygon) {
+    background-color: #16a34a !important;
+  }
+</style>

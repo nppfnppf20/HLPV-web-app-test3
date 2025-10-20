@@ -1,5 +1,5 @@
 <script>
-  import MapPanel from './MapPanel.svelte';
+  import SocioeconomicsMapPanel from './SocioeconomicsMapPanel.svelte';
   import SocioeconomicsSpreadsheet from './SocioeconomicsSpreadsheet.svelte';
   import { goto } from '$app/navigation';
   import { analyzeSocioeconomics } from '$lib/services/socioeconomicsApi.js';
@@ -108,13 +108,10 @@
     </div>
   </div>
 
-  <!-- Map panel (reused from HLPV) -->
-  <MapPanel
+  <!-- Dedicated socioeconomics map panel -->
+  <SocioeconomicsMapPanel
     onPolygonDrawn={handlePolygonDrawn}
     loading={loading}
-    heritageData={null}
-    landscapeData={null}
-    renewablesData={null}
   />
 </div>
 
