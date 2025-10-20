@@ -60,15 +60,7 @@
 
     <!-- Simple content area -->
     <div class="findings-panel">
-      {#if loading}
-        <div class="loading-state">
-          <div class="loading-icon">
-            <i class="las la-spinner"></i>
-          </div>
-          <h2>Analyzing Socioeconomics Data...</h2>
-          <p>Running spatial analysis on the Socioeconomics schema</p>
-        </div>
-      {:else if errorMsg}
+      {#if errorMsg}
         <div class="error-state">
           <div class="error-icon">
             <i class="las la-exclamation-triangle"></i>
@@ -78,31 +70,22 @@
         </div>
       {:else if socioeconomicsResult}
         <div class="results-content">
-          <div class="results-header">
-            <div class="results-icon">
-              <i class="las la-chart-bar"></i>
-            </div>
-            <h2>Socioeconomics Analysis Results</h2>
-            <p>Generated: {new Date(socioeconomicsResult.metadata?.generatedAt).toLocaleString()}</p>
-            <div class="results-summary">
-              <span class="summary-stat">
-                <strong>{socioeconomicsResult.metadata?.totalLayers || 0}</strong> layers analyzed
-              </span>
-              <span class="summary-stat">
-                <strong>{socioeconomicsResult.metadata?.layersWithData || 0}</strong> layers with data
-              </span>
-            </div>
-          </div>
-
-          <SocioeconomicsSpreadsheet {socioeconomicsResult} />
+          <SocioeconomicsSpreadsheet
+            {socioeconomicsResult}
+            summaryStats={{
+              totalLayers: socioeconomicsResult.metadata?.totalLayers || 0,
+              layersWithData: socioeconomicsResult.metadata?.layersWithData || 0,
+              generatedAt: socioeconomicsResult.metadata?.generatedAt
+            }}
+          />
         </div>
       {:else}
         <div class="welcome-content">
           <div class="welcome-icon">
             <i class="las la-chart-bar"></i>
           </div>
-          <h2>Draw a Polygon to Analyze</h2>
-          <p>Use the drawing tools on the map to create a polygon. The polygon will be analyzed against the socioeconomics database.</p>
+          <h2>Draw a Polygon to Analyse</h2>
+          <p>Use the drawing tools on the map to create a polygon. The polygon will be analysed against the socioeconomics database.</p>
         </div>
       {/if}
     </div>
@@ -116,6 +99,40 @@
 </div>
 
 <style>
+  /* Override global dashboard layout for socioeconomics - vertical instead of horizontal */
+  .dashboard {
+    flex-direction: column !important;
+    height: 100vh;
+    align-items: center;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .findings-section {
+    width: 90% !important;
+    max-width: 1200px !important;
+    height: auto !important;
+    order: 2; /* Put findings section below map */
+  }
+
+  .findings-panel {
+    height: auto !important;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
+
+  /* Make map panel take top portion */
+  :global(.socioeconomics-map-panel) {
+    order: 1; /* Put map panel above findings */
+    height: 45vh !important;
+    width: 90% !important;
+    max-width: 1200px !important;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
   .navbar-content {
     display: flex;
     align-items: center;

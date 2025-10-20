@@ -16,6 +16,8 @@
   export let loading = false;
   /** @type {string} */
   export let error = '';
+  /** @type {{totalLayers: number, layersWithData: number, generatedAt: string} | undefined} */
+  export let summaryStats = undefined;
 
   /** @type {string[]} */
   let allColumns = [];
@@ -241,7 +243,9 @@
 {:else}
   <div class="analysis-results">
     <div class="results-header">
-      <h2>{title}</h2>
+      <div class="title-section">
+        <h2>{title}</h2>
+      </div>
       <div class="action-buttons">
         <button class="copy-button" on:click={copyToClipboard}>
           Copy to Clipboard
@@ -478,5 +482,27 @@
 
   .results-table tr:hover td:nth-child(2) {
     background: #f1f3f5 !important;
+  }
+
+  .title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .summary-stats {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .stat {
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+
+  .stat strong {
+    color: #1e293b;
+    font-weight: 600;
   }
 </style>
