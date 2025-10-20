@@ -60,23 +60,12 @@
     'bng_n',
     'long',
     'lat',
-    'Population projections LAD19_Area',
-    'Population projections LAD19_2018 All Ages',
-    'Population projections LAD19_2018 Aged 0 to 15',
-    'Population projections LAD19_2018 Aged 16 to 64',
-    'Population projections LAD19_2018 Aged 65+',
-    'Population projections LAD19_field_7',
-    'Population projections LAD19_field_8',
     'field_7',
     'field_8',
     'field_9',
     'Master sheet2_field_7',
     'Master sheet2_field_8',
     'Master sheet2_field_9',
-    'Population projections LAD19_2043 All Ages',
-    'Population projections LAD19_2043 Aged 0 to 15',
-    'Population projections LAD19_2043 Aged 16 to 64',
-    'Population projections LAD19_2043 Aged 65+',
     'LAD25CD',
     'LAD25NM',
     'LAD25NMW',
@@ -123,6 +112,37 @@
             if (row['QS103EW - Age by single year 2011 census_Working age percent 20'] !== undefined) {
               row['Working age percent 2011'] = row['QS103EW - Age by single year 2011 census_Working age percent 20'];
               row['Master sheet2_Working age percent 2011'] = row['QS103EW - Age by single year 2011 census_Working age percent 20'];
+            }
+          }
+
+          // Map LAD19 population projection data to standard column names
+          if (layerName === 'LAD19') {
+            // 2018 data mapping
+            if (row['Population projections LAD19_2018 All Ages'] !== undefined) {
+              row['2018 All Ages'] = row['Population projections LAD19_2018 All Ages'];
+            }
+            if (row['Population projections LAD19_2018 Aged 0 to 15'] !== undefined) {
+              row['2018 Aged 0 to 15'] = row['Population projections LAD19_2018 Aged 0 to 15'];
+            }
+            if (row['Population projections LAD19_2018 Aged 16 to 64'] !== undefined) {
+              row['2018 Aged 16 to 64'] = row['Population projections LAD19_2018 Aged 16 to 64'];
+            }
+            if (row['Population projections LAD19_2018 Aged 65+'] !== undefined) {
+              row['2018 Aged 65+'] = row['Population projections LAD19_2018 Aged 65+'];
+            }
+
+            // 2043 data mapping
+            if (row['Population projections LAD19_2043 All Ages'] !== undefined) {
+              row['2043 All Ages'] = row['Population projections LAD19_2043 All Ages'];
+            }
+            if (row['Population projections LAD19_2043 Aged 0 to 15'] !== undefined) {
+              row['2043 Aged 0 to 15'] = row['Population projections LAD19_2043 Aged 0 to 15'];
+            }
+            if (row['Population projections LAD19_2043 Aged 16 to 64'] !== undefined) {
+              row['2043 Aged 16 to 64'] = row['Population projections LAD19_2043 Aged 16 to 64'];
+            }
+            if (row['Population projections LAD19_2043 Aged 65+'] !== undefined) {
+              row['2043 Aged 65+'] = row['Population projections LAD19_2043 Aged 65+'];
             }
           }
 
