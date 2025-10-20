@@ -158,6 +158,25 @@
       col !== 'layer_type' && col !== 'geo_name'
     );
     displayColumns.push(...remainingColumns);
+
+    // Sort rows by layer_type in the specified order
+    const layerOrder = ['Countries', 'Regions', 'LAD25', 'LAD19', 'LAD11'];
+    flattenedData.sort((a, b) => {
+      const aIndex = layerOrder.indexOf(a.layer_type);
+      const bIndex = layerOrder.indexOf(b.layer_type);
+
+      // If both are in the order array, sort by their position
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+
+      // If only one is in the order array, prioritize it
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+
+      // If neither is in the order array, sort alphabetically
+      return (a.layer_type || '').localeCompare(b.layer_type || '');
+    });
   }
 
   /**
