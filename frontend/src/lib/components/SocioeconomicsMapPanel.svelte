@@ -6,6 +6,46 @@
   /** @type {boolean} */
   export let loading = false;
 
+  // Loading message rotation
+  let loadingMessageIndex = 0;
+  let loadingInterval = null;
+
+  const loadingMessages = [
+    'Analyzing socioeconomics data...',
+    'Analysing education data...',
+    'Analysing census data...',
+    'Analysing travel data...',
+    'Analysing employment data...',
+    'Analysing housing data...',
+    'Analysing demographic data...'
+  ];
+
+  $: currentLoadingMessage = loadingMessages[loadingMessageIndex];
+
+  // Handle loading state changes
+  $: if (loading) {
+    startLoadingRotation();
+  } else {
+    stopLoadingRotation();
+  }
+
+  function startLoadingRotation() {
+    if (loadingInterval) return; // Already running
+
+    loadingMessageIndex = 0;
+    loadingInterval = setInterval(() => {
+      loadingMessageIndex = (loadingMessageIndex + 1) % loadingMessages.length;
+    }, 5000); // Change every 5 seconds
+  }
+
+  function stopLoadingRotation() {
+    if (loadingInterval) {
+      clearInterval(loadingInterval);
+      loadingInterval = null;
+    }
+    loadingMessageIndex = 0; // Reset to first message
+  }
+
   /** @type {HTMLDivElement | null} */
   let mapContainer = null;
   /** @type {import('leaflet').Map | null} */
@@ -97,6 +137,7 @@
       if (map) {
         map.remove();
       }
+      stopLoadingRotation(); // Clean up interval on unmount
     };
   });
 </script>
@@ -108,7 +149,7 @@
     <div class="map-loading-overlay">
       <div class="loading-spinner">
         <div class="spinner"></div>
-        <p>Analyzing socioeconomics data...</p>
+        <p>{currentLoadingMessage}</p>
       </div>
     </div>
   {/if}
