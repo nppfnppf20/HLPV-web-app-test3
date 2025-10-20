@@ -13,6 +13,46 @@
   export let landscapeData = null;
   /** @type {Record<string, any> | null} */
   export let renewablesData = null;
+
+  // Loading message rotation
+  let loadingMessageIndex = 0;
+  let loadingInterval = null;
+
+  const loadingMessages = [
+    'Analysing site constraints...',
+    'Analysing heritage data...',
+    'Analysing landscape data...',
+    'Analysing ecology data...',
+    'Analysing agricultural land...',
+    'Analysing renewables data...',
+    'Processing spatial analysis...'
+  ];
+
+  $: currentLoadingMessage = loadingMessages[loadingMessageIndex];
+
+  // Handle loading state changes
+  $: if (loading) {
+    startLoadingRotation();
+  } else {
+    stopLoadingRotation();
+  }
+
+  function startLoadingRotation() {
+    if (loadingInterval) return; // Already running
+
+    loadingMessageIndex = 0;
+    loadingInterval = setInterval(() => {
+      loadingMessageIndex = (loadingMessageIndex + 1) % loadingMessages.length;
+    }, 3000); // Change every 3 seconds
+  }
+
+  function stopLoadingRotation() {
+    if (loadingInterval) {
+      clearInterval(loadingInterval);
+      loadingInterval = null;
+    }
+    loadingMessageIndex = 0; // Reset to first message
+  }
 </script>
 
 <div class="map-panel">
@@ -23,7 +63,7 @@
       <div class="map-loading-overlay">
         <div class="loading-spinner">
           <div class="spinner"></div>
-          <p>Analysing site constraints...</p>
+          <p>{currentLoadingMessage}</p>
         </div>
       </div>
     {/if}

@@ -35,7 +35,7 @@
     loadingMessageIndex = 0;
     loadingInterval = setInterval(() => {
       loadingMessageIndex = (loadingMessageIndex + 1) % loadingMessages.length;
-    }, 5000); // Change every 5 seconds
+    }, 3000); // Change every 3 seconds
   }
 
   function stopLoadingRotation() {
