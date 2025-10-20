@@ -55,7 +55,7 @@
 
   onMount(async () => {
     // Dynamic import to avoid SSR issues
-    const L = await import('leaflet');
+    const L = (await import('leaflet')).default;
     await import('leaflet/dist/leaflet.css');
     await import('leaflet-draw');
     await import('leaflet-draw/dist/leaflet.draw.css');
@@ -72,8 +72,11 @@
     drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
+    // Cast L to any to access Draw functionality (leaflet-draw types aren't available)
+    const Lany = /** @type {any} */ (L);
+
     // Add drawing controls
-    const drawControl = new L.Control.Draw({
+    const drawControl = new Lany.Control.Draw({
       edit: {
         featureGroup: drawnItems,
         remove: true
@@ -103,7 +106,7 @@
     map.addControl(drawControl);
 
     // Handle polygon creation
-    map.on(L.Draw.Event.CREATED, function (e) {
+    map.on(Lany.Draw.Event.CREATED, function (e) {
       const layer = e.layer;
 
       // Clear existing polygons
@@ -128,7 +131,7 @@
     });
 
     // Handle polygon deletion
-    map.on(L.Draw.Event.DELETED, function () {
+    map.on(Lany.Draw.Event.DELETED, function () {
       console.log('🗑️ Polygon deleted');
       // Could call a callback here if needed
     });

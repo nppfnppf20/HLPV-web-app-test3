@@ -125,10 +125,6 @@ export function getSocioeconomicsQueries(geojsonPolygon) {
     {
       name: 'Regions',
       query: buildRegionsQuery(geojsonPolygon)
-    },
-    {
-      name: 'socioec',
-      query: buildSocioecQuery(geojsonPolygon)
     }
   ];
 }
