@@ -487,6 +487,76 @@ app.post('/save-trp-edits', async (req, res) => {
   }
 });
 
+// Socioeconomics analysis - separate import to keep modular
+import {
+  getSocioeconomicsQueries,
+  getGeoIdentifiers
+} from './socioeconomicsQueries.js';
+
+// Socioeconomics analysis endpoint
+app.post('/analyze/socioeconomics', async (req, res) => {
+  try {
+    const { polygon } = req.body;
+    if (!polygon) {
+      return res.status(400).json({ error: 'polygon is required (GeoJSON Polygon or MultiPolygon)' });
+    }
+
+    console.log('🔍 Starting socioeconomics analysis...');
+
+    // Get all socioeconomics queries
+    const queries = getSocioeconomicsQueries(polygon);
+    const results = {};
+
+    // Execute each query and collect results
+    for (const { name, query } of queries) {
+      try {
+        console.log(`📊 Running ${name} query...`);
+        const result = await pool.query(query.text, query.values);
+
+        // Process each row - include all fields plus geo identifiers
+        const processedRows = result.rows.map((row, index) => {
+          const geoIds = getGeoIdentifiers(name, row);
+          return {
+            ...row,
+            ...geoIds,
+            layer_type: name,
+            feature_index: index + 1
+          };
+        });
+
+        results[name.toLowerCase()] = processedRows;
+        console.log(`✅ ${name}: ${processedRows.length} features found`);
+      } catch (error) {
+        console.error(`❌ Error querying ${name}:`, error.message);
+        results[name.toLowerCase()] = [];
+      }
+    }
+
+    // Build response
+    const response = {
+      ...results,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalLayers: queries.length,
+        layersWithData: Object.values(results).filter(layer => layer.length > 0).length,
+        analysisType: 'socioeconomic-spatial-analysis'
+      }
+    };
+
+    console.log('🎉 Socioeconomics analysis complete!');
+    res.json(response);
+
+  } catch (error) {
+    console.error('Socioeconomics analysis error:', {
+      message: error?.message,
+      detail: error?.detail,
+      hint: error?.hint,
+      stack: error?.stack
+    });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Backend listening on port ${port}`);
 });

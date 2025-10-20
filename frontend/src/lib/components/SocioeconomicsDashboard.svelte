@@ -1,17 +1,39 @@
 <script>
   import MapPanel from './MapPanel.svelte';
+  import SocioeconomicsSpreadsheet from './SocioeconomicsSpreadsheet.svelte';
   import { goto } from '$app/navigation';
+  import { analyzeSocioeconomics } from '$lib/services/socioeconomicsApi.js';
 
   /** @type {any | null} */
   let currentPolygonGeometry = null;
+  /** @type {any | null} */
+  let socioeconomicsResult = null;
+  /** @type {boolean} */
+  let loading = false;
+  /** @type {string} */
+  let errorMsg = '';
 
   /** @param {any} geometry */
   async function handlePolygonDrawn(geometry) {
     console.log('🎯 Socioeconomics: Polygon drawn', geometry);
     currentPolygonGeometry = geometry;
 
-    // For now, just log the polygon. You can add API call later
-    console.log('📍 Polygon will be sent to socioeconomics schema:', geometry);
+    // Reset state
+    socioeconomicsResult = null;
+    errorMsg = '';
+    loading = true;
+
+    try {
+      console.log('🚀 Starting socioeconomics analysis...');
+      const result = await analyzeSocioeconomics(geometry);
+      console.log('✅ Socioeconomics analysis complete:', result);
+      socioeconomicsResult = result;
+    } catch (error) {
+      console.error('❌ Socioeconomics analysis failed:', error);
+      errorMsg = error.message || 'Analysis failed';
+    } finally {
+      loading = false;
+    }
   }
 
   function goHome() {
@@ -38,28 +60,58 @@
 
     <!-- Simple content area -->
     <div class="findings-panel">
-      <div class="welcome-content">
-        <div class="welcome-icon">
-          <i class="las la-chart-bar"></i>
-        </div>
-        <h2>Draw a Polygon to Analyze</h2>
-        <p>Use the drawing tools on the map to create a polygon. The polygon will be analyzed against the socioeconomics database.</p>
-
-        {#if currentPolygonGeometry}
-          <div class="polygon-info">
-            <h3>✅ Polygon Created</h3>
-            <p>Polygon coordinates captured and ready for analysis.</p>
-            <small>Coordinates: {JSON.stringify(currentPolygonGeometry.coordinates[0].slice(0, 2))}...</small>
+      {#if loading}
+        <div class="loading-state">
+          <div class="loading-icon">
+            <i class="las la-spinner"></i>
           </div>
-        {/if}
-      </div>
+          <h2>Analyzing Socioeconomics Data...</h2>
+          <p>Running spatial analysis on the Socioeconomics schema</p>
+        </div>
+      {:else if errorMsg}
+        <div class="error-state">
+          <div class="error-icon">
+            <i class="las la-exclamation-triangle"></i>
+          </div>
+          <h2>Analysis Error</h2>
+          <p>{errorMsg}</p>
+        </div>
+      {:else if socioeconomicsResult}
+        <div class="results-content">
+          <div class="results-header">
+            <div class="results-icon">
+              <i class="las la-chart-bar"></i>
+            </div>
+            <h2>Socioeconomics Analysis Results</h2>
+            <p>Generated: {new Date(socioeconomicsResult.metadata?.generatedAt).toLocaleString()}</p>
+            <div class="results-summary">
+              <span class="summary-stat">
+                <strong>{socioeconomicsResult.metadata?.totalLayers || 0}</strong> layers analyzed
+              </span>
+              <span class="summary-stat">
+                <strong>{socioeconomicsResult.metadata?.layersWithData || 0}</strong> layers with data
+              </span>
+            </div>
+          </div>
+
+          <SocioeconomicsSpreadsheet {socioeconomicsResult} />
+        </div>
+      {:else}
+        <div class="welcome-content">
+          <div class="welcome-icon">
+            <i class="las la-chart-bar"></i>
+          </div>
+          <h2>Draw a Polygon to Analyze</h2>
+          <p>Use the drawing tools on the map to create a polygon. The polygon will be analyzed against the socioeconomics database.</p>
+        </div>
+      {/if}
     </div>
   </div>
 
   <!-- Map panel (reused from HLPV) -->
   <MapPanel
     onPolygonDrawn={handlePolygonDrawn}
-    loading={false}
+    loading={loading}
     heritageData={null}
     landscapeData={null}
     renewablesData={null}
@@ -147,8 +199,101 @@
     color: #166534;
   }
 
-  .polygon-info small {
-    color: #15803d;
-    font-family: monospace;
+  .loading-state, .error-state {
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .loading-icon, .error-icon {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+
+  .loading-icon {
+    background: #dbeafe;
+    color: #3b82f6;
+  }
+
+  .loading-icon i {
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+  }
+
+  .error-icon {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .error-icon i {
+    font-size: 2rem;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .results-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .results-header {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .results-icon {
+    width: 3rem;
+    height: 3rem;
+    background: #dcfce7;
+    color: #16a34a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+  }
+
+  .results-icon i {
+    font-size: 1.5rem;
+  }
+
+  .results-header h2 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .results-header p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .results-summary {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .summary-stat {
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+
+  .summary-stat strong {
+    color: #1e293b;
+    font-weight: 600;
   }
 </style>
