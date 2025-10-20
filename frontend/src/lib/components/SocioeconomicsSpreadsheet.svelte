@@ -138,7 +138,26 @@
     allColumns = Array.from(columnsSet);
 
     // Create filtered column list for display (exclude hidden columns)
-    displayColumns = allColumns.filter(col => !hiddenColumns.includes(col));
+    const filteredColumns = allColumns.filter(col => !hiddenColumns.includes(col));
+
+    // Reorder columns: layer_type first, geo_name second, then the rest
+    displayColumns = [];
+
+    // Add layer_type if it exists
+    if (filteredColumns.includes('layer_type')) {
+      displayColumns.push('layer_type');
+    }
+
+    // Add geo_name if it exists
+    if (filteredColumns.includes('geo_name')) {
+      displayColumns.push('geo_name');
+    }
+
+    // Add remaining columns
+    const remainingColumns = filteredColumns.filter(col =>
+      col !== 'layer_type' && col !== 'geo_name'
+    );
+    displayColumns.push(...remainingColumns);
   }
 
   /**
@@ -433,13 +452,15 @@
   /* Sticky first column (layer_name) */
   .results-table th:first-child,
   .results-table td:first-child {
-    position: sticky;
-    left: 0;
+    position: sticky !important;
+    left: 0 !important;
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     isolation: isolate;
-    width: 150px;
-    min-width: 150px;
-    max-width: 150px;
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    border-right: 1px solid #dee2e6 !important;
+    box-sizing: border-box !important;
   }
 
   .results-table th:first-child {
@@ -457,25 +478,64 @@
     background: #f1f3f5 !important;
   }
 
-  /* Sticky second column (geo_name) */
+  /* Sticky second column (geo_name) - Absolutely positioned */
   .results-table th:nth-child(2),
   .results-table td:nth-child(2) {
-    position: sticky;
-    left: 150px; /* Position after first column (150px) */
+    position: sticky !important;
+    left: 151px !important; /* 150px (first column) + 1px (border) */
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     isolation: isolate;
-    width: 200px;
-    min-width: 200px;
-    max-width: 200px;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    z-index: 98;
+    box-sizing: border-box !important;
+    border-left: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    transform: translateX(0) translateY(0) translateZ(0) !important;
+    position-sticky: supported !important;
   }
 
   .results-table th:nth-child(2) {
-    z-index: 99;
+    z-index: 99 !important;
     background: #f8f9fa !important;
   }
 
   .results-table td:nth-child(2) {
-    z-index: 49;
+    z-index: 98 !important;
+    background: #fafbfc !important;
+    font-weight: 500;
+  }
+
+  .results-table tr:hover td:nth-child(2) {
+    background: #f1f3f5 !important;
+  }
+
+  /* Sticky second column (geo_name) - Absolutely positioned */
+  .results-table th:nth-child(2),
+  .results-table td:nth-child(2) {
+    position: sticky !important;
+    left: 151px !important; /* 150px (first column) + 1px (border) */
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    isolation: isolate;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    z-index: 98;
+    box-sizing: border-box !important;
+    border-left: 1px solid #dee2e6 !important;
+    border-right: 1px solid #dee2e6 !important;
+    transform: translateX(0) translateY(0) translateZ(0) !important;
+    position-sticky: supported !important;
+  }
+
+  .results-table th:nth-child(2) {
+    z-index: 99 !important;
+    background: #f8f9fa !important;
+  }
+
+  .results-table td:nth-child(2) {
+    z-index: 98 !important;
     background: #fafbfc !important;
     font-weight: 500;
   }
