@@ -33,13 +33,13 @@
           </div>
 
           <h2 class="card-title">
-            HLPV Assessment
+            High-Level Planning View Tool (beta)
           </h2>
 
           <p class="card-description">
-            Comprehensive heritage, landscape, planning, and viability assessment tool.
-            Analyze sites for heritage constraints, landscape impacts, agricultural land quality,
-            renewable energy potential, and ecological considerations.
+            Provisional heritage, landscape, planning, and viability assessment tool. Analyses sites for
+            heritage constraints, landscape impacts, agricultural land quality, renewable energy potential, and ecology
+            considerations.
           </p>
 
           <div class="features-list">
@@ -80,9 +80,9 @@
           </h2>
 
           <p class="card-description">
-            Analyze socioeconomic data including demographics, employment patterns,
-            transportation methods, health statistics, and educational qualifications
-            to understand community characteristics and development impacts.
+            Analyse socioeconomic data including demographics, employment patterns, transportation methods,
+            health statistics, and educational qualifications to understand community characteristics and development
+            impacts.
           </p>
 
           <div class="features-list">
