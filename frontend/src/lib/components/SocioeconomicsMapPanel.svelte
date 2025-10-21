@@ -11,7 +11,7 @@
   let loadingInterval = null;
 
   const loadingMessages = [
-    'Analyzing socioeconomics data...',
+    'Analysing socioeconomics data...',
     'Analysing education data...',
     'Analysing census data...',
     'Analysing travel data...',
@@ -222,9 +222,5 @@
 
   :global(.leaflet-draw-toolbar) {
     margin-top: 10px;
-  }
-
-  :global(.leaflet-draw-draw-polygon) {
-    background-color: #16a34a !important;
   }
 </style>
