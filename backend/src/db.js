@@ -8,7 +8,7 @@ if (!connectionString) {
 
 export const pool = new pg.Pool({
   connectionString,
-  ssl: { rejectUnauthorized: false, require: true },
+  ssl: connectionString ? { rejectUnauthorized: false } : false,
   keepAlive: true,
   idleTimeoutMillis: 30000,
   max: 10
