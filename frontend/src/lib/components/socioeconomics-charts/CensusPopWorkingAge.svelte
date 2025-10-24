@@ -1,8 +1,9 @@
 <script>
   import { onMount } from 'svelte';
   import { Chart, registerables } from 'chart.js';
+  import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-  Chart.register(...registerables);
+  Chart.register(...registerables, ChartDataLabels);
 
   /** @type {any | undefined} */
   export let socioeconomicsResult = undefined;
@@ -270,6 +271,18 @@
               label: function(context) {
                 return context.dataset.label + ': ' + (context.parsed.x?.toFixed(1) || 'N/A') + '%';
               }
+            }
+          },
+          datalabels: {
+            anchor: 'end',
+            align: 'end',
+            formatter: function(value) {
+              return value != null ? value.toFixed(1) + '%' : '';
+            },
+            color: '#444',
+            font: {
+              weight: 'bold',
+              size: 11
             }
           }
         },
