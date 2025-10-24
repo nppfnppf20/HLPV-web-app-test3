@@ -1,6 +1,8 @@
 <script>
   import CensusPopWorkingAge from './socioeconomics-charts/CensusPopWorkingAge.svelte';
   import CarsVansHousehold from './socioeconomics-charts/CarsVansHousehold.svelte';
+  import BREStable from './socioeconomics-charts/BREStable.svelte';
+  import MethodOfTravel from './socioeconomics-charts/MethodOfTravel.svelte';
 
   /** @type {any | undefined} */
   export let socioeconomicsResult = undefined;
@@ -11,7 +13,7 @@
 
   // Chart navigation
   let currentChartIndex = 0;
-  const totalCharts = 2; // Updated for 2 charts
+  const totalCharts = 4; // Updated for 4 charts/tables
 
   function handleBackdropClick(event) {
     if (event.target === event.currentTarget) {
@@ -56,6 +58,16 @@
             />
           {:else if currentChartIndex === 1}
             <CarsVansHousehold
+              {socioeconomicsResult}
+              {flattenedData}
+            />
+          {:else if currentChartIndex === 2}
+            <BREStable
+              {socioeconomicsResult}
+              {flattenedData}
+            />
+          {:else if currentChartIndex === 3}
+            <MethodOfTravel
               {socioeconomicsResult}
               {flattenedData}
             />
