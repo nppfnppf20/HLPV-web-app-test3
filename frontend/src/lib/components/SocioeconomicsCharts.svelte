@@ -1,5 +1,6 @@
 <script>
   import CensusPopWorkingAge from './socioeconomics-charts/CensusPopWorkingAge.svelte';
+  import CarsVansHousehold from './socioeconomics-charts/CarsVansHousehold.svelte';
 
   /** @type {any | undefined} */
   export let socioeconomicsResult = undefined;
@@ -10,7 +11,7 @@
 
   // Chart navigation
   let currentChartIndex = 0;
-  const totalCharts = 1; // Will increase as we add more charts
+  const totalCharts = 2; // Updated for 2 charts
 
   function handleBackdropClick(event) {
     if (event.target === event.currentTarget) {
@@ -50,6 +51,11 @@
         <div class="chart-display">
           {#if currentChartIndex === 0}
             <CensusPopWorkingAge
+              {socioeconomicsResult}
+              {flattenedData}
+            />
+          {:else if currentChartIndex === 1}
+            <CarsVansHousehold
               {socioeconomicsResult}
               {flattenedData}
             />
