@@ -1,4 +1,6 @@
 <script>
+  import SocioeconomicsCharts from './SocioeconomicsCharts.svelte';
+
   /**
    * @typedef {Object} SocioeconomicsData
    * @property {Object} Countries - Countries data
@@ -25,6 +27,8 @@
   let displayColumns = [];
   /** @type {any[]} */
   let flattenedData = [];
+  /** @type {boolean} */
+  let showCharts = false;
 
   // Columns to hide from display (but keep in export/copy data)
   const hiddenColumns = [
@@ -311,6 +315,9 @@
         <button class="export-button" on:click={exportToCSV}>
           Export to CSV
         </button>
+        <button class="charts-button" on:click={() => showCharts = true}>
+          View Charts
+        </button>
       </div>
     </div>
 
@@ -342,6 +349,14 @@
       </table>
     </div>
   </div>
+{/if}
+
+{#if showCharts}
+  <SocioeconomicsCharts
+    {socioeconomicsResult}
+    {flattenedData}
+    onClose={() => showCharts = false}
+  />
 {/if}
 
 <style>
@@ -409,6 +424,23 @@
   .export-button:hover {
     background: #45a049;
     border-color: #45a049;
+  }
+
+  .charts-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ff9800;
+    background: #ff9800;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+
+  .charts-button:hover {
+    background: #f57c00;
+    border-color: #f57c00;
   }
 
   .results-loading {

@@ -22,6 +22,7 @@
 		"vite": "^7.0.4"
 	},
 	"dependencies": {
+		"chart.js": "^4.5.1",
 		"docx": "^9.5.1",
 		"file-saver": "^2.0.5",
 		"flowbite-svelte": "^1.13.8",
