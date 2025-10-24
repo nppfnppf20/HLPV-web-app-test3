@@ -119,25 +119,51 @@
     console.log('LAD11 rows found:', lad11Data.length);
     console.log('LAD25 rows found:', lad25Data.length);
 
-    // Create a map of LAD25 by geo_name
+    // Create maps for matching
     const lad25Map = new Map();
     lad25Data.forEach(lad => {
       lad25Map.set(lad.geo_name, lad);
     });
 
-    // Match LAD11 with LAD25
+    const lad11Map = new Map();
+    lad11Data.forEach(lad => {
+      lad11Map.set(lad.geo_name, lad);
+    });
+
+    // Track which LADs have been matched
     const matchedLADs = new Set();
+
+    // Process LAD11 data
     lad11Data.forEach(lad11 => {
       const lad25 = lad25Map.get(lad11.geo_name);
 
       if (lad25) {
+        // MATCHED: Both LAD11 and LAD25 have the same geo_name
         matchedLADs.add(lad11.geo_name);
-        // LAD11 has 2011 data in 'Master sheet2_Working age percent 2011'
-        const data2011 = lad11['Master sheet2_Working age percent 2011'];
-        // LAD25 has 2021 data in 'Master sheet2_percent working age 2021 census'
+
+        // Debug: Show all columns containing relevant keywords
+        console.log(`LAD11 ${lad11.geo_name} columns with 'working/age/percent':`,
+          Object.keys(lad11).filter(k =>
+            k.toLowerCase().includes('working') ||
+            k.toLowerCase().includes('age') ||
+            k.toLowerCase().includes('percent') ||
+            k.toLowerCase().includes('2011')
+          )
+        );
+        console.log(`LAD25 ${lad25.geo_name} columns with 'working/age/percent':`,
+          Object.keys(lad25).filter(k =>
+            k.toLowerCase().includes('working') ||
+            k.toLowerCase().includes('age') ||
+            k.toLowerCase().includes('percent') ||
+            k.toLowerCase().includes('2021')
+          )
+        );
+
+        // LAD11 uses a different column name than Countries/Regions
+        const data2011 = lad11['QS103EW - Age by single year 2011 census_Working age percent 20'];
         const data2021 = lad25['Master sheet2_percent working age 2021 census'];
 
-        console.log(`Matched LAD ${lad11.geo_name}:`, {
+        console.log(`✓ Matched LAD ${lad11.geo_name}:`, {
           data2011,
           data2021,
           parsed2011: parsePercentage(data2011),
@@ -151,14 +177,38 @@
           value2021: parsePercentage(data2021)
         });
       } else {
-        warnings.push(`LAD boundary change: "${lad11.geo_name}" exists in 2011 but not in 2021 data`);
+        // UNMATCHED: LAD11 exists but no matching LAD25
+        const data2011 = lad11['QS103EW - Age by single year 2011 census_Working age percent 20'];
+
+        console.log(`✗ Unmatched LAD11 ${lad11.geo_name} (2011 only)`);
+
+        warnings.push(`Boundary change: "${lad11.geo_name}" exists in 2011 census but not in 2021 census (shown with 2011 data only)`);
+
+        chartData.push({
+          name: `${lad11.geo_name} (2011 only)`,
+          type: 'LAD',
+          value2011: parsePercentage(data2011),
+          value2021: null
+        });
       }
     });
 
-    // Check for unmatched LAD25
+    // Process unmatched LAD25 data
     lad25Data.forEach(lad25 => {
       if (!matchedLADs.has(lad25.geo_name)) {
-        warnings.push(`LAD boundary change: "${lad25.geo_name}" exists in 2021 but not in 2011 data`);
+        // UNMATCHED: LAD25 exists but no matching LAD11
+        const data2021 = lad25['Master sheet2_percent working age 2021 census'];
+
+        console.log(`✗ Unmatched LAD25 ${lad25.geo_name} (2021 only)`);
+
+        warnings.push(`Boundary change: "${lad25.geo_name}" exists in 2021 census but not in 2011 census (shown with 2021 data only)`);
+
+        chartData.push({
+          name: `${lad25.geo_name} (2021 only)`,
+          type: 'LAD',
+          value2011: null,
+          value2021: parsePercentage(data2021)
+        });
       }
     });
 
