@@ -64,22 +64,22 @@
               {flattenedData}
             />
           {:else if currentChartIndex === 2}
-            <BREStable
-              {socioeconomicsResult}
-              {flattenedData}
-            />
-          {:else if currentChartIndex === 3}
-            <MethodOfTravel
-              {socioeconomicsResult}
-              {flattenedData}
-            />
-          {:else if currentChartIndex === 4}
             <UnemploymentRate
               {socioeconomicsResult}
               {flattenedData}
             />
-          {:else if currentChartIndex === 5}
+          {:else if currentChartIndex === 3}
             <HighestQualification
+              {socioeconomicsResult}
+              {flattenedData}
+            />
+          {:else if currentChartIndex === 4}
+            <BREStable
+              {socioeconomicsResult}
+              {flattenedData}
+            />
+          {:else if currentChartIndex === 5}
+            <MethodOfTravel
               {socioeconomicsResult}
               {flattenedData}
             />
