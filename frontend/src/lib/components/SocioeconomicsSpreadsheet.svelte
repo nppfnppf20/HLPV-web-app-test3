@@ -209,8 +209,83 @@
   function cleanColumnName(columnName) {
     if (!columnName) return columnName;
 
+    // BRES column name mappings
+    const bresMapping = {
+      'BRES': 'Business Register and Employment Survey',
+      'A number': 'A Agriculture forestry and fishing (number)',
+      'A percent': 'A Agriculture forestry and fishing (%)',
+      'B number': 'B Mining and quarrying (number)',
+      'B percent': 'B Mining and quarrying (%)',
+      'C number': 'C Manufacturing (number)',
+      'C percent': 'C Manufacturing (%)',
+      'D number': 'D Electricity gas steam and air conditioning supply (number)',
+      'D percent': 'D Electricity gas steam and air conditioning supply (%)',
+      'E number': 'E Water supply sewerage waste management and remediation activities (number)',
+      'E percent': 'E Water supply sewerage waste management and remediation activities (%)',
+      'F number': 'F Construction (number)',
+      'F percent': 'F Construction (%)',
+      'G number': 'G Wholesale and retail trade repair of motor vehicles and motorcycles (number)',
+      'G percent': 'G Wholesale and retail trade repair of motor vehicles and motorcycles (%)',
+      'H number': 'H Transportation and storage (number)',
+      'H percent': 'H Transportation and storage (%)',
+      'I number': 'I Accommodation and food service activities (number)',
+      'I percent': 'I Accommodation and food service activities (%)',
+      'J number': 'J Information and communication (number)',
+      'J percent': 'J Information and communication (%)',
+      'K number': 'K Financial and insurance activities (number)',
+      'K percent': 'K Financial and insurance activities (%)',
+      'L number': 'L Real estate activities (number)',
+      'L percent': 'L Real estate activities (%)',
+      'M number': 'M Professional scientific and technical activities (number)',
+      'M percent': 'M Professional scientific and technical activities (%)',
+      'N number': 'N Administrative and support service activities (number)',
+      'N percent': 'N Administrative and support service activities (%)',
+      'O number': 'O Public administration and defence compulsory social security (number)',
+      'O percent': 'O Public administration and defence compulsory social security (%)',
+      'P number': 'P Education (number)',
+      'P percent': 'P Education (%)',
+      'Q number': 'Q Human health and social work activities (number)',
+      'Q percent': 'Q Human health and social work activities (%)',
+      'R number': 'R Arts entertainment and recreation (number)',
+      'R percent': 'R Arts entertainment and recreation (%)',
+      'S number': 'S Other service activities (number)',
+      'S percent': 'S Other service activities (%)',
+      'BRES Total': 'Total'
+    };
+
+    // Annual population survey - Economic Inactivity mappings
+    const apsMapping = {
+      'Annual population survey - EIBY': 'Reason for Economic Inactivity',
+      'APEIRSno': 'Student (number)',
+      'APEIRSp': 'Student (%)',
+      'APEIRFno': 'Looking after family or home (number)',
+      'APEIRFp': 'Looking after family or home (%)',
+      'APEIRTSno': 'Temporary sick (number)',
+      'APEIRTSp': 'Temporary sick (%)',
+      'APEIRLTno': 'Long-term sick (number)',
+      'APEIRLTp': 'Long-term sick (%)',
+      'APEIRDno': 'Discouraged (number)',
+      'APEIRDp': 'Discouraged (%)',
+      'APEIRTno': 'Total (number)',
+      'APEIRTp': 'Total (%)',
+      'APEIRTno_1': 'Retired (number)',
+      'APEIRTp_1': 'Retired (%)',
+      'APEIRTno_2': 'Other (number)',
+      'APEIRTp_2': 'Other (%)'
+    };
+
     // Remove "Master sheet2_" prefix (case insensitive)
     let cleaned = columnName.replace(/^Master\s*sheet2?_/i, '');
+
+    // Check if this is a BRES column that needs mapping
+    if (bresMapping[cleaned]) {
+      return bresMapping[cleaned];
+    }
+
+    // Check if this is an APS column that needs mapping
+    if (apsMapping[cleaned]) {
+      return apsMapping[cleaned];
+    }
 
     // You can add more cleaning rules here if needed
     // For example: cleaned = cleaned.replace(/^some_other_prefix_/i, '');
