@@ -77,13 +77,17 @@
       const values = columnNames.map(col => parsePercentage(country[col]));
       console.log(`Country ${country.geo_name}:`, values);
 
-      datasets.push({
-        label: `${country.geo_name} (Country)`,
-        data: values,
-        backgroundColor: colors['Country'],
-        borderColor: colors['Country'].replace('0.8', '1'),
-        borderWidth: 1
-      });
+      // Only add to chart if there's at least one non-null value
+      const hasData = values.some(v => v !== null && v !== undefined);
+      if (hasData) {
+        datasets.push({
+          label: `${country.geo_name} (Country)`,
+          data: values,
+          backgroundColor: colors['Country'],
+          borderColor: colors['Country'].replace('0.8', '1'),
+          borderWidth: 1
+        });
+      }
     });
 
     // Get Regions data
@@ -92,13 +96,17 @@
       const values = columnNames.map(col => parsePercentage(region[col]));
       console.log(`Region ${region.geo_name}:`, values);
 
-      datasets.push({
-        label: `${region.geo_name} (Region)`,
-        data: values,
-        backgroundColor: colors['Region'],
-        borderColor: colors['Region'].replace('0.8', '1'),
-        borderWidth: 1
-      });
+      // Only add to chart if there's at least one non-null value
+      const hasData = values.some(v => v !== null && v !== undefined);
+      if (hasData) {
+        datasets.push({
+          label: `${region.geo_name} (Region)`,
+          data: values,
+          backgroundColor: colors['Region'],
+          borderColor: colors['Region'].replace('0.8', '1'),
+          borderWidth: 1
+        });
+      }
     });
 
     // Get LAD25 data
@@ -107,13 +115,17 @@
       const values = columnNames.map(col => parsePercentage(lad[col]));
       console.log(`LAD25 ${lad.geo_name}:`, values);
 
-      datasets.push({
-        label: `${lad.geo_name} (LAD)`,
-        data: values,
-        backgroundColor: colors['LAD'],
-        borderColor: colors['LAD'].replace('0.8', '1'),
-        borderWidth: 1
-      });
+      // Only add to chart if there's at least one non-null value
+      const hasData = values.some(v => v !== null && v !== undefined);
+      if (hasData) {
+        datasets.push({
+          label: `${lad.geo_name} (LAD)`,
+          data: values,
+          backgroundColor: colors['LAD'],
+          borderColor: colors['LAD'].replace('0.8', '1'),
+          borderWidth: 1
+        });
+      }
     });
 
     console.log('Final datasets:', datasets);
