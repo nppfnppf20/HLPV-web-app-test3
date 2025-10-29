@@ -274,6 +274,59 @@
       'APEIRTp_2': 'Other (%)'
     };
 
+    // Annual population survey - EA and UE mappings (16-64 age group)
+    const apsEAUEMapping = {
+      'Annual pop survey EA and UE - 16-64': 'Annual Population Survey - Economically Active and Unemployment (16-64)',
+      // Jul17-Jun18
+      'Jul17-Jun18': 'Jul17-Jun18 total',
+      'Jul17-Jun18EA': 'Jul17-Jun18 Economically Active',
+      'Jul17-Jun18EAP': 'Jul17-Jun18 Economically Active %',
+      'Jul17-18UE': 'Jul17-18 Unemployment',
+      'Jul17-18UEP': 'Jul17-18 Unemployment %',
+      // Jul18-Jun19
+      'Jul18-Jun19': 'Jul18-Jun19 total',
+      'Jul18-Jun19EA': 'Jul18-Jun19 Economically Active',
+      'Jul18-Jun19EAP': 'Jul18-Jun19 Economically Active %',
+      'Jul18-19UE': 'Jul18-19 Unemployment',
+      'Jul18-19UEP': 'Jul18-19 Unemployment %',
+      // Jul19-Jun20
+      'Jul19-Jun20': 'Jul19-Jun20 total',
+      'Jul19-Jun20EA': 'Jul19-Jun20 Economically Active',
+      'Jul19-Jun20EAP': 'Jul19-Jun20 Economically Active %',
+      'Jul19-20UE': 'Jul19-20 Unemployment',
+      'Jul19-20UEP': 'Jul19-20 Unemployment %',
+      // Jul20-Jun21
+      'Jul20-Jun21': 'Jul20-Jun21 total',
+      'Ju20-Jun21EA': 'Jul20-Jun21 Economically Active',
+      'Ju20-Jun21EAP': 'Jul20-Jun21 Economically Active %',
+      'Jul20-21UE': 'Jul20-21 Unemployment',
+      'Jul20-21UEP': 'Jul20-21 Unemployment %',
+      // Jul21-Jun22
+      'Jul21-Jun22': 'Jul21-Jun22 total',
+      'Jul21-Jun22EA': 'Jul21-Jun22 Economically Active',
+      'Jul21-Jun22EAP': 'Jul21-Jun22 Economically Active %',
+      'Jul21-Jun22UE': 'Jul21-Jun22 Unemployment',
+      'Jul21-Jun22UEP': 'Jul21-Jun22 Unemployment %',
+      // Jul22-Jun23
+      'Jul22-Jun23': 'Jul22-Jun23 total',
+      'Jul22-Jun23EA': 'Jul22-Jun23 Economically Active',
+      'Jul22-Jun23EAP': 'Jul22-Jun23 Economically Active %',
+      'Jul22-Jun23UE': 'Jul22-Jun23 Unemployment',
+      'Jul22-Jun23UEP': 'Jul22-Jun23 Unemployment %',
+      // Jul23-Jun24
+      'Jul23-Jun24': 'Jul23-Jun24 total',
+      'Jul23-Jun24EA': 'Jul23-Jun24 Economically Active',
+      'Jul23-Jun24EAP': 'Jul23-Jun24 Economically Active %',
+      'Jul23-Jun24UE': 'Jul23-Jun24 Unemployment',
+      'Jul23-Jun24UEP': 'Jul23-Jun24 Unemployment %',
+      // Jul24-Jun25
+      'Jul24-Jun25': 'Jul24-Jun25 total',
+      'Jul24-Jun25EA': 'Jul24-Jun25 Economically Active',
+      'Jul24-Jun25EAP': 'Jul24-Jun25 Economically Active %',
+      'Jul24-Jun25UE': 'Jul24-Jun25 Unemployment',
+      'Jul24-Jun25UEP': 'Jul24-Jun25 Unemployment %'
+    };
+
     // Remove "Master sheet2_" prefix (case insensitive)
     let cleaned = columnName.replace(/^Master\s*sheet2?_/i, '');
 
@@ -285,6 +338,11 @@
     // Check if this is an APS column that needs mapping
     if (apsMapping[cleaned]) {
       return apsMapping[cleaned];
+    }
+
+    // Check if this is an APS EA/UE column that needs mapping
+    if (apsEAUEMapping[cleaned]) {
+      return apsEAUEMapping[cleaned];
     }
 
     // You can add more cleaning rules here if needed
