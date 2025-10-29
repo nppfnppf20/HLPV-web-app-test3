@@ -5,6 +5,7 @@
   import MethodOfTravel from './socioeconomics-charts/MethodOfTravel.svelte';
   import UnemploymentRate from './socioeconomics-charts/UnemploymentRate.svelte';
   import HighestQualification from './socioeconomics-charts/HighestQualification.svelte';
+  import GeneralHealthTable from './socioeconomics-charts/GeneralHealthTable.svelte';
 
   /** @type {any | undefined} */
   export let socioeconomicsResult = undefined;
@@ -15,7 +16,7 @@
 
   // Chart navigation
   let currentChartIndex = 0;
-  const totalCharts = 6; // Updated for 6 charts/tables
+  const totalCharts = 7; // Updated for 7 charts/tables
 
   function handleBackdropClick(event) {
     if (event.target === event.currentTarget) {
@@ -74,11 +75,16 @@
               {flattenedData}
             />
           {:else if currentChartIndex === 4}
-            <BREStable
+            <GeneralHealthTable
               {socioeconomicsResult}
               {flattenedData}
             />
           {:else if currentChartIndex === 5}
+            <BREStable
+              {socioeconomicsResult}
+              {flattenedData}
+            />
+          {:else if currentChartIndex === 6}
             <MethodOfTravel
               {socioeconomicsResult}
               {flattenedData}
